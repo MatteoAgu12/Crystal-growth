@@ -1,8 +1,10 @@
+import numpy as np
 from Lattice import Lattice
+import EDEN_simulation as EDEN
 
 def test_lattice_class():
     """
-    This test function tests the attributes of the Lattice class, including the __init__() function.
+    This test function tests the attributes of the 'Lattice' class, including the '__init__()' function.
     
     A lattice with shape (3, 5, 7) is generated.
     Then the function 'is_point_inside()' is tested, using both point expected to be inside the lattice and not.
@@ -41,3 +43,22 @@ def test_lattice_class():
     assert len(LATTICE.initial_seeds) == 1
     assert (0, 0, 0) in LATTICE.initial_seeds
     assert not (2, 2, 2) in LATTICE.initial_seeds
+    
+def test_choose_random_border_site_function():
+    """
+    This test function tests the 'choose_random_border_site()' function.
+    
+    A dummy active border is defined, together with an empty dummy border, which is an empty list.
+    First the function is tested on the empty one, to see if it returns None.
+    Then, the function is called 10 times on the dummy border, and it is asserted that the output is one of the element of teh border itself.
+    """
+    dummy_active_border = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3]])
+    empty_dummy_border = []
+    
+    assert EDEN.choose_random_border_site(empty_dummy_border) is None
+    for _ in range(10):
+        assert EDEN.choose_random_border_site(dummy_active_border) in dummy_active_border
+        
+        
+if __name__ == '__main__':
+    test_choose_random_border_site_function()

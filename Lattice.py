@@ -40,7 +40,7 @@ class Lattice:
         
     def get_neighbors(self, x: int, y: int, z: int) -> np.array:
         """
-        Function that checks the occupation of the eight cells around the selected one.
+        Function that returns the coordinates of the six cells around the selected one (only adjecent cells, not diagonally).
         
         Args:
             x (int): x coordinate of the point to check the neighbors
@@ -48,7 +48,7 @@ class Lattice:
             z (int): z coordinate of the point to check the neighbors
             
         Return:
-            (np.array): array containing the coordinates of the occupied neighbors
+            (np.array): array containing the coordinates of the six cell neighbors
         """
         directions = [
             (1, 0, 0), (-1, 0, 0),  # x-axis
@@ -113,7 +113,7 @@ class Lattice:
             (np.array): array containing the points that form the active border
         """
         active_border = []
-        occupied_sites = self.grid[np.where(self.grid == 1)]
+        occupied_sites = np.argwhere(self.grid == 1)
         for (x, y, z) in occupied_sites:
             neighbors = self.get_neighbors(x, y, z)
             

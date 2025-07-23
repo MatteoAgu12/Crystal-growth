@@ -44,9 +44,6 @@ def EDEN_simulation(lattice: Lattice, N_reps: int) -> int:
         new_cell = choose_random_border_site(active_border)
         
         if new_cell is None:
-            print("ATTENTION: from function 'EDEN_simulation', the computed active border is empty.\n \
-                   This means either that the lattice is full or no initial nucleation sites are selected.\n \
-                   Simulation stopped")
             if len(lattice.initial_seeds) == 0: return 1
             elif len(active_border) == 0: return 2
             else: return 3

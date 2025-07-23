@@ -59,6 +59,23 @@ def test_choose_random_border_site_function():
     for _ in range(10):
         assert EDEN.choose_random_border_site(dummy_active_border) in dummy_active_border
         
+def test_EDEN_simulation_function():
+    """
+    This function tests the 'EDEN_simulation()' function.
+    
+    To do the test, three lattices are defined: one with no nucleation sites, one fully occupied and one normal.
+    The output code of the function is tested for all these three situations and compared with the expected one.
+    """
+    N_reps = 10
+    lattice_with_no_initial_seeds = Lattice(10, 10, 10)
+    
+    lattice_with_initial_seed = Lattice(10, 10, 10)
+    lattice_with_initial_seed.set_nucleation_seed(5, 5, 5) 
+    
+    fully_occupied_lattice = Lattice(1, 1, 1)
+    fully_occupied_lattice.set_nucleation_seed(0, 0, 0)
+    
+    assert EDEN.EDEN_simulation(lattice_with_initial_seed, N_reps) == 0
+    assert EDEN.EDEN_simulation(lattice_with_no_initial_seeds, N_reps) == 1
+    assert EDEN.EDEN_simulation(fully_occupied_lattice, N_reps) == 2
         
-if __name__ == '__main__':
-    test_choose_random_border_site_function()

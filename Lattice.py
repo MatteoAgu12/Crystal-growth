@@ -32,7 +32,7 @@ class Lattice:
             y (int): y coordinate of the point to verify
             z (int): z coordinate of the point to verify
             
-        Return:
+        Returns:
             (bool): returns if the point is inside the lattice or not
         """
         nx, ny, nz = self.shape
@@ -47,7 +47,7 @@ class Lattice:
             y (int): y coordinate of the point to check the neighbors
             z (int): z coordinate of the point to check the neighbors
             
-        Return:
+        Returns:
             (np.array): array containing the coordinates of the six cell neighbors
         """
         directions = [
@@ -85,7 +85,7 @@ class Lattice:
             y (int): _description_
             z (int): _description_
             
-        Return:
+        Returns:
             (bool): 
         """
         return self.grid[x, y, z] == 1
@@ -109,7 +109,7 @@ class Lattice:
         Function that compute the active border of teh crystal.
         The active border is the set of all empty cells having at least one occupied cell as neighbor.
 
-        Returns:
+        Returnss:
             (np.array): array containing the points that form the active border
         """
         active_border = []

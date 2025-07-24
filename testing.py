@@ -1,6 +1,7 @@
 import numpy as np
 from Lattice import Lattice
 import EDEN_simulation as EDEN
+import GUI as GUI
 
 def test_lattice_class():
     """

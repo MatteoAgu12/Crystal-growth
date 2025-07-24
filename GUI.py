@@ -2,13 +2,56 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from Lattice import Lattice
+import EDEN_simulation as EDEN
 
-def plot_lattice(lattice: Lattice, title: str = "Crystal lattice"):
-    """_summary_
+def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
+    """
+    Function that creates a binary mask based on the lattice occupation.
+    This function creates a mask that when applied to the lattice, return only the occupied cells not surrounded by other occupied cell.
+    The porpouse of this function is to improve the GUI computational time and cost, by avoiding to show voxels that can't be seen.
 
     Args:
-        lattice (Lattice): _description_
-        title (str, optional): _description_. Defaults to "Crystal lattice".
+        lattice (Lattice): custom lattice object
+
+    Returns:
+        (np.array): binary 3D mask. The cell is True if it is going to be plotted, False elsewhere.
+    """
+    original_nx, original_ny, original_nz = lattice.shape
+    binary_mask = np.zeros_like(lattice.grid, dtype=bool)
+    directions = [
+        (1, 0, 0), (-1, 0, 0),
+        (0, 1, 0), (0, -1, 0),
+        (0, 0, 1), (0, 0, -1)
+    ]
+    occupied = lattice.grid.astype(bool)
+    iterator = np.nditer(occupied, flags=['multi_index'])
+    
+    while not iterator.finished:
+        if iterator[0]:
+            x, y, z = iterator.multi_index
+            for dx, dy, dz in directions:
+                nx, ny, nz = x + dx, y + dy, z + dz
+                if (0 <= nx < original_nx and 0 <= ny < original_ny and 0 <= nz < original_nz):
+                    if not occupied[nx, ny, nz]:
+                        binary_mask[x, y, z] = True
+                        break
+                
+                else:
+                    binary_mask[x, y, z] = True
+                    break
+        
+        iterator.iternext()
+        
+    return binary_mask
+
+def plot_lattice(lattice: Lattice, title: str = "Crystal lattice"):
+    """
+    Function that creates an interactive window that plots the 3D lattice.
+    The user can inspect it (zoom, rotate, ...) at runtime.
+
+    Args:
+        lattice (Lattice): lattice to be plotted
+        title (str, optional): Title of the canvas. Defaults to "Crystal lattice".
     """
     x, y, z = np.nonzero(lattice.grid)
     
@@ -17,7 +60,8 @@ def plot_lattice(lattice: Lattice, title: str = "Crystal lattice"):
     
     voxels = lattice.grid.astype(bool)
     facecolors = np.where(voxels, 'royalblue', 'none')
-    ax.voxels(voxels, facecolors=facecolors, edgecolor='k', linewidth=0.2)
+    visible_voxels = get_visible_voxels_binary_mask(lattice)
+    ax.voxels(visible_voxels, facecolors=facecolors, edgecolor='k', linewidth=0.2)
     
     ax.set_title(title)
     ax.set_xlabel('x')
@@ -33,16 +77,3 @@ def plot_lattice(lattice: Lattice, title: str = "Crystal lattice"):
     plt.tight_layout()
     plt.show()
     
-if __name__ == '__main__':
-    LATTICE = Lattice(30, 30, 30)
-    LATTICE.set_nucleation_seed(15, 15, 15)
-    LATTICE.set_nucleation_seed(15, 16, 15)
-    LATTICE.set_nucleation_seed(15, 17, 15)
-    LATTICE.set_nucleation_seed(16, 15, 15)
-    LATTICE.set_nucleation_seed(16, 16, 15)
-    LATTICE.set_nucleation_seed(16, 17, 15)
-    LATTICE.set_nucleation_seed(17, 15, 15)
-    LATTICE.set_nucleation_seed(17, 16, 15)
-    LATTICE.set_nucleation_seed(17, 17, 15)
-    
-    plot_lattice(LATTICE)

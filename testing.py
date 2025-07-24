@@ -3,6 +3,7 @@ from Lattice import Lattice
 import EDEN_simulation as EDEN
 import GUI as GUI
 
+# === Lattice class ========================================================
 def test_lattice_class():
     """
     This test function tests the attributes of the 'Lattice' class, including the '__init__()' function.
@@ -44,7 +45,8 @@ def test_lattice_class():
     assert len(LATTICE.initial_seeds) == 1
     assert (0, 0, 0) in LATTICE.initial_seeds
     assert not (2, 2, 2) in LATTICE.initial_seeds
-    
+
+# === EDEN simulation section ==============================================    
 def test_choose_random_border_site_function():
     """
     This test function tests the 'choose_random_border_site()' function.
@@ -79,7 +81,10 @@ def test_EDEN_simulation_function():
     assert EDEN.EDEN_simulation(lattice_with_initial_seed, N_reps) == 0
     assert EDEN.EDEN_simulation(lattice_with_no_initial_seeds, N_reps) == 1
     assert EDEN.EDEN_simulation(fully_occupied_lattice, N_reps) == 2
-        
+
+# === DLA simulation section ===============================================
+
+# === GUI section ==========================================================        
 def test_get_visible_voxels_binary_mask_function():
     """
     This function tests the 'get_visible_voxels_binary_mask()' function.

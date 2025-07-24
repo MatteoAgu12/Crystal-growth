@@ -2,7 +2,6 @@ import numpy as np
 
 class Lattice:
     """
-    Attributes:
     """
     def __init__(self, number_of_cells_x: int, number_of_cells_y: int, number_of_cells_z: int):
         """
@@ -122,7 +121,7 @@ class Lattice:
                     active_border.append((x_n, y_n, z_n))
         
         return np.array(active_border)
-            
+    
 
 
 

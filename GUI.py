@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from Lattice import Lattice
-import EDEN_simulation as EDEN
 
 def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
     """

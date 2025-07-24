@@ -80,3 +80,24 @@ def test_EDEN_simulation_function():
     assert EDEN.EDEN_simulation(lattice_with_no_initial_seeds, N_reps) == 1
     assert EDEN.EDEN_simulation(fully_occupied_lattice, N_reps) == 2
         
+def test_get_visible_voxels_binary_mask_function():
+    """
+    This function tests the 'get_visible_voxels_binary_mask()' function.
+    
+    A 3x3x3 lattice is generated, and its central cell (1, 1, 1) is set to occupied, together with all its neighbors.
+    The mask is generated with the tested function, and the occupation of the output is tested.
+    The test is performed by checking the central cell, that now is expected to be False, and the one of all others occupied, expected to be True.
+    """
+    lattice = Lattice(3, 3, 3)
+    lattice.occupy(1, 1, 1)
+    lattice.occupy(1, 1, 0)
+    lattice.occupy(1, 1, 2)
+    lattice.occupy(1, 0, 1)
+    lattice.occupy(1, 2, 1)
+    lattice.occupy(0, 1, 1)
+    lattice.occupy(2, 1, 1)
+    visible_voxels = GUI.get_visible_voxels_binary_mask(lattice)
+    
+    assert np.sum(lattice.grid) == 7
+    assert np.sum(visible_voxels) == 6
+    assert not visible_voxels[1,1,1]

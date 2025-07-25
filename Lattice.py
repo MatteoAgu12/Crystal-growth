@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Union
 
 class Lattice:
     """
@@ -122,6 +123,30 @@ class Lattice:
         
         return np.array(active_border)
     
+    def get_crystal_bounding_box(self, padding: int = 0) -> Union[tuple, None]:
+        """
+        Function to compute the bounding box of the occupied region (smallest parallelogram that contains it).
+
+        Args:
+            padding (int, optional): optional enlargement (in each direction) of the box. Defaults to 0.
+
+        Returns:
+            (Union[tuple, None]): tuple containing the information (coord_min, coord_max) for each coordinate.
+        """
+        occupied = np.argwhere(self.grid)
+        
+        if occupied.size == 0:
+            return None
+        
+        mins = occupied.min(axis=0) - padding
+        maxs = occupied.max(axis=0) + 1 + padding
+        
+        # I never want to exit from my lattice grid
+        mins = np.clip(mins, 0, np.array(self.shape) - 1)
+        maxs = np.clip(maxs, 0, np.array(self.shape))
+        
+        return tuple(zip(mins, maxs))
+        
 
 
 

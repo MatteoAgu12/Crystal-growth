@@ -47,6 +47,22 @@ def test_lattice_class():
     assert (0, 0, 0) in LATTICE.initial_seeds
     assert not (2, 2, 2) in LATTICE.initial_seeds
 
+def test_lattice_get_crystal_bounding_box_method():
+    """
+    Function to test the method 'Lattice.get_crystal_bounding_box()'.
+    
+    The bounding box returned by the function is compered with the expected one for different configurations of occupied sites and for different padding values.
+    """
+    lattice = Lattice(5, 5, 5)
+    lattice.set_nucleation_seed(2, 2, 2)
+    
+    assert lattice.get_crystal_bounding_box() == ((2,3), (2,3), (2,3))
+    assert lattice.get_crystal_bounding_box(padding=1) == ((1, 4), (1, 4), (1, 4))
+    
+    lattice.set_nucleation_seed(1, 1, 1)
+    
+    assert lattice.get_crystal_bounding_box() == ((1, 3), (1, 3), (1, 3))
+
 # === EDEN simulation section ==============================================    
 def test_choose_random_border_site_function():
     """
@@ -117,4 +133,4 @@ def test_get_visible_voxels_binary_mask_function():
     
     
 if __name__ == '__main__':
-    test_random_walk_function()
+    test_lattice_get_crystal_bounding_box_method()

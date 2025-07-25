@@ -1,18 +1,17 @@
 import numpy as np
 from Lattice import Lattice
 
-def generate_random_point_on_sphere(radius: float, center: list = [0, 0, 0]) -> np.array:
+def generate_random_point_on_box(radius: float, bounding_box: tuple) -> np.array:
     """
-    This function randomly generates a point on a sphere of a selected radius and center.
-    Each coordinate of the point given as output is casted to int, in order to match with the Lattice object functionalities.
+    This function randomly generates a point on the surface of a box.
 
     Args:
         radius (float): radius of the sphere.
-        center (list, optional): coordinates of the center point of the sphere. Defaults to [0, 0, 0].
+        bounding_box (tuple): bounding box on which generate the point.
 
     Raises:
         Valuerror: if the input parameter 'radius' is less then or equal to zero, the program stops.
-        ValueError: if the input parameter 'center' is not a list of lenght == 3, the program stops.
+        ValueError: if the input parameter 'bounding_box' is not a list of lenght == 3, the program stops.
 
     Returns:
         np.array: _description_
@@ -21,22 +20,16 @@ def generate_random_point_on_sphere(radius: float, center: list = [0, 0, 0]) -> 
         raise ValueError(f"ERROR: in function 'generate_random_point_on_sphere' the radius input parameter \
             must be a number bigger than zero. \
             \nThe value {radius} has been inserted. Aborted")
-    if len(center) != 3:
+    if len(bounding_box) != 3:
         raise ValueError(f"ERROR: in function 'generate_random_point_on_sphere' the center input parameter \
             must be the set of coordinates of the center of the sphere. \
-            \nThe value {center} has been inserted. Aborted")
-        
-    phi = np.random.uniform(0, 1) * 2 * np.pi
-    theta = np.random.uniform(0, 1) * np.pi
+            \nThe value {bounding_box} has been inserted. Aborted")
     
-    cos_t, sin_t = np.cos(theta), np.sin(theta)
-    cos_f, sin_f = np.cos(phi), np.sin(phi)
+    return np.array(np.random.randint(bounding_box[0][0], bounding_box[0][1]+1),
+                    np.random.randint(bounding_box[1][1], bounding_box[1][1]+1),
+                    np.random.randint(bounding_box[2][2], bounding_box[2][1]+1))
     
-    return np.array([int(center[0] + radius * cos_f * sin_t), 
-                     int(center[1] + radius * sin_t, sin_f), 
-                     int(center[2] + radius * cos_t)])
-    
-def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple) -> tuple:
+def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, max_steps: int = 1000) -> tuple:
     """
     This function creates a particle in position 'initial_coordinate' and performes a random walk.
     If the particles arrives in a site with an occupied neighbor, it stops and becomes part of the crystal.
@@ -46,6 +39,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
         lattice (Lattice): custom Lattice object.
         initial_coordinate (np.array): coordinates of the spawn point of the new particle.
         outer_bounding_box (tuple): bounding box outside which the particle can't go. If it happens, the random walk restarts.
+        max_steps (int, optional): maximum number of step performed before restarting the walk.
 
     Returns:
         (tuple): cuple of int representing the number of stpes needed to reach the crystal (in a cycle) and how many times the walk has restarted.
@@ -61,7 +55,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
         
         if not (outer_allowed_bounding_box[0][0] <= position[0] <= outer_allowed_bounding_box[0][1] and 
                 outer_allowed_bounding_box[1][0] <= position[1] <= outer_allowed_bounding_box[1][1] and
-                outer_allowed_bounding_box[2][0] <= position[2] <= outer_allowed_bounding_box[2][1]):
+                outer_allowed_bounding_box[2][0] <= position[2] <= outer_allowed_bounding_box[2][1]) or total_steps > max_steps:
             position = initial_coordinate 
             number_of_restarts += 1 
             total_steps = 0        
@@ -75,7 +69,8 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             
     return (total_steps, number_of_restarts)
             
-    
+def DLA_simulation(lattice: Lattice, N_particles):    
+    pass
 
 if __name__ == '__main__':
     out = np.random.randint(-1, 2, 10)

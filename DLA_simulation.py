@@ -36,16 +36,21 @@ def generate_random_point_on_sphere(radius: float, center: list = [0, 0, 0]) -> 
                      int(center[1] + radius * sin_t, sin_f), 
                      int(center[2] + radius * cos_t)])
     
-def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, max_steps: int = 1000) -> int:
+def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, max_steps: int = 1000, verbose: bool = False) -> int:
     # TODO: add a way to restart the random walk if the particle goes too far from the crystal
     position = initial_coordinate
+    
     for i in range(max_steps):
         position += np.random.randint(-1, 2, 3)
         neighbors = lattice.get_neighbors(position[0], position[1], position[2])
+        
         for neighbor in neighbors:
             if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]): 
                 lattice.occupy(position[0], position[1], position[2])
-                print(f"Particle attached in {i} steps.")
+                
+                if verbose:
+                    print(f"Particle attached in {i} steps.")
+                
                 return 0
             
     return 1

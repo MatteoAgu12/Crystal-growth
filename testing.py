@@ -1,6 +1,7 @@
 import numpy as np
 from Lattice import Lattice
 import EDEN_simulation as EDEN
+import DLA_simulation as DLA
 import GUI as GUI
 
 # === Lattice class ========================================================
@@ -83,6 +84,12 @@ def test_EDEN_simulation_function():
     assert EDEN.EDEN_simulation(fully_occupied_lattice, N_reps) == 2
 
 # === DLA simulation section ===============================================
+def test_random_walk_function():
+    lattice = Lattice(2, 2, 2)
+    lattice.set_nucleation_seed(0, 0, 0)
+    
+    assert DLA.particle_random_walk(lattice, np.array([100, 100, 100])) == 1
+    assert DLA.particle_random_walk(lattice, np.array([0, 0, 1])) == 0
 
 # === GUI section ==========================================================        
 def test_get_visible_voxels_binary_mask_function():
@@ -106,3 +113,8 @@ def test_get_visible_voxels_binary_mask_function():
     assert np.sum(lattice.grid) == 7
     assert np.sum(visible_voxels) == 6
     assert not visible_voxels[1,1,1]
+    
+    
+    
+if __name__ == '__main__':
+    test_random_walk_function()

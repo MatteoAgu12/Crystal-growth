@@ -36,24 +36,44 @@ def generate_random_point_on_sphere(radius: float, center: list = [0, 0, 0]) -> 
                      int(center[1] + radius * sin_t, sin_f), 
                      int(center[2] + radius * cos_t)])
     
-def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, max_steps: int = 1000, verbose: bool = False) -> int:
-    # TODO: add a way to restart the random walk if the particle goes too far from the crystal
+def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple) -> tuple:
+    """
+    This function creates a particle in position 'initial_coordinate' and performes a random walk.
+    If the particles arrives in a site with an occupied neighbor, it stops and becomes part of the crystal.
+    If the particle exits from the bounding box 'outer_allowed_bounding_box', its position is set to the initial one and the random walk restarts.
+
+    Args:
+        lattice (Lattice): custom Lattice object.
+        initial_coordinate (np.array): coordinates of the spawn point of the new particle.
+        outer_bounding_box (tuple): bounding box outside which the particle can't go. If it happens, the random walk restarts.
+
+    Returns:
+        (tuple): cuple of int representing the number of stpes needed to reach the crystal (in a cycle) and how many times the walk has restarted.
+    """
     position = initial_coordinate
+    continue_walk = True
+    number_of_restarts = 0
+    total_steps = 0
     
-    for i in range(max_steps):
+    while continue_walk:
+        total_steps += 1
         position += np.random.randint(-1, 2, 3)
-        neighbors = lattice.get_neighbors(position[0], position[1], position[2])
         
+        if not (outer_allowed_bounding_box[0][0] <= position[0] <= outer_allowed_bounding_box[0][1] and 
+                outer_allowed_bounding_box[1][0] <= position[1] <= outer_allowed_bounding_box[1][1] and
+                outer_allowed_bounding_box[2][0] <= position[2] <= outer_allowed_bounding_box[2][1]):
+            position = initial_coordinate 
+            number_of_restarts += 1 
+            total_steps = 0        
+        
+        neighbors = lattice.get_neighbors(position[0], position[1], position[2])        
         for neighbor in neighbors:
             if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]): 
                 lattice.occupy(position[0], position[1], position[2])
-                
-                if verbose:
-                    print(f"Particle attached in {i} steps.")
-                
-                return 0
+                continue_walk = False
+                break
             
-    return 1
+    return (total_steps, number_of_restarts)
             
     
 

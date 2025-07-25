@@ -1,33 +1,36 @@
 import numpy as np
 from Lattice import Lattice
 
-def generate_random_point_on_box(radius: float, bounding_box: tuple) -> np.array:
+def generate_random_point_on_box(bounding_box: tuple) -> np.array:
     """
     This function randomly generates a point on the surface of a box.
+    It randomly selects one face of the box, and then it generates a random point constrained on that face
 
     Args:
-        radius (float): radius of the sphere.
         bounding_box (tuple): bounding box on which generate the point.
 
     Raises:
-        Valuerror: if the input parameter 'radius' is less then or equal to zero, the program stops.
-        ValueError: if the input parameter 'bounding_box' is not a list of lenght == 3, the program stops.
+        ValueError: if the input parameter 'bounding_box' is not an object of lenght == 3, the program stops.
 
     Returns:
-        np.array: _description_
+        (np.array): the coordinates of the randomly generated point
     """
-    if radius <= 0:
-        raise ValueError(f"ERROR: in function 'generate_random_point_on_sphere' the radius input parameter \
-            must be a number bigger than zero. \
-            \nThe value {radius} has been inserted. Aborted")
     if len(bounding_box) != 3:
         raise ValueError(f"ERROR: in function 'generate_random_point_on_sphere' the center input parameter \
             must be the set of coordinates of the center of the sphere. \
             \nThe value {bounding_box} has been inserted. Aborted")
+        
+    axis = np.random.randint(0, 3)
+    face = np.random.randint(0, 2)
+    point = np.zeros(3)
     
-    return np.array(np.random.randint(bounding_box[0][0], bounding_box[0][1]+1),
-                    np.random.randint(bounding_box[1][1], bounding_box[1][1]+1),
-                    np.random.randint(bounding_box[2][2], bounding_box[2][1]+1))
+    for direction in range(3):
+        if direction == axis:
+            point[direction] = int(bounding_box[direction][face])
+        else:
+            point[direction] = int(np.random.randint(bounding_box[direction][0], bounding_box[direction][1]+1))
+           
+    return point
     
 def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, max_steps: int = 1000) -> tuple:
     """

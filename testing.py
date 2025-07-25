@@ -100,7 +100,21 @@ def test_EDEN_simulation_function():
     assert EDEN.EDEN_simulation(fully_occupied_lattice, N_reps) == 2
 
 # === DLA simulation section ===============================================
-
+def test_generate_random_point_on_box_function():
+    """
+    This function tests the 'generate_random_point_on_box()' function.
+    
+    A random point is generated on the selected box using the tested function.
+    Since it is a random function, it is tested if the point is actually generated on the surface of the box for 1000 different points.
+    """
+    box = ([1, 10], [36, 98], [78, 110])
+    for _ in range(1000):
+        generated_point = DLA.generate_random_point_on_box(box)
+        assert ((1 <= generated_point[0] <= 10) and 
+                (36 <= generated_point[1] <= 98) and 
+                (78 <= generated_point[2] <= 110)) and ((generated_point[0] in box[0]) or 
+                                                        (generated_point[1] in box[1]) or 
+                                                        (generated_point[2] in box[2]))
 
 # === GUI section ==========================================================        
 def test_get_visible_voxels_binary_mask_function():
@@ -128,4 +142,4 @@ def test_get_visible_voxels_binary_mask_function():
     
     
 if __name__ == '__main__':
-    test_lattice_get_crystal_bounding_box_method()
+    test_generate_random_point_on_box_function()

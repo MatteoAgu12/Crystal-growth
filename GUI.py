@@ -3,6 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from Lattice import Lattice
 import DLA_simulation as DLA
+import EDEN_simulation as EDEN
 
 def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
     """
@@ -82,7 +83,10 @@ if __name__ == '__main__':
     LATTICE = Lattice(100, 100, 100)
     LATTICE.set_nucleation_seed(50, 50, 50)
     
-    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, 500, 1, 3, three_dim=False)
+    """s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, 500, 1, 3, three_dim=False)
     
     print(f"\nMean number of steps = {s_mean} +/- {s_std}\nMean restarts = {r_mean} +/- {r_std}\n")
+    plot_lattice(LATTICE)"""
+    
+    _ = EDEN.EDEN_simulation(LATTICE, 500, False)
     plot_lattice(LATTICE)

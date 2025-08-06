@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.patches import Rectangle
 import numpy as np
 from Lattice import Lattice
 import DLA_simulation as DLA
@@ -85,14 +86,22 @@ def plot_lattice(lattice: Lattice, title: str = "Crystal lattice", three_dim : b
         ax.set_title(title)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        
-        slice_z = lattice.grid[:, :, lattice.get_nucleation_seeds()[0][2]]
+
+        z_coord = lattice.get_nucleation_seeds()[0][2]
+        slice_z = lattice.grid[:, :, z_coord]
         occupied = np.argwhere(slice_z)
         x_list = occupied[:, 0].tolist()
         y_list = occupied[:, 1].tolist()
-        ax.scatter(x_list, y_list, c='b', s=10)
-        plt.tight_layout()
-        plt.show()
+
+    for x, y in zip(x_list, y_list):
+        ax.add_patch(Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor='blue', edgecolor='black'))
+
+    ax.set_xlim(min(x_list) - 1, max(x_list) + 1)
+    ax.set_ylim(min(y_list) - 1, max(y_list) + 1)
+    ax.set_aspect('equal')
+    ax.grid(False)
+    plt.tight_layout()
+    plt.show()
         
         
 

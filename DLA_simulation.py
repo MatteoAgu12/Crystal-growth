@@ -32,7 +32,7 @@ def generate_random_point_on_box(bounding_box: tuple) -> np.array:
            
     return point
     
-def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, max_steps: int = 1000, 
+def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, max_steps: int = 100, 
                          three_dim : bool = False) -> tuple:
     """
     This function creates a particle in position 'initial_coordinate' and performes a random walk.
@@ -93,6 +93,7 @@ def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, 
         ValueError: if the input N_particles is less than or equal to zero, the function raises an error.
                     This is because a negative number of particles is nonsense.
         ValueError: if the nearest padding is higher than the farest, the function raises an error.
+        ValueError: if you select a 2D simulation and the initial nucleation seeds don't have the same z-coord, the function raises error.
 
     Returns:
         tuple: statistics about the simulation, reguarding the random wlak, in the form (step_mean, step_std, restart_mean, restart_std).
@@ -107,14 +108,26 @@ def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, 
         
     if not three_dim:
         seeds_on_same_xy_plane = True
+        seeds = lattice.get_nucleation_seeds()
+        for seed in seeds:
+            seeds_on_same_xy_plane = (seeds[0][2] == seed[2])
+            if not seeds_on_same_xy_plane: break
+            
+        if not seeds_on_same_xy_plane:
+            raise ValueError("ERROR: in function 'DLA_simulation()', in a 2D simulation the nucleation seeds must have the same z-coord.")
     
     steps = np.zeros(N_particles)
     restarts = np.zeros(N_particles)
-    xy_plane = 
+    z_coord = lattice.get_nucleation_seeds()[0][2]
         
     for n in range(N_particles):
         generation_box = lattice.get_crystal_bounding_box(padding=generation_padding)
-        outer_limit_box = lattice.get_crystal_bounding_box(padding=outer_limit_padding)        
+        outer_limit_box = lattice.get_crystal_bounding_box(padding=outer_limit_padding)
+        
+        if not three_dim:
+            generation_box[2] = (z_coord, z_coord)
+            outer_limit_box[2] = (z_coord, z_coord)
+                
         starting_point = generate_random_point_on_box(generation_box)
         
         n_step, n_restart = particle_random_walk(lattice, starting_point, outer_limit_box, three_dim=three_dim)

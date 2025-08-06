@@ -125,7 +125,8 @@ def test_particle_random_walk_function():
     for rep in range(repetitions):
         lattice_bbox = lattice.get_crystal_bounding_box()
         generation_pos = DLA.generate_random_point_on_box(lattice_bbox)
-        _, _ = DLA.particle_random_walk(lattice, )
+        _, _ = DLA.particle_random_walk(lattice, generation_pos)
+            
 
 # === GUI section ==========================================================        
 def test_get_visible_voxels_binary_mask_function():

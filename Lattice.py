@@ -132,7 +132,7 @@ class Lattice:
         
         return np.array(active_border)
     
-    def get_crystal_bounding_box(self, padding: int = 0) -> Union[tuple, None]:
+    def get_crystal_bounding_box(self, padding: int = 0) -> Union[list, None]:
         """
         Function to compute the bounding box of the occupied region (smallest parallelogram that contains it).
 
@@ -140,7 +140,7 @@ class Lattice:
             padding (int, optional): optional enlargement (in each direction) of the box. Defaults to 0.
 
         Returns:
-            (Union[tuple, None]): tuple containing the information (coord_min, coord_max) for each coordinate.
+            (Union[list, None]): tuple containing the information (coord_min, coord_max) for each coordinate.
         """
         occupied = np.argwhere(self.grid)
         
@@ -154,7 +154,7 @@ class Lattice:
         mins = np.clip(mins, 0, np.array(self.shape) - 1)
         maxs = np.clip(maxs, 0, np.array(self.shape))
         
-        return tuple(zip(mins, maxs))
+        return list(zip(mins, maxs))
         
 
 

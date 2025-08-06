@@ -103,7 +103,16 @@ class Lattice:
         if self.is_point_inside(x, y, z) and (x, y, z) not in self.initial_seeds:
             self.occupy(x, y, z)
             self.initial_seeds.append((x, y, z))
-            
+    
+    def get_nucleation_seeds(self) -> np.array:
+        """
+        This function returns the initial nucleation seeds.
+
+        Returns:
+            np.array: array containing all the initial nucleation seeds.
+        """
+        return np.array(self.initial_seeds)
+    
     def get_active_border(self) -> np.array:
         """
         Function that compute the active border of teh crystal.

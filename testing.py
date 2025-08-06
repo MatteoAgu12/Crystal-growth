@@ -42,6 +42,7 @@ def test_lattice_class():
     
     assert LATTICE.initial_seeds == []
     LATTICE.set_nucleation_seed(0, 0, 0)
+    assert np.array_equal(LATTICE.get_nucleation_seeds(), np.array([[0, 0, 0]]))
     assert LATTICE.is_occupied(0, 0, 0)
     assert len(LATTICE.initial_seeds) == 1
     assert (0, 0, 0) in LATTICE.initial_seeds
@@ -116,6 +117,16 @@ def test_generate_random_point_on_box_function():
                                                         (generated_point[1] in box[1]) or 
                                                         (generated_point[2] in box[2]))
 
+def test_particle_random_walk_function():
+    lattice = Lattice(10, 10, 10)
+    lattice.set_nucleation_seed(5, 5, 5)
+    repetitions = 100
+    
+    for rep in range(repetitions):
+        lattice_bbox = lattice.get_crystal_bounding_box()
+        generation_pos = DLA.generate_random_point_on_box(lattice_bbox)
+        _, _ = DLA.particle_random_walk(lattice, )
+
 # === GUI section ==========================================================        
 def test_get_visible_voxels_binary_mask_function():
     """
@@ -142,4 +153,5 @@ def test_get_visible_voxels_binary_mask_function():
     
     
 if __name__ == '__main__':
+    test_lattice_class()
     test_generate_random_point_on_box_function()

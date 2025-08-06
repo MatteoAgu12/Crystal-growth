@@ -32,7 +32,8 @@ def generate_random_point_on_box(bounding_box: tuple) -> np.array:
            
     return point
     
-def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, max_steps: int = 1000) -> tuple:
+def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, max_steps: int = 1000, 
+                         three_dim : bool = False) -> tuple:
     """
     This function creates a particle in position 'initial_coordinate' and performes a random walk.
     If the particles arrives in a site with an occupied neighbor, it stops and becomes part of the crystal.
@@ -43,6 +44,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
         initial_coordinate (np.array): coordinates of the spawn point of the new particle.
         outer_bounding_box (tuple): bounding box outside which the particle can't go. If it happens, the random walk restarts.
         max_steps (int, optional): maximum number of step performed before restarting the walk.
+        three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to False.
 
     Returns:
         (tuple): cuple of int representing the number of stpes needed to reach the crystal (in a cycle) and how many times the walk has restarted.
@@ -54,14 +56,12 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
     
     while continue_walk:
         total_steps += 1
-        move_along = np.random.randint(0, 3)
+        move_along = np.random.randint(0, 3) if three_dim else np.random.randint(0, 2)
         direction = np.random.choice([-1, 1])
         position[move_along] += direction
-        print(position)
         
         (xmin, xmax), (ymin, ymax), (zmin, zmax) = outer_allowed_bounding_box
         if not (xmin <= position[0] <= xmax and ymin <= position[1] <= ymax and zmin <= position[2] <= zmax) or total_steps > max_steps:
-            print("RESTARTED!!!!!!")
             position = initial_coordinate.copy() 
             number_of_restarts += 1 
             total_steps = 0        
@@ -76,28 +76,52 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             
     return (total_steps, number_of_restarts)
             
-def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, outer_limit_padding: int) -> tuple:
+def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, outer_limit_padding: int, three_dim : bool = False) -> tuple:
+    """
+    This function performs a crystal growth DLA simulation (diffusion limited enviroment).
+
+    Args:
+        lattice (Lattice): custom lattice object.
+        N_particles (int): number of particle to deposit.
+        generation_padding (int): padding to the crystal bounding box. 
+                                  It is the nearest limit on which particles are generated at the beginning of the random walk.
+        outer_limit_padding (int): padding to the crystal bounding box.
+                                   During walk, if a particle exits from this box, the random walk restarts.
+        three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to False.
+
+    Raises:
+        ValueError: if the input N_particles is less than or equal to zero, the function raises an error.
+                    This is because a negative number of particles is nonsense.
+        ValueError: if the nearest padding is higher than the farest, the function raises an error.
+
+    Returns:
+        tuple: statistics about the simulation, reguarding the random wlak, in the form (step_mean, step_std, restart_mean, restart_std).
+    """
     if N_particles <= 0:
         raise ValueError(f"ERROR: in function 'DLA_simulation()' the number of generated particles must be an integer bigger than zero. \
             You inserted {N_particles}. Aborted")
         
     if outer_limit_padding <= generation_padding:
         raise ValueError(f"ERROR: in function 'DLA_simulation()' the generation padding must be smaller than the outer limit one. \
-            You inserted {generation_padding} and {outer_limit_padding} respectively. Aborted.")    
+            You inserted {generation_padding} and {outer_limit_padding} respectively. Aborted.")
+        
+    if not three_dim:
+        seeds_on_same_xy_plane = True
     
     steps = np.zeros(N_particles)
     restarts = np.zeros(N_particles)
+    xy_plane = 
         
     for n in range(N_particles):
         generation_box = lattice.get_crystal_bounding_box(padding=generation_padding)
         outer_limit_box = lattice.get_crystal_bounding_box(padding=outer_limit_padding)        
         starting_point = generate_random_point_on_box(generation_box)
         
-        print(f"Starting point = {starting_point}")
-        
-        n_step, n_restart = particle_random_walk(lattice, starting_point, outer_limit_box)
+        n_step, n_restart = particle_random_walk(lattice, starting_point, outer_limit_box, three_dim=three_dim)
         steps[n] = n_step
         restarts[n] = n_restart
+        
+        print(f"Procedure completed for particle {n+1}")
     
     step_mean, step_std = np.mean(steps), np.std(steps)
     restart_mean, restart_std = np.mean(restarts), np.std(restarts)

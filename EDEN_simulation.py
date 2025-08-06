@@ -19,7 +19,7 @@ def choose_random_border_site(active_border: np.array) -> Union[np.array, None]:
 
 def EDEN_simulation(lattice: Lattice, N_reps: int) -> int:
     """
-    This function perform a crystal growth EDEN simulation (saturated enviroment).
+    This function performs a crystal growth EDEN simulation (saturated enviroment).
 
     Args:
         lattice (Lattice): custom lattice object

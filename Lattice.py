@@ -60,7 +60,7 @@ class Lattice:
             nx, ny, nz = x + dx, y + dy, z + dz
             
             if self.is_point_inside(nx, ny, nz):
-                neighbors.append([nx, ny, nz])
+                neighbors.append([int(nx), int(ny), int(nz)])
                 
         return np.array(neighbors)
 

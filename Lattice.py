@@ -16,6 +16,7 @@ class Lattice:
             
         self.shape = (number_of_cells_x, number_of_cells_y, number_of_cells_z)
         self.grid = np.zeros(self.shape, dtype=np.uint8)    # 0 = empty; 1 = occupied
+        self.history = np.ones(self.shape, dtype=np.int64) * (-1)
         self.initial_seeds = []
 
     def __str__(self):
@@ -64,17 +65,26 @@ class Lattice:
                 
         return np.array(neighbors)
 
-    def occupy(self, x: int, y: int, z: int) -> None:
+    def occupy(self, x: int, y: int, z: int, epoch: int) -> None:
         """
         Set the status of the cell at coordinates (x,y,z) to occupied.
+        It also keeps track of the epoch at which the new cell has been occupied.
         
         Args:
             x (int): x coordinate of the point to occupy
             y (int): y coordinate of the point to occupy
             z (int): z coordinate of the point to occupy
+            epoch (int): current epoch in the simulation
+            
+        Raises:
+            ValueError: if the epoch number is negative the function raises error.
         """
+        if epoch < 0:
+            raise ValueError(f"ERROR: in function 'Lattice::occupy()' the epoch number must be a an integer bigger or equal to zero.")
+        
         if self.is_point_inside(x, y, z):
             self.grid[x, y, z] = 1
+            self.history[x, y, z] = int(epoch)
             
     def is_occupied(self, x: int, y: int, z: int) -> bool:
         """
@@ -101,7 +111,7 @@ class Lattice:
             z (int): z coordinate of the nucleation seed
         """
         if self.is_point_inside(x, y, z) and (x, y, z) not in self.initial_seeds:
-            self.occupy(x, y, z)
+            self.occupy(x, y, z, epoch=0)
             self.initial_seeds.append((x, y, z))
     
     def get_nucleation_seeds(self) -> np.array:

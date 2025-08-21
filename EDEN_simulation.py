@@ -67,7 +67,7 @@ def EDEN_simulation(lattice: Lattice, N_reps: int, three_dim : bool = True) -> i
             else: return 3
         
         x, y, z = new_cell
-        lattice.occupy(x, y, z)
+        lattice.occupy(x, y, z, epoch=n+1)
         
         print(f"Procedure completed for particle {n+1}")
         

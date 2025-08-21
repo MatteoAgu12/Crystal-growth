@@ -32,8 +32,8 @@ def generate_random_point_on_box(bounding_box: tuple) -> np.array:
            
     return point
     
-def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, max_steps: int = 100, 
-                         three_dim : bool = True) -> tuple:
+def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, epoch: int,
+                         max_steps: int = 100, three_dim : bool = True) -> tuple:
     """
     This function creates a particle in position 'initial_coordinate' and performes a random walk.
     If the particles arrives in a site with an occupied neighbor, it stops and becomes part of the crystal.
@@ -43,6 +43,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
         lattice (Lattice): custom Lattice object.
         initial_coordinate (np.array): coordinates of the spawn point of the new particle.
         outer_bounding_box (tuple): bounding box outside which the particle can't go. If it happens, the random walk restarts.
+        epoch (int): current epoch number.
         max_steps (int, optional): maximum number of step performed before restarting the walk.
         three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to True.
 
@@ -70,7 +71,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             neighbors = lattice.get_neighbors(position[0], position[1], position[2])        
             for neighbor in neighbors:
                 if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]): 
-                    lattice.occupy(int(position[0]), int(position[1]), int(position[2]))
+                    lattice.occupy(int(position[0]), int(position[1]), int(position[2]), epoch=epoch)
                     continue_walk = False
                     break
             
@@ -130,7 +131,7 @@ def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, 
                 
         starting_point = generate_random_point_on_box(generation_box)
         
-        n_step, n_restart = particle_random_walk(lattice, starting_point, outer_limit_box, three_dim=three_dim)
+        n_step, n_restart = particle_random_walk(lattice, starting_point, outer_limit_box, epoch=n+1, three_dim=three_dim)
         steps[n] = n_step
         restarts[n] = n_restart
         

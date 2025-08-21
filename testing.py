@@ -24,7 +24,7 @@ def test_lattice_class():
     assert LATTICE.is_point_inside(0, 0, 0)
     assert LATTICE.is_point_inside(2, 4, 6)
     
-    LATTICE.occupy(2, 2, 2)
+    LATTICE.occupy(2, 2, 2, 0)
     assert LATTICE.is_occupied(2, 2, 2)
     assert not LATTICE.is_occupied(2, 2, 1)
     
@@ -63,6 +63,20 @@ def test_lattice_get_crystal_bounding_box_method():
     lattice.set_nucleation_seed(1, 1, 1)
     
     assert lattice.get_crystal_bounding_box() == ((1, 3), (1, 3), (1, 3))
+
+def test_lattice_history_member_update():
+    """
+    This function tests the correct generation of the 'history' member and its update using the 'occupy()' method.
+    A 1D lattice of lenght 6 is generated, and the first five cells are occupied in five consecutive steps.
+    The function then checks the corresponding value in the history.
+    Finally, it checks that the last cell, which is empty, has an associeted value of -1 in the history array.
+    """
+    LATTICE = Lattice(6, 1, 1)
+    for i in range(5): LATTICE.occupy(i, 0, 0, epoch=i+1)
+    
+    assert LATTICE.history.size == 6
+    for i in range(5): assert LATTICE.history[i, 0, 0] == i+1
+    assert LATTICE.history[5, 0, 0] == -1
 
 # === EDEN simulation section ==============================================    
 def test_choose_random_border_site_function():
@@ -138,13 +152,13 @@ def test_get_visible_voxels_binary_mask_function():
     The test is performed by checking the central cell, that now is expected to be False, and the one of all others occupied, expected to be True.
     """
     lattice = Lattice(3, 3, 3)
-    lattice.occupy(1, 1, 1)
-    lattice.occupy(1, 1, 0)
-    lattice.occupy(1, 1, 2)
-    lattice.occupy(1, 0, 1)
-    lattice.occupy(1, 2, 1)
-    lattice.occupy(0, 1, 1)
-    lattice.occupy(2, 1, 1)
+    lattice.occupy(1, 1, 1, 0)
+    lattice.occupy(1, 1, 0, 0)
+    lattice.occupy(1, 1, 2, 0)
+    lattice.occupy(1, 0, 1, 0)
+    lattice.occupy(1, 2, 1, 0)
+    lattice.occupy(0, 1, 1, 0)
+    lattice.occupy(2, 1, 1, 0)
     visible_voxels = GUI.get_visible_voxels_binary_mask(lattice)
     
     assert np.sum(lattice.grid) == 7
@@ -154,5 +168,4 @@ def test_get_visible_voxels_binary_mask_function():
     
     
 if __name__ == '__main__':
-    test_lattice_class()
-    test_generate_random_point_on_box_function()
+    test_lattice_history_member_update()

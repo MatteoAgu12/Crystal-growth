@@ -108,12 +108,12 @@ def plot_lattice(lattice: Lattice, title: str = "Crystal lattice", three_dim : b
 
 if __name__ == '__main__':
     LATTICE = Lattice(100, 100, 100)
-    LATTICE.set_nucleation_seed(50, 50, 50)
+    LATTICE.set_nucleation_seed(0, 50, 50)
     
-    """s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, 500, 1, 3, three_dim=False)
+    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, 3000, 1, 3, three_dim=True)
     
     print(f"\nMean number of steps = {s_mean} +/- {s_std}\nMean restarts = {r_mean} +/- {r_std}\n")
-    plot_lattice(LATTICE)"""
+    plot_lattice(LATTICE)
     
-    _ = EDEN.EDEN_simulation(LATTICE, 1000, False)
-    plot_lattice(LATTICE, three_dim=False)
+    """_ = EDEN.EDEN_simulation(LATTICE, 1000, False)
+    plot_lattice(LATTICE, three_dim=False)"""

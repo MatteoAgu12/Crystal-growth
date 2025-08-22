@@ -18,6 +18,8 @@ def parse_inputs() -> argparse.Namespace:
                         help="Grid dimention, in the form: X Y Z. Default 100 100 100")
     parser.add_argument("--2d", dest="three_dim", action="store_true",
                         help="Simulate a 2D crystal instead of a 3D one")
+    parser.add_argument("--title", "-t", type=str, default="Crystal lattice",
+                        help="Simulation title, default 'Crystal lattice'.")
     
     return parser.parse_args()
 

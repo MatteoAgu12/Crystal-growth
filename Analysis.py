@@ -2,6 +2,7 @@ import numpy as np
 from Lattice import Lattice
 
 # TODO: ancora da testare, mettere in 2D, ecc...
+# TODO: parte di analisi solo per cristalli singoli, produrre immagini da salvare in una crtella target da inserire con il parser
 def compute_radial_density(lattice: Lattice, max_radius: int = None, dr: float = 1.0) -> tuple:
     grid = lattice.grid
     shape = lattice.shape

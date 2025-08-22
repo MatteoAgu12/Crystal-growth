@@ -32,8 +32,20 @@ def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: 
     # TODO: optional analysis part
     GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim)
 
-def perform_active_surface_simulation():
-    pass
+def perform_active_surface_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, title: str):
+    LATTICE = Lattice(NX, NY, NZ)
+    for x in range(NX):
+        for z in range(NZ):
+            LATTICE.set_nucleation_seed(x, 0, z)
+            
+    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, N_EPOCHS, 1, 3, three_dim=True)
+    print(f"DLA SIMULATION FOR ACTIVE SURFACE COMPLETED!\n \
+          Statistics about the random walk:\n \
+          \t* Mean number of steps in the random walk: {s_mean} +/- {s_std}\n \
+          \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
+    
+    # TODO: optional analysis specific for this simulation????
+    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=True)
 
 if __name__ == '__main__':
     print(parse_inputs())

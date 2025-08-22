@@ -151,3 +151,13 @@ if __name__ == '__main__':
     N_EPOCHS = 300
     _ = EDEN.EDEN_simulation(LATTICE, N_EPOCHS, False)
     plot_lattice(LATTICE, N_EPOCHS, three_dim=False)"""
+    
+    # BATTERY
+    """N = 20
+    LATTICE = Lattice(N, N, N)
+    for x in range(N):
+        for z in range(N):
+            LATTICE.set_nucleation_seed(x, 1, z)
+    N_EPOCHS = 1000
+    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, N_EPOCHS, 1, 3, three_dim=True)
+    plot_lattice(LATTICE, N_EPOCHS)"""

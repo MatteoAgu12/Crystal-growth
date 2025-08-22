@@ -17,7 +17,9 @@ def choose_random_border_site(active_border: np.array) -> Union[np.array, None]:
     
     return np.array(active_border[np.random.randint(0, len(active_border))])
 
-def EDEN_simulation(lattice: Lattice, N_reps: int, three_dim : bool = True) -> int:
+def EDEN_simulation(lattice: Lattice, N_reps: int, 
+                    three_dim : bool = True, 
+                    verbose: bool = True) -> int:
     """
     This function performs a crystal growth EDEN simulation (saturated enviroment).
 
@@ -25,6 +27,7 @@ def EDEN_simulation(lattice: Lattice, N_reps: int, three_dim : bool = True) -> i
         lattice (Lattice): custom lattice object
         N_reps (int): number of rpetitions to run (maximum number of new cells to add)
         three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to True.
+        verbose (bool, optional): if true prints additional info during the simulation. Defaults to True.
 
     Raises:
         ValueError: if the input parameter N_reps is less than or equal to zero, the function raises an error.
@@ -69,7 +72,7 @@ def EDEN_simulation(lattice: Lattice, N_reps: int, three_dim : bool = True) -> i
         x, y, z = new_cell
         lattice.occupy(x, y, z, epoch=n+1)
         
-        print(f"Procedure completed for particle {n+1}")
+        if verbose: print(f"Procedure completed for particle {n+1}")
         
     return 0
             

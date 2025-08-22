@@ -77,7 +77,9 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             
     return (total_steps, number_of_restarts)
             
-def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, outer_limit_padding: int, three_dim : bool = True) -> tuple:
+def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, outer_limit_padding: int, 
+                   three_dim : bool = True,
+                   verbose: bool = True) -> tuple:
     """
     This function performs a crystal growth DLA simulation (diffusion limited enviroment).
 
@@ -89,6 +91,7 @@ def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, 
         outer_limit_padding (int): padding to the crystal bounding box.
                                    During walk, if a particle exits from this box, the random walk restarts.
         three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to True.
+        verbose (bool, optional): if true prints additional info during the simulation. Defaults to True.
 
     Raises:
         ValueError: if the input N_particles is less than or equal to zero, the function raises an error.
@@ -135,7 +138,7 @@ def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, 
         steps[n] = n_step
         restarts[n] = n_restart
         
-        print(f"Procedure completed for particle {n+1}")
+        if verbose: print(f"Procedure completed for particle {n+1}")
     
     step_mean, step_std = np.mean(steps), np.std(steps)
     restart_mean, restart_std = np.mean(restarts), np.std(restarts)

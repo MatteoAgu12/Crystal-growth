@@ -20,12 +20,14 @@ def parse_inputs() -> argparse.Namespace:
                         help="Number of epochs in the simulation, default 1000")
     parser.add_argument("--size", "-s", type=int, nargs=3, metavar=("NX", "NY", "NZ"), default=[100, 100, 100],
                         help="Grid dimention, in the form: X Y Z. Default 100 100 100")
-    parser.add_argument("--2d", dest="two_dim", action="store_true",
+    parser.add_argument("--2d", "--2D", dest="two_dim", action="store_true",
                         help="Simulate a 2D crystal instead of a 3D one")
     parser.add_argument("--title", "-t", type=str, default="Crystal lattice",
                         help="Simulation title, default 'Crystal lattice'.")
     parser.add_argument("--simulation", "--sim", type=str, default='EDEN',
                         help=f"Type of built-in simulation to perform. Default 'EDEN'.\nAllowed options are {ALLOWED_SIM_OPTIONS}.")
+    parser.add_argument("--verbose", "-v", dest="verbose", action="store_true",
+                        help="If active prints extra info during the simulation.")
     
     # Checks the inputs
     parsed_input = parser.parse_args()

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from Lattice import Lattice
 
 def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
@@ -8,10 +9,10 @@ def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_
     
     Args:
         lattice (Lattice): custom Lattice object after the growth simulation.
-        min_box_size (int): min box size (in pixel).
-        max_box_size (int): max box size. Default None, in this case set to min(grid.shape)/2
-        num_scales (int): number of log scale to use. Default 10.
-        three_dim (bool): if the crystal is 2D or 3D. Dafault to True (3D).
+        min_box_size (int, optional): min box size (in pixel).
+        max_box_size (int, optional): max box size. Default None, in this case set to min(grid.shape)/2
+        num_scales (int, optional): number of log scale to use. Default 10.
+        three_dim (bool, optional): if the crystal is 2D or 3D. Dafault to True (3D).
         
     Returns:
         (tuple): tuple in the form (D = fractal dimention, sizes = array of log scales used, counts = box with overlap per scale).
@@ -43,3 +44,43 @@ def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_
     D = coeffs[0]
     
     return (D, sizes, counts)
+
+def fractal_dimention_analysis(lattice: Lattice, output_dir: str,
+                               min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
+                               three_dim: bool = True, verbose: bool = True):
+    """
+    This function produces the plot needed to compute the Hausdorff dimention and save it in .png in the specified directory.
+
+    Args:
+        lattice (Lattice): custom Lattice object after the growth simulation.
+        output_dir (str): directory in which save the produce plot.
+        min_box_size (int, optional): min box size (in pixel).
+        max_box_size (int, optional): max box size. Default None, in this case set to min(grid.shape)/2
+        num_scales (int, optional): number of log scale to use. Default 10.
+        three_dim (bool, optional): if the crystal is 2D or 3D. Dafault to True (3D).
+        verbose (bool, optional): if True prints additional info during the analysis. Defaults to True.
+    """
+    
+    D, sizes, counts = compute_fractal_dimention(lattice, min_box_size=min_box_size, max_box_size=max_box_size, num_scales=num_scales, 
+                                                 three_dim=three_dim)
+    
+    if verbose:
+        print("\nAnalysis of the Hausdorff (fractal) dimention completed!")
+        print(f"Computed fractal dimention: {D:.4f}")
+
+    plt.figure()
+    plt.title("Hausdorff dimention of the generated crystal")
+    plt.plot(np.log(1/sizes), np.log(counts), "o-", label="data")
+    plt.plot(np.log(1/sizes),
+             np.polyval(np.polyfit(np.log(1/sizes), np.log(counts), 1), np.log(1/sizes)),
+             "--", label=r"Best-fit (D $\approx$ " + f"{D:.4f})")
+    plt.xlabel(r"-log$\epsilon$")
+    plt.ylabel(r"log(N($\epsilon$))")
+    plt.legend()
+    
+    filename = output_dir + "Hausdorff_dimention.png"
+    plt.savefig(filename)
+        
+    if verbose:
+        print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
+    

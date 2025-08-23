@@ -1,32 +1,45 @@
 import numpy as np
 from Lattice import Lattice
 
-# TODO: ancora da testare, mettere in 2D, ecc...
-# TODO: parte di analisi solo per cristalli singoli, produrre immagini da salvare in una crtella target da inserire con il parser
-def compute_radial_density(lattice: Lattice, max_radius: int = None, dr: float = 1.0) -> tuple:
+def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
+                           three_dim: bool = True) -> tuple:
+    """
+    Computes the fractal (Hausdorff) dimention of a single crystal using the box-counting method.
+    
+    Args:
+        lattice (Lattice): custom Lattice object after the growth simulation.
+        min_box_size (int): min box size (in pixel).
+        max_box_size (int): max box size. Default None, in this case set to min(grid.shape)/2
+        num_scales (int): number of log scale to use. Default 10.
+        three_dim (bool): if the crystal is 2D or 3D. Dafault to True (3D).
+        
+    Returns:
+        (tuple): tuple in the form (D = fractal dimention, sizes = array of log scales used, counts = box with overlap per scale).
+    """
     grid = lattice.grid
-    shape = lattice.shape
-    center = lattice.get_nucleation_seeds()[0]
+    if max_box_size is None:
+        max_box_size = min(grid.shape) // 2 if three_dim else min(grid.shape[:2]) // 2
     
-    z, y, x = np.indices(shape)
-    r = np.sqrt((x - center[0])**2 + (y - center[1])**2 + (z - center[2])**2)
+    sizes = np.logspace(np.log10(min_box_size), np.log10(max_box_size), num=num_scales, dtype=int)
+    sizes = np.unique(sizes)
     
-    if max_radius is None:
-        max_radius = int(np.max(r))
-        
-    bins = np.arange(0, max_radius + dr, dr)
-    bin_centers = (bins[:1] + bins[1:]) / 2
-    densities = []
+    counts = []
+    for size in sizes:
+        count = 0
+        for i in range(0, grid.shape[0], size):
+            for j in range(0, grid.shape[1], size):
+                
+                if three_dim:
+                    for k in range(0, grid.shape[2], size):
+                        if np.any(grid[i:i+size, j:j+size, k:k+size]):
+                            count += 1
+                else:
+                    if np.any(grid[i:i+size, j:j+size]):
+                        count += 1
+                        
+        counts.append(count)
     
-    for i in range(len(bins)-1):
-        r_min, r_max = bins[i], bins[i+1]
-        shell_mask = (r_min <= r < r_max)
-        shell_occupied = grid[shell_mask]
-        
-        n_total = shell_mask.sum()
-        n_occupied = shell_occupied.sum()
-        
-        density = n_occupied / n_total if n_total > 0 else 0
-        densities.append(density)
+    coeffs = np.polyfit(np.log(1/sizes), np.log(counts), 1)
+    D = coeffs[0]
     
-    return (bin_centers, np.array(densities))
+    return (D, sizes, counts)

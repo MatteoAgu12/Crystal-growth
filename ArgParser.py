@@ -1,4 +1,5 @@
 import argparse
+import os
 
 def parse_inputs() -> argparse.Namespace:
     """
@@ -28,6 +29,8 @@ def parse_inputs() -> argparse.Namespace:
                         help=f"Type of built-in simulation to perform. Default 'EDEN'.\nAllowed options are {ALLOWED_SIM_OPTIONS}.")
     parser.add_argument("--verbose", "-v", dest="verbose", action="store_true",
                         help="If active prints extra info during the simulation.")
+    parser.add_argument("--output", "-o", type=str, default="",
+                        help="Directory where to save the plots produced.\nIf not specified, the analysis is not performed, only the simulation.")
     
     # Checks the inputs
     parsed_input = parser.parse_args()
@@ -38,5 +41,8 @@ def parse_inputs() -> argparse.Namespace:
             raise ValueError(f"ERROR: in function 'parse_inputs()', {parsed_input.size} is not a valid size value.")    
     if parsed_input.simulation not in ALLOWED_SIM_OPTIONS:
         raise ValueError(f"ERROR: in function 'parse_inputs()', {parsed_input.simulation} is not a valid simulation option.")
+    if not parsed_input.output == "":
+        if not os.path.isdir(parsed_input.output):
+            raise ValueError(f"ERROR: in function 'parse_inputs()', directory {parsed_input.output} does not exist.")
     
     return parsed_input

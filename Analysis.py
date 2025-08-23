@@ -83,4 +83,6 @@ def fractal_dimention_analysis(lattice: Lattice, output_dir: str,
         
     if verbose:
         print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
-    
+
+def distance_from_active_surface(lattice: Lattice):
+    pass

@@ -48,7 +48,8 @@ def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
         
     return binary_mask
 
-def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", three_dim : bool = True):
+def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", out_dir: str = None,
+                 three_dim : bool = True):
     """
     Function that creates an interactive window that plots the 3D (or 2D) lattice.
     The user can inspect it (zoom, rotate -only in 3D version-, ...) at runtime.
@@ -57,6 +58,7 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         lattice (Lattice): lattice to be plotted.
         N_epochs (int): total number of epochs in the simulation.
         title (str, optional): Title of the canvas. Defaults to "Crystal lattice".
+        out_dir (str, optional): directory in which save an image of the crystal. Default to None.
         three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to True.
     """
     history = lattice.history
@@ -95,9 +97,13 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         sm = cm.ScalarMappable(cmap=cmap, norm=norm)
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
-        cbar.set_label("Occupation epoch")
-        
+        cbar.set_label("Occupation epoch")        
         plt.tight_layout()
+        
+        if out_dir is not None:
+            filename = out_dir + "Crystal.png"
+            plt.savefig(filename)
+            print(f"Lattice image saved as {filename}!")            
         plt.show()
         
     else:
@@ -127,8 +133,12 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
         cbar.set_label("Occupation epoch")
-
         plt.tight_layout()
+        
+        if out_dir is not None:
+            filename = out_dir + "Crystal.png"
+            plt.savefig(filename)
+            print(f"Lattice image saved as {filename}!")        
         plt.show()
 
 

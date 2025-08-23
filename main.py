@@ -5,7 +5,7 @@ import GUI as GUI
 from Lattice import Lattice
 from ArgParser import parse_inputs
 
-def perform_EDEN_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str):
+def perform_EDEN_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str, out_dir: str = None):
     LATTICE = Lattice(NX, NY, NZ)
     LATTICE.set_nucleation_seed(int(NX / 2), int(NY / 2), int(NZ / 2))
     
@@ -16,10 +16,11 @@ def perform_EDEN_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim:
                        "\nEDEN SIMULATION: EARLY STOP."]
     print(output_messages[output_code])
     
-    # TODO: optional analysis part
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim)
+    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir)
+    
+    
 
-def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str):
+def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str, out_dir: str = None):
     LATTICE = Lattice(NX, NY, NZ)
     LATTICE.set_nucleation_seed(int(NX / 2), int(NY / 2), int(NZ / 2))
     
@@ -29,10 +30,14 @@ def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: 
           \t* Mean number of steps in the random walk: {s_mean} +/- {s_std}\n \
           \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
     
-    # TODO: optional analysis part
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim)
+    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir)
+    
+    if out_dir is not None:
+        ANLS.fractal_dimention_analysis(LATTICE, out_dir, num_scales=25, three_dim=three_dim, verbose=verbose)
+        
+        
 
-def perform_active_surface_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, verbose: bool, title: str):
+def perform_active_surface_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, verbose: bool, title: str, out_dir: str = None):
     LATTICE = Lattice(NX, NY, NZ)
     for x in range(NX):
         for z in range(NZ):
@@ -45,7 +50,9 @@ def perform_active_surface_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, 
           \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
     
     # TODO: optional analysis specific for this simulation????
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=True)
+    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=True, out_dir=out_dir)
+    
+    
 
 if __name__ == '__main__':
     parsed_inputs = parse_inputs()
@@ -55,12 +62,13 @@ if __name__ == '__main__':
     TITLE = parsed_inputs.title
     SIMULATION = parsed_inputs.simulation
     VERBOSE = parsed_inputs.verbose
+    OUTPUT_DIR = None if parsed_inputs.output == "" else parsed_inputs.output
     
     if SIMULATION == 'EDEN':
-        perform_EDEN_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE)
+        perform_EDEN_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE, OUTPUT_DIR)
         
     elif SIMULATION == 'DLA':
-        perform_DLA_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE)
+        perform_DLA_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE, OUTPUT_DIR)
         
     elif SIMULATION == 'SURFACE':
-        perform_active_surface_simulation(NX, NY, NZ, EPOCHS, VERBOSE, TITLE)
+        perform_active_surface_simulation(NX, NY, NZ, EPOCHS, VERBOSE, TITLE, OUTPUT_DIR)

@@ -84,5 +84,33 @@ def fractal_dimention_analysis(lattice: Lattice, output_dir: str,
     if verbose:
         print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
 
-def distance_from_active_surface(lattice: Lattice):
-    pass
+def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: int, verbose: bool = True):
+    history = lattice.history
+    time = np.linspace(1, N_epochs, N_epochs)
+    distance = np.zeros(len(time))
+    max_distance = 0
+    
+    for epoch in range(N_epochs):
+        y_index = np.where(history == epoch+1)[1][0] if len(np.where(history == epoch+1)[1]) > 0 else None
+        if y_index is not None:
+            if y_index > max_distance:
+                max_distance = y_index
+                
+        distance[epoch] = max_distance
+            
+    if verbose:
+        print("\nAnalysis of the distance of the farest cell from the active surface as function of time completed!")
+
+    plt.figure()
+    plt.title("Farest occupied cell VS time")
+    plt.plot(time, distance, "o-", label="data")
+    plt.xlabel("Epoch")
+    plt.ylabel("Farest occupied distance")
+    plt.legend()
+    
+    filename = output_dir + "Active_surface_distance.png"
+    plt.savefig(filename)
+        
+    if verbose:
+        print(f"Plot of distance of the farest cell from the active surface as function of time saved as {filename}.")       
+    

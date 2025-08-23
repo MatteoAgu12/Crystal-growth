@@ -49,8 +49,10 @@ def perform_active_surface_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, 
           \t* Mean number of steps in the random walk: {s_mean} +/- {s_std}\n \
           \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
     
-    # TODO: optional analysis specific for this simulation????
     GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=True, out_dir=out_dir)
+    
+    if out_dir is not None:
+        ANLS.distance_from_active_surface(LATTICE, out_dir, N_EPOCHS, verbose=verbose)
     
     
 

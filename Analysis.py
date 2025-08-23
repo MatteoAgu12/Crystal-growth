@@ -103,7 +103,7 @@ def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: in
 
     plt.figure()
     plt.title("Farest occupied cell VS time")
-    plt.plot(time, distance, "o-", label="data")
+    plt.plot(time, distance, label="data", c='b')
     plt.xlabel("Epoch")
     plt.ylabel("Farest occupied distance")
     plt.legend()

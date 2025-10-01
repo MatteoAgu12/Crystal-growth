@@ -140,6 +140,15 @@ def test_particle_random_walk_function():
         lattice_bbox = lattice.get_crystal_bounding_box()
         generation_pos = DLA.generate_random_point_on_box(lattice_bbox)
         _, _ = DLA.particle_random_walk(lattice, generation_pos)
+
+# === SURFACE simulation section ===========================================
+def test_active_surface_seeds_preserved():
+    L = Lattice(8,5,8)
+    for x in range(8):
+        for z in range(8):
+            L.set_nucleation_seed(x,0,z)
+    DLA.DLA_simulation(L, N_particles=500, generation_padding=1, outer_limit_padding=3, three_dim=True, verbose=False)
+    assert np.all(L.history[:,0,:] == 0), "Some cells have been rewritten!"
             
 
 # === GUI section ==========================================================        
@@ -168,4 +177,4 @@ def test_get_visible_voxels_binary_mask_function():
     
     
 if __name__ == '__main__':
-    test_lattice_history_member_update()
+    test_active_surface_seeds_preserved()

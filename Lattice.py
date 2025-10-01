@@ -82,9 +82,14 @@ class Lattice:
         if epoch < 0:
             raise ValueError(f"ERROR: in function 'Lattice::occupy()' the epoch number must be a an integer bigger or equal to zero.")
         
-        if self.is_point_inside(x, y, z):
-            self.grid[x, y, z] = 1
-            self.history[x, y, z] = int(epoch)
+        if not self.is_point_inside(x, y, z):
+            return
+        
+        if self.grid[x, y, z] == 1:
+            return
+        
+        self.grid[x, y, z] = 1
+        self.history[x, y, z] = int(epoch)
             
     def is_occupied(self, x: int, y: int, z: int) -> bool:
         """
@@ -162,7 +167,7 @@ class Lattice:
         
         # I never want to exit from my lattice grid
         mins = np.clip(mins, 0, np.array(self.shape) - 1)
-        maxs = np.clip(maxs, 0, np.array(self.shape))
+        maxs = np.clip(maxs, 0, np.array(self.shape) - 1)
         
         return list(zip(mins, maxs))
         

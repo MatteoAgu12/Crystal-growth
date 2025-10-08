@@ -20,36 +20,19 @@ def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
     Returns:
         (np.array): binary 3D mask. The cell is True if it is going to be plotted, False elsewhere.
     """
-    original_nx, original_ny, original_nz = lattice.shape
-    binary_mask = np.zeros_like(lattice.grid, dtype=bool)
-    directions = [
-        (1, 0, 0), (-1, 0, 0),
-        (0, 1, 0), (0, -1, 0),
-        (0, 0, 1), (0, 0, -1)
-    ]
-    occupied = lattice.grid.astype(bool)
-    iterator = np.nditer(occupied, flags=['multi_index'])
-    
-    while not iterator.finished:
-        if iterator[0]:
-            x, y, z = iterator.multi_index
-            for dx, dy, dz in directions:
-                nx, ny, nz = x + dx, y + dy, z + dz
-                if (0 <= nx < original_nx and 0 <= ny < original_ny and 0 <= nz < original_nz):
-                    if not occupied[nx, ny, nz]:
-                        binary_mask[x, y, z] = True
-                        break
-                
-                else:
-                    binary_mask[x, y, z] = True
-                    break
-        
-        iterator.iternext()
-        
-    return binary_mask
+    occ = lattice.grid.astype(bool)
+    p = np.pad(occ, ((1,1),(1,1),(1,1)), mode='constant', constant_values=False)
+    n1 = p[2:,1:-1,1:-1]
+    n2 = p[:-2,1:-1,1:-1]
+    n3 = p[1:-1,2:,1:-1]
+    n4 = p[1:-1,:-2,1:-1]
+    n5 = p[1:-1,1:-1,2:]
+    n6 = p[1:-1,1:-1,:-2]
+    neighbors_all_occupied = n1 & n2 & n3 & n4 & n5 & n6
+    visible = occ & (~neighbors_all_occupied)
+    return visible
 
-def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", out_dir: str = None,
-                 three_dim : bool = True):
+def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", out_dir: str = None, three_dim : bool = True):
     """
     Function that creates an interactive window that plots the 3D (or 2D) lattice.
     The user can inspect it (zoom, rotate -only in 3D version-, ...) at runtime.
@@ -61,60 +44,125 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         out_dir (str, optional): directory in which save an image of the crystal. Default to None.
         three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to True.
     """
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
+    from matplotlib.colors import Normalize
+    from matplotlib.patches import Rectangle
+
     history = lattice.history
-    
+
     cmap = plt.cm.viridis
     norm = Normalize(vmin=0, vmax=N_epochs)
-    
-    if three_dim:    
+
+    if three_dim:
         fig = plt.figure(figsize=(8, 7))
         ax = fig.add_subplot(111, projection='3d')
-    
+
+        # boolean occupancy grid
         voxels = lattice.grid.astype(bool)
-        visible_voxels_indices = np.where(voxels)
-        colors = np.empty(lattice.shape, dtype=object)
-        
-        for i in range(len(visible_voxels_indices[0])):
-            epoch = history[visible_voxels_indices[0][i], visible_voxels_indices[1][i], visible_voxels_indices[2][i]]
-            color = cmap(norm(epoch))
-            colors[visible_voxels_indices[0][i], visible_voxels_indices[1][i], visible_voxels_indices[2][i]] = color
-        
-        visible_voxels = get_visible_voxels_binary_mask(lattice)
+
+        # if nothing occupied -> show empty axes and return
+        if not np.any(voxels):
+            ax.set_title(title)
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel('z')
+            plt.tight_layout()
+            if out_dir is not None:
+                filename = out_dir + "Crystal.png"
+                plt.savefig(filename)
+                print(f"Lattice image saved as {filename}!")
+            plt.show()
+            return
+
+        # -------------------------
+        # VECTORIZED: compute visible (surface) mask in 3D
+        # A voxel is visible if it is occupied AND at least one 6-neighbor is empty
+        occ = voxels
+        p = np.pad(occ, ((1,1),(1,1),(1,1)), mode='constant', constant_values=False)
+        n_xp = p[2:,1:-1,1:-1]
+        n_xm = p[:-2,1:-1,1:-1]
+        n_yp = p[1:-1,2:,1:-1]
+        n_ym = p[1:-1,:-2,1:-1]
+        n_zp = p[1:-1,1:-1,2:]
+        n_zm = p[1:-1,1:-1,:-2]
+        neighbors_all_occupied = n_xp & n_xm & n_yp & n_ym & n_zp & n_zm
+        visible_voxels = occ & (~neighbors_all_occupied)
+        # -------------------------
+
+        # Build RGBA color array (float32) instead of dtype=object
+        colors = np.zeros(lattice.shape + (4,), dtype=np.float32)  # default transparent
+
+        # unique epoch values among visible occupied voxels
+        if np.any(visible_voxels):
+            unique_epochs = np.unique(history[visible_voxels])
+            # assign color per epoch (batch)
+            for epoch in unique_epochs:
+                mask = (visible_voxels) & (history == epoch)
+                rgba = cmap(norm(epoch))  # returns (r,g,b,a) floats 0..1
+                colors[mask] = rgba
+
+        # draw voxels with efficient float RGBA facecolors
         ax.voxels(visible_voxels, facecolors=colors, edgecolor='k', linewidth=0.2)
-    
+
         ax.set_title(title)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
-    
+
         max_range = max(lattice.shape)
         ax.set_xlim(0, max_range)
         ax.set_ylim(0, max_range)
-        ax.set_zlim(0, max_range)    
+        ax.set_zlim(0, max_range)
         ax.view_init(elev=30, azim=45)
-        
+
         # Scalarmap
         sm = cm.ScalarMappable(cmap=cmap, norm=norm)
-        sm.set_array([])
+        sm.set_array([])  # matplotlib requires set_array even if empty
         cbar = plt.colorbar(sm, ax=ax)
-        cbar.set_label("Occupation epoch")        
+        cbar.set_label("Occupation epoch")
         plt.tight_layout()
-        
+
         if out_dir is not None:
             filename = out_dir + "Crystal.png"
             plt.savefig(filename)
-            print(f"Lattice image saved as {filename}!")            
+            print(f"Lattice image saved as {filename}!")
         plt.show()
-        
+
     else:
+        # 2D plotting kept mostly as you wrote it, with a small guard if no occupied pixels
         fig, ax = plt.subplots(figsize=(8, 7))
         ax.set_title(title)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
 
-        z_coord = lattice.get_nucleation_seeds()[0][2]
+        seeds = lattice.get_nucleation_seeds()
+        if seeds is None or len(seeds) == 0:
+            # nothing to plot
+            ax.set_aspect('equal')
+            plt.tight_layout()
+            if out_dir is not None:
+                filename = out_dir + "Crystal.png"
+                plt.savefig(filename)
+                print(f"Lattice image saved as {filename}!")
+            plt.show()
+            return
+
+        z_coord = seeds[0][2]
         slice_z = lattice.grid[:, :, z_coord]
         occupied = np.argwhere(slice_z)
+
+        if occupied.size == 0:
+            ax.set_aspect('equal')
+            plt.tight_layout()
+            if out_dir is not None:
+                filename = out_dir + "Crystal.png"
+                plt.savefig(filename)
+                print(f"Lattice image saved as {filename}!")
+            plt.show()
+            return
+
         x_list = occupied[:, 0].tolist()
         y_list = occupied[:, 1].tolist()
 
@@ -127,20 +175,19 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         ax.set_ylim(min(y_list) - 1, max(y_list) + 1)
         ax.set_aspect('equal')
         ax.grid(False)
-        
+
         # Scalarmap
         sm = cm.ScalarMappable(cmap=cmap, norm=norm)
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
         cbar.set_label("Occupation epoch")
         plt.tight_layout()
-        
+
         if out_dir is not None:
             filename = out_dir + "Crystal.png"
             plt.savefig(filename)
-            print(f"Lattice image saved as {filename}!")        
+            print(f"Lattice image saved as {filename}!")
         plt.show()
-
 
 if __name__ == '__main__':    
     """LATTICE = Lattice(5, 2, 2)

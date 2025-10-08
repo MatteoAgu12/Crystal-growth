@@ -18,6 +18,7 @@ class Lattice:
         self.grid = np.zeros(self.shape, dtype=np.uint8)    # 0 = empty; 1 = occupied
         self.history = np.ones(self.shape, dtype=np.int64) * (-1)
         self.initial_seeds = []
+        self.occupied = set()
 
     def __str__(self):
         return f"Lattice has shape: {self.shape} \
@@ -85,25 +86,26 @@ class Lattice:
         if not self.is_point_inside(x, y, z):
             return
         
-        if self.grid[x, y, z] == 1:
+        if (x, y, z) in self.occupied:
             return
         
         self.grid[x, y, z] = 1
         self.history[x, y, z] = int(epoch)
+        self.occupied.add((int(x), int(y), int(z)))
             
     def is_occupied(self, x: int, y: int, z: int) -> bool:
         """
         Function that check if a point at coordinates (x,y,z) i occupied or not.
 
         Args:
-            x (int): _description_
-            y (int): _description_
-            z (int): _description_
+            x (int): x coord of the pixel
+            y (int): y coord of the pixel
+            z (int): z coord of the pixel
             
         Returns:
-            (bool): 
+            (bool): if that pixel is occupied or not
         """
-        return self.grid[x, y, z] == 1
+        return (int(x), int(y), int(z)) in self.occupied
 
     def set_nucleation_seed(self, x: int, y: int, z: int) -> None:
         """
@@ -128,7 +130,7 @@ class Lattice:
         """
         return np.array(self.initial_seeds)
     
-    def get_active_border(self) -> np.array:
+    def get_active_border(self):
         """
         Function that compute the active border of teh crystal.
         The active border is the set of all empty cells having at least one occupied cell as neighbor.
@@ -136,17 +138,16 @@ class Lattice:
         Returnss:
             (np.array): array containing the points that form the active border
         """
-        active_border = []
-        occupied_sites = np.argwhere(self.grid == 1)
-        for (x, y, z) in occupied_sites:
-            neighbors = self.get_neighbors(x, y, z)
-            
-            for (x_n, y_n, z_n) in neighbors:
-                if not self.is_occupied(x_n, y_n, z_n) and (x_n, y_n, z_n) not in active_border:
-                    active_border.append((x_n, y_n, z_n))
-        
-        return np.array(active_border)
-    
+        active_set = set()
+                
+        for (x, y, z) in self.occupied:
+            for (nx, ny, nz) in self.get_neighbors(x, y, z):
+                if (int(nx), int(ny), int(nz)) not in self.occupied:
+                    active_set.add((int(nx), int(ny), int(nz)))
+                    
+        if not active_set: return np.array([]).reshape((0, 3))
+        return np.array(list(active_set), dtype=int)
+ 
     def get_crystal_bounding_box(self, padding: int = 0) -> Union[list, None]:
         """
         Function to compute the bounding box of the occupied region (smallest parallelogram that contains it).
@@ -157,13 +158,12 @@ class Lattice:
         Returns:
             (Union[list, None]): tuple containing the information (coord_min, coord_max) for each coordinate.
         """
-        occupied = np.argwhere(self.grid)
-        
-        if occupied.size == 0:
+        if not self.occupied:
             return None
         
-        mins = occupied.min(axis=0) - padding
-        maxs = occupied.max(axis=0) + 1 + padding
+        occupied_coords = np.array(list(self.occupied), dtype=int)
+        mins = occupied_coords.min(axis=0) - padding
+        maxs = occupied_coords.max(axis=0) + 1 + padding
         
         # I never want to exit from my lattice grid
         mins = np.clip(mins, 0, np.array(self.shape) - 1)

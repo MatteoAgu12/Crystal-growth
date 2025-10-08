@@ -177,4 +177,16 @@ def test_get_visible_voxels_binary_mask_function():
     
     
 if __name__ == '__main__':
+    test_lattice_class()
+    test_lattice_get_crystal_bounding_box_method()
+    test_lattice_history_member_update()
+    
+    test_choose_random_border_site_function()
+    test_EDEN_simulation_function()
+    
+    test_generate_random_point_on_box_function()
+    test_particle_random_walk_function()
+    
+    test_active_surface_seeds_preserved()
+    
     test_active_surface_seeds_preserved()

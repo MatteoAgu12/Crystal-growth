@@ -19,6 +19,8 @@ class Lattice:
         self.history = np.ones(self.shape, dtype=np.int64) * (-1)
         self.initial_seeds = []
         self.occupied = set()
+        self.anisotropyDirections = None
+        self.anisotropyStrength = 0.0
 
     def __str__(self):
         return f"Lattice has shape: {self.shape} \
@@ -135,7 +137,7 @@ class Lattice:
         Function that compute the active border of teh crystal.
         The active border is the set of all empty cells having at least one occupied cell as neighbor.
 
-        Returnss:
+        Returns:
             (np.array): array containing the points that form the active border
         """
         active_set = set()
@@ -170,6 +172,73 @@ class Lattice:
         maxs = np.clip(maxs, 0, np.array(self.shape) - 1)
         
         return list(zip(mins, maxs))
+
+    def setAnisotropy(self, directions: np.array, strength: float) -> None:
+        """
+        Initialize lattice anisotropy.
+
+        Args:
+            direction (np.array): array of vector of lenght 3.
+            strength (float): must be >= 0. If 0, anisotropy is disabled.
+        """
+        for dir in directions:
+            if len(dir) != 3:
+                raise ValueError("Each direction in the directions input must have a lenght of 3.")
+        if strength < 0.0:
+            raise ValueError("The anisotropy strength can't be negative.")
+
+        if strength == 0.0 or directions.ndim != 2 or directions.shape[1] != 3
+            self.anisotropyDirections = None
+            self.anisotropyStrength = 0.0
+            return
+
+        norms = np.linalg.norm(directions, axis=1)
+        mask = norms > 0.0
+        if not np.any(mask):
+            self.anisotropyDirections = None
+            self.anisotropyStrength = 0.0
+
+        directions = directions[mask]
+        norms = norms[mask].reshape(-1,1)
+        self.anisotropyDirections = directions / norms
+        self.anisotropyStrength = strength            
+
+    def clearAnisotropy(self) -> None:
+        """
+        Disable the lattice anisotropy (removes it if was present).
+        """
+        self.anisotropyDirections = None
+        self.anisotropyStrength = 0.0
+
+    def computeAnisotropyWeight(self, direction: np.array()) -> float:
+        """
+        Return the anisotropy weight for the selected direction, based on lattice anisotropy.
+        
+        Returns:
+            (float): the weight if the anisotropy is activated, 1.0 otherwise
+        """
+        if len(direction) != 3:
+            raise ValueError("The direction must be an array of lenght 3.")
+
+        direction = np.array(direction, dtype=float)
+        norm = np.linalg.norm(direction)
+        if norm == 0.0:
+            return 1.0
+
+        if self. anisotropyDirections is not None and self.anisotropyStrength > 0.0:
+            dir = direction / norm
+            weights = []
+            for a in self.anisotropyDirections:
+                cos_t = float(np.dot(dir, a))
+                if cos_t > 1.0: cos_t = 1.0
+                elif cos_t < -1.0: cos_t = -1.0
+                weights.append(np.exp(self.anisotropyStrength * cos_t))
+
+            total = float(np.sum(weights))
+            if total < = 0.0: return 1.0
+            return total
+        
+        return 1.0
         
 
 

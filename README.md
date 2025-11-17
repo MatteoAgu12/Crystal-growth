@@ -62,7 +62,7 @@ For each new particle in the simulation:
    A random starting position $mathbf{r}_0$ is selected on the surface of this box.
 2. Define a **outer bounding box** with larger padding $p_{out} > p_{gen}$.  
    If the particle exits this region or exceeds a maximum number of steps, its walk is restarted from a new random generation point.
-3. From $\mathbf{r}_0$, perform a random walk: $\mathbf{r}_{t+1} = \mathbf{r}_t + \mathbf{\Delta r}_t$  
+3. From $\mathbf{r}\_0$, perform a random walk: $\mathbf{r}_{t+1} = \mathbf{r}_t + \mathbf{\Delta r}_t$  
    where $\mathbf{\Delta r}_t$ is the nearest-neighbor step, chosen according to a probability distribution that can be isotropic or not.
 4. If at a given step the particle position $\mathbf{r}_t$ has at least one occupied neighbor, the particle sticks to the crystal. The walk ends and the simulator proceeds with the next particle.
 

@@ -32,10 +32,10 @@ def generate_random_point_on_box(bounding_box: tuple) -> np.array:
            
     return point
     
-def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, epoch: int,
+def particle_random_walk_isotropic(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, epoch: int,
                          max_steps: int = 100, three_dim : bool = True) -> tuple:
     """
-    This function creates a particle in position 'initial_coordinate' and performes a random walk.
+    This function creates a particle in position 'initial_coordinate' and performes an isotropic random walk.
     If the particles arrives in a site with an occupied neighbor, it stops and becomes part of the crystal.
     If the particle exits from the bounding box 'outer_allowed_bounding_box', its position is set to the initial one and the random walk restarts.
 
@@ -76,7 +76,84 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
                     break
             
     return (total_steps, number_of_restarts)
+
+def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, epoch: int,
+                         max_steps: int = 100, three_dim : bool = True) -> tuple:
+    """
+    This function creates a particle in position 'initial_coordinate' and performes a random walk, weighted by the anisotropy factor.
+    If the particles arrives in a site with an occupied neighbor, it stops and becomes part of the crystal.
+    If the particle exits from the bounding box 'outer_allowed_bounding_box', its position is set to the initial one and the random walk restarts.
+
+    Args:
+        lattice (Lattice): custom Lattice object.
+        initial_coordinate (np.array): coordinates of the spawn point of the new particle.
+        outer_bounding_box (tuple): bounding box outside which the particle can't go. If it happens, the random walk restarts.
+        epoch (int): current epoch number.
+        max_steps (int, optional): maximum number of step performed before restarting the walk.
+        three_dim (bool, optional): decides if the crystal is two or three dimentional. Defaults to True.
+
+    Returns:
+        (tuple): cuple of int representing the number of stpes needed to reach the crystal (in a cycle) and how many times the walk has restarted.
+    """
+    position = initial_coordinate.copy()
+    continue_walk = True
+    number_of_restarts = 0
+    total_steps = 0
+    candidate_steps = []
+    if three_dim:
+        candidate_step = np.array([
+            [1, 0, 0],
+            [-1, 0, 0],
+            [0, 1, 0],
+            [0, -1, 0],
+            [0, 0, 1],
+            [0, 0, -1]
+        ], dtype=int)
+    else:
+        candidate_steps = np.array([
+            [1, 0, 0],
+            [-1, 0, 0],
+            [0, 1, 0],
+            [0, -1, 0]
+        ], dtype=int)
+
+    while continue_walk:
+        total_steps += 1
+        idx = None
+        if lattice.anisotropyStrength > 0.0 and lattice.anisotropyDirections is not None:
+            weights = np.zeros(len(candidate_steps), dtype=float)
+            for i, step_vec in enumerate(candidate_step):
+                weights[i] = lattice.computeAnisotropyWeight(step_vec)
+
+            weight_sum = float(np.sum(weights))
+            if weight_sum == 0.0:
+                idx = np.random.randint(0, len(candidate_step))
+            else:
+                probabilities = weights / weight_sum
+                idx = np.random.choice(len(candidate_steps), p=probabilities)
+
+        else:
+            idx = np.random.randint(0, len(candidate_step))
+
+        step = candidate_steps[idx]
+        position = position + step
+
+        (xmin, xmax), (ymin, ymax), (zmin, zmax) = outer_allowed_bounding_box
+        if not (xmin <= position[0] <= xmax and ymin <= position[1] <= ymax and zmin <= position[2] <= zmax) or total_steps > max_steps:
+            position = initial_coordinate.copy() 
+            number_of_restarts += 1 
+            total_steps = 0        
+        
+        else:
+            neighbors = lattice.get_neighbors(position[0], position[1], position[2])        
+            for neighbor in neighbors:
+                if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]): 
+                    lattice.occupy(int(position[0]), int(position[1]), int(position[2]), epoch=epoch)
+                    continue_walk = False
+                    break
             
+    return (total_steps, number_of_restarts)
+
 def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, outer_limit_padding: int, 
                    three_dim : bool = True,
                    verbose: bool = True) -> tuple:

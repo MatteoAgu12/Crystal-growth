@@ -140,7 +140,7 @@ def test_particle_random_walk_function():
         lattice_bbox = lattice.get_crystal_bounding_box()
         generation_pos = DLA.generate_random_point_on_box(lattice_bbox)
         # TODO: Update the line below to the new logic
-        _, _ = DLA.particle_random_walk(lattice, generation_pos)
+        _, _ = DLA.particle_random_walk_isotropic(lattice, generation_pos)
 
 # === SURFACE simulation section ===========================================
 def test_active_surface_seeds_preserved():

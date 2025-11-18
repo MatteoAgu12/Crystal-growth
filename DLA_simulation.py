@@ -99,7 +99,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
     continue_walk = True
     number_of_restarts = 0
     total_steps = 0
-    candidate_steps = []
+    candidate_step = []
     if three_dim:
         candidate_step = np.array([
             [1, 0, 0],
@@ -110,7 +110,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             [0, 0, -1]
         ], dtype=int)
     else:
-        candidate_steps = np.array([
+        candidate_step = np.array([
             [1, 0, 0],
             [-1, 0, 0],
             [0, 1, 0],
@@ -121,7 +121,7 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
         total_steps += 1
         idx = None
         if lattice.anisotropyStrength > 0.0 and lattice.anisotropyDirections is not None:
-            weights = np.zeros(len(candidate_steps), dtype=float)
+            weights = np.zeros(len(candidate_step), dtype=float)
             for i, step_vec in enumerate(candidate_step):
                 weights[i] = lattice.computeAnisotropyWeight(step_vec)
 
@@ -130,12 +130,12 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
                 idx = np.random.randint(0, len(candidate_step))
             else:
                 probabilities = weights / weight_sum
-                idx = np.random.choice(len(candidate_steps), p=probabilities)
+                idx = np.random.choice(len(candidate_step), p=probabilities)
 
         else:
             idx = np.random.randint(0, len(candidate_step))
 
-        step = candidate_steps[idx]
+        step = candidate_step[idx]
         position = position + step
 
         (xmin, xmax), (ymin, ymax), (zmin, zmax) = outer_allowed_bounding_box

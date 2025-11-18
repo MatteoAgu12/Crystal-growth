@@ -103,7 +103,7 @@ def EDEN_simulation(lattice: Lattice, N_reps: int,
                 if site[2] == z_coord: planar_border.append(site)
             
         # new_cell = choose_random_border_site(active_border) if three_dim else choose_random_border_site(planar_border)
-        border_to_use = active border if three_dim else planar_border
+        border_to_use = active_border if three_dim else planar_border
         if real_time_reference_point_correction:
             (xmin, xmax), (ymin, ymax), (zmin, zmax) = lattice.get_crystal_bounding_box()
             reference_point = np.array([0.5 * (xmin+xmax), 0.5 * (ymin+ymax), 0.5 * (zmin+zmax)])

@@ -187,7 +187,7 @@ class Lattice:
         if strength < 0.0:
             raise ValueError("The anisotropy strength can't be negative.")
 
-        if strength == 0.0 or directions.ndim != 2 or directions.shape[1] != 3
+        if strength == 0.0 or directions.ndim != 2 or directions.shape[1] != 3:
             self.anisotropyDirections = None
             self.anisotropyStrength = 0.0
             return
@@ -235,7 +235,7 @@ class Lattice:
                 weights.append(np.exp(self.anisotropyStrength * cos_t))
 
             total = float(np.sum(weights))
-            if total < = 0.0: return 1.0
+            if total <= 0.0: return 1.0
             return total
         
         return 1.0

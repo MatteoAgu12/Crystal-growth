@@ -19,13 +19,14 @@ The main physical phenomena in which these objects are involved are:
 ### Lattice representation
 The system is defined on a discrete cubic lattice
 
-$$\Lambda = \\{(x,y,z) | x=0,\dots,N_x-1;\\; y=0,\dots,N_y-1;\\; z=0,\dots,N_z-1\\}$$
+$$\Lambda = \\{(x,y,z) | x=0,\dots,N_x-1, y=0,\dots,N_y-1, z=0,\dots,N_z-1\\}$$
 
 Each site carries:
 * a **binary occupancy** variable $n(\mathbf{r}) \in \\{0,1\\}, \quad \mathbf{r} = (x,y,z)$  
 where $n(\mathbf{r}) = 1$ denotates an occupied site and $n(\mathbf{r})=0$ denotates an empty cell.
 * an **hisotry** field $h(\mathbf{r}) \in \\{-1,1,2,\dots \\}$  
 where $h(\mathbf{r})=-1$ for empty sites, and $h(\mathbf{r})=t$ if the site was occupied at time step $t$.
+* an **id** field $id(\mathbf{r})$, used to mimic different cristalline domains.
 * an optional **crystal seed set** $S_0 \subset  \Lambda$, used to define the initial occupied regions.
 
 Nearest-neighbor connectivity is defined in the usual 6-neighbors sense in 3D (restricted accordingly in 2D):
@@ -62,7 +63,7 @@ For each new particle in the simulation:
    A random starting position $mathbf{r}_0$ is selected on the surface of this box.
 2. Define a **outer bounding box** with larger padding $p_{out} > p_{gen}$.  
    If the particle exits this region or exceeds a maximum number of steps, its walk is restarted from a new random generation point.
-3. From $\mathbf{r}\_0$, perform a random walk: $\mathbf{r}_{t+1} = \mathbf{r}_t + \mathbf{\Delta r}_t$  
+3. From $\mathbf{r}_0$, perform a random walk: $\mathbf{r}_{t+1} = \mathbf{r}_t + \mathbf{\Delta r}_t$  
    where $\mathbf{\Delta r}_t$ is the nearest-neighbor step, chosen according to a probability distribution that can be isotropic or not.
 4. If at a given step the particle position $\mathbf{r}_t$ has at least one occupied neighbor, the particle sticks to the crystal. The walk ends and the simulator proceeds with the next particle.
 
@@ -129,23 +130,164 @@ By doing these few steps you should be ready to use the software on your machine
 ## Tutorials
 The usage of this software is very easy, and to help the user to learn the main features the following short tutorials are provided, covering all the possibilities offered by this work.
 
-### Create a $\texttt{Lattice}$ object
+### Create and use a $\texttt{Lattice}$ object
+The $\texttt{Lattice}$ class is the very core of this project.
+It provides a 3D enviroment in which perform the simulations under the conditions set by the user.  
+Let's start by importing the class and creating an object of this class with fixed sizes:
+```
+from Lattice import Lattice
+
+NX = 100
+NY = 50
+NZ = 120
+
+MY_LATTICE = Lattice(number_of_cells_x = NX, number_of_cells_y = NY, number_of_cells_z = NZ)
+```
+At this point the lattice is empty.
+To start a growth you need to set at least one nucleation seed.
+Nucleation seeds are ment to be the step 0 of any simulation.  
+Let's add a nucleation seed to our object, for example at point (50, 25, 60), which is the center of our crystal:
+```
+MY_LATTICE.set_nucleation_seed(x=50, y=25, z=60)
+```
+The list of the nucleation seeds set can be obtained via:
+```
+seeds_array = MY_LATTICE.get_nucleation_seeds()
+```
+By default, the growth of out crystal is isotropic.
+To add an anisotropy effect, we need to define some preferenced directions, together with an anisotropy strenght:
+```
+x_dir = (1,0,0)
+y_dir = (0,1,0)
+anisotropy_directions = np.array([x_dir, y_dir])
+anisotropy_strength = 1.5
+
+MY_LATTICE.setAnisotropy(directions=anisotropy_directions, strength=anisotropy_strength)
+```
+To remove the anisotropy, use:
+```
+MY_LATTICE.clearAnisotropy()
+```
+
+Now, let's go through some methods to get the status of the lattice or of a specific cell:
+```
+X = 70
+Y = 20
+Z = 80
+
+# Check if a point in space is inside the lattice
+is_inside = MY_LATTICE.is_point_inside(X, Y, Z)
+
+# Get the coordinates of all 6 neighbors of a cell
+neighbors = MY_LATTICE.get_neighbors(X, Y, Z)
+
+# Check if a cell of the lattice is occupied or not
+is_occupied = MY_LATTICE.is_occupied(X, Y, Z)
+
+# Get the active border of the crystal
+active_border = MY_LATTICE.get_active_border()
+
+# Get the bounding box of the crystal
+crystal_bbox = MY_LATTICE.get_crystal_bounding_box()
+crystal_bbox_with_padding = MY_LATTICE.get_crystal_bounding_box(padding = N)  # same but with an extra padding of N cells
+
+```
+
+During a growth simulation, more and more cells have to be occupied.  
+In a built-in simulation this is done automatically, but in you custom simulation you have to do it manually. The way to do so is:
+```
+MY_LATTICE.occupy(X, Y, Z)
+```
 
 ### Run a built-in simulation
+The software offers some built-in simulations the user can use.
+
+To execute them, you have to execute the file $\texttt{main.py}$ with some extra parameters (their order is irrelevant).  
+All the instructions are below, but you can have a look at all the possible commands directly in the terminal by typing:
+```
+python main.py --help
+```
+
+To select which simulation you want to do:
+```
+--simulation EDEN       # to perform an EDEN simulation 
+--simulation DLA        # to perform a DLA simulation 
+--simulation SURFACE    # to perform an ACTIVE SURFACE simulation 
+```
+
+To set all the parameters of the chosen simulation (examples with arbitrary values):
+```
+--epochs 3000                          # Number of particles to deposit on the crystal
+--size 100 100 100                     # Size of the Lattice object (must be three values: sizeX, sizeY, sizeZ)
+--2D                                   # If present it simulates a 2D crystal, otherwise it's 3D 
+--title "My simulation"                # Title of the simulation
+--output "Results"                     # Directory where to save the results of the analysis
+--anisotropy-directions 1 0 0 0 0 1    # Anisotropy directions (must be in groups of three: x, y, z)
+--anisotropy-strength 2.3              # Anisotropy strength
+--verbose                              # If present, it prints extra informations during the simulation (slower, but you can see what is going on)
+```
+
+For example, the full command to execute an isotropic 2D DLA simulation on a 150x150 lattice with 2000 particles and save it in the directory $\texttt{outputs/}$, with the name *DLA simulation* is:
+```
+python main.py --2D --simulation DLA --size 150 150 1 --epochs 2000 --output "outputs" --title "DLA simulation"
+```
 
 ### Create your custom simulation
+
+### Running the tests
+You can run each test module with $\texttt{pytest}$ by executing the following commands from the software folder
+```
+pytest testing.py
+```
 
 
 
 ## Examples
 ### 2D isotropic DLA simulation
+This example shows the results of a 2D isotropic DLA simulation, with one nucleation seed.  
+The result is a 2D fractal crystal. The image of the crystal and the plot from which the Hausdorff dimention is extracted are both reported here.
+
+// TODO: metti immagini
+
+The command used to generate this simulation is the following (change $\texttt{\\$OUT}$ dir with yours):
+```
+python main.py --2D --simulation DLA --size 200 200 1 --epochs 4000 --output $OUT --title "2D isotropic DLA"
+```
 
 ### 2D anisotropic DLA simulation
+This example shows the results of a 2D anisotropic DLA simulation, with one nucleation seed.  
+The result is a 2D crystal developed along the y-axis. The image of the crystal and the plot from which the Hausdorff dimention is extracted are both reported here.
+
+// TODO: metti immagini
+
+The command used to generate this simulation is the following (change $\texttt{\$OUT}$ dir with yours):
+```
+python main.py --2D --simulation DLA --size 200 200 1 --epochs 4000 --output $OUT --title "2D anisotropic DLA" --anisotropy-directions 0 1 0 --anisotropy-strength 3.5
+```
 
 ### Active surface simulation
+This example shows the results of a crystal growth from an active surface, with a slight anisotropy along the y-axis. This system simulates the brakedown of a lithium battery, caused by a short circuit between the electrodes via the crystal made of lithium dendrites.    
+The result is a 3D crystal. The image of the crystal and the plot of the farest crystal point from the active surface are both reported here.
+
+// TODO: metti immagini
+
+The command used to generate this simulation is the following (change $\texttt{\\$OUT}$ dir with yours):
+```
+python main.py --simulation SURFACE --size 25 100 25 --epochs 4000 --output $OUT --title "Lithium battery breakdown" --anisotropy-directions 0 1 0 --anisotropy-strength 0.75
+```
 
 ### Policrystal simulation
+Crystalline solids in reality are made of lots of cristalline domains. Each domain is a crystal oriented in a random direction. The boundaries of these domains are very interesting object to study, because they can play an important role in the elasticity and plasticity of the material, and they can also have an influence on transport properties.
+In this simulation the orientation in space of the domain is not implemented, but it is mocked using the group id of each cell.  
+Here we simulate a 2D EDEN growth with 50 randomly initilized nucleation seeds on a 500x500 lattice. The result is a colormap showing different cristalline domains and a bitmap showing the domain boundaries.
 
+// TODO: metti immagini
+
+The command used to generate this simulation is the following (change $\texttt{\\$OUT}$ dir with yours):
+```
+python main.py --simulation POLI --size 500 500 1 --epochs 10000 --output $OUT --title "Policrystal"
+```
+**N.B.**: this simulaion is particularly heavy, so be patient.
 
 
 ## References

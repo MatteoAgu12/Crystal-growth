@@ -261,9 +261,9 @@ The result is a 2D crystal developed along both the x-axis and the y-axis. The i
 
 ![alt text](images/2D_EDEN_aniso.png)
 
-The command used to generate this simulation is the following (change $\texttt{\$OUT}$ dir with yours):
+The command used to generate this simulation is the following (change $\texttt{\\$OUT}$ dir with yours):
 ```
-python main.py --2D --simulation DLA --size 200 200 1 --epochs 4000 --output $OUT --title "2D anisotropic DLA" --anisotropy-directions 0 1 0 --anisotropy-strength 3.5
+python main.py --simulation EDEN --2d --size 200 200 1 --epochs 3000 --output /home/agu/Scrivania/Crystal-growth/images/ --title "2D anisotropic EDEN" --anisotropy-directions 1 0 0 0 1 0 -1 0 0 0 -1 0  --anisotropy-strength 7.5 --verbose
 ```
 
 ### Active surface simulation

@@ -173,40 +173,48 @@ class Lattice:
         
         return list(zip(mins, maxs))
 
-    def setAnisotropy(self, directions: np.array, strength: float) -> None:
+    def setAnisotropy(self, directions: Union[np.ndarray, list], strength: float) -> None:
         """
         Initialize lattice anisotropy.
 
         Args:
-            direction (np.array): array of vector of lenght 3.
+            directions (np.array or list): iterable of vectors of length 3.
             strength (float): must be >= 0. If 0, anisotropy is disabled.
         """
-        for dir in directions:
-            if len(dir) != 3:
-                raise ValueError("Each direction in the directions input must have a lenght of 3.")
+        # Convert input to numpy array
+        dirs = np.array(directions, dtype=float)
+
         if strength < 0.0:
             raise ValueError("The anisotropy strength can't be negative.")
 
-        bad_shape = False
-        for dir in directions:
-            if len(dir) != 3: 
-                bad_shape = True
-                break
-        if strength == 0.0 or bad_shape:
+        # Check shape: we expect an array of shape (n_dirs, 3)
+        if dirs.ndim != 2 or dirs.shape[1] != 3:
+            # bad shape: disable anisotropy
             self.anisotropyDirections = None
             self.anisotropyStrength = 0.0
             return
 
-        norms = np.linalg.norm(directions, axis=1)
-        mask = norms > 0.0
-        if not np.any(mask):
+        # If strength is zero, disable anisotropy
+        if strength == 0.0:
             self.anisotropyDirections = None
             self.anisotropyStrength = 0.0
+            return
 
-        directions = directions[mask]
-        norms = norms[mask].reshape(-1,1)
-        self.anisotropyDirections = directions / norms
-        self.anisotropyStrength = strength            
+        # Remove zero-length directions
+        norms = np.linalg.norm(dirs, axis=1)
+        mask = norms > 0.0
+        if not np.any(mask):
+            # no valid directions -> disable anisotropy
+            self.anisotropyDirections = None
+            self.anisotropyStrength = 0.0
+            return
+
+        dirs = dirs[mask]
+        norms = norms[mask].reshape(-1, 1)
+
+        # Store normalized directions and strength
+        self.anisotropyDirections = dirs / norms
+        self.anisotropyStrength = strength
 
     def clearAnisotropy(self) -> None:
         """

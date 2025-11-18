@@ -87,4 +87,4 @@ if __name__ == '__main__':
         perform_DLA_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE, OUTPUT_DIR, ANISOTROPIC_DIRECTIONS, ANISOTROPIC_STRENGTH)
         
     elif SIMULATION == 'SURFACE':
-        perform_active_surface_simulation(NX, NY, NZ, EPOCHS, VERBOSE, TITLE, OUTPUT_DIR, ANISOTROPIC_DIRECTIONS, ANISOTROPIC_STRENGTH)
+        perform_active_surface_simulation(NX, NY, NZ, EPOCHS, VERBOSE, TITLE, OUTPUT_DIR, ANISOTROPIC_STRENGTH)

@@ -4,13 +4,14 @@ import Analysis as ANLS
 import GUI as GUI
 from Lattice import Lattice
 from ArgParser import parse_inputs
+import numpy as np
 
 def perform_EDEN_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str, out_dir: str = None,
                            anisotropy_directions: np.array = None, anisotropy_strength: float = 0.0):
     LATTICE = Lattice(NX, NY, NZ)
     LATTICE.set_nucleation_seed(int(NX / 2), int(NY / 2), int(NZ / 2))
 
-    if anisotropy_directions is not None and anisotropy_stregth > 0.0:
+    if anisotropy_directions is not None and anisotropy_strength > 0.0:
         LATTICE.setAnisotropy(anisotropy_directions, anisotropy_strength)
     
     output_code = EDEN.EDEN_simulation(LATTICE, N_EPOCHS, three_dim=three_dim, verbose=verbose, real_time_reference_point_correction=False)

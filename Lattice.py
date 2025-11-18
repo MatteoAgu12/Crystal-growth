@@ -187,7 +187,12 @@ class Lattice:
         if strength < 0.0:
             raise ValueError("The anisotropy strength can't be negative.")
 
-        if strength == 0.0 or directions.ndim != 2 or directions.shape[1] != 3:
+        bad_shape = False
+        for dir in directions:
+            if len(dir) != 3: 
+                bad_shape = True
+                break
+        if strength == 0.0 or bad_shape:
             self.anisotropyDirections = None
             self.anisotropyStrength = 0.0
             return
@@ -210,7 +215,7 @@ class Lattice:
         self.anisotropyDirections = None
         self.anisotropyStrength = 0.0
 
-    def computeAnisotropyWeight(self, direction: np.array()) -> float:
+    def computeAnisotropyWeight(self, direction: np.array) -> float:
         """
         Return the anisotropy weight for the selected direction, based on lattice anisotropy.
         

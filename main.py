@@ -30,7 +30,7 @@ def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: 
     LATTICE = Lattice(NX, NY, NZ)
     LATTICE.set_nucleation_seed(int(NX / 2), int(NY / 2), int(NZ / 2))
 
-    if anisotropy_directions is not None and anisotropy_stregth > 0.0:
+    if anisotropy_directions is not None and anisotropy_strength > 0.0:
         LATTICE.setAnisotropy(anisotropy_directions, anisotropy_strength)
     
     s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, N_EPOCHS, 1, 3, three_dim=three_dim, verbose=verbose)

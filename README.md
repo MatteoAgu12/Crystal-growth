@@ -267,14 +267,15 @@ python main.py --simulation EDEN --2d --size 200 200 1 --epochs 3000 --output /h
 ```
 
 ### Active surface simulation
-This example shows the results of a crystal growth from an active surface, with a slight anisotropy along the y-axis. This system simulates the brakedown of a lithium battery, caused by a short circuit between the electrodes via the crystal made of lithium dendrites.    
+This example shows the results of a crystal growth from an active surface, with a slight anisotropy along the y-axis (built-in, no need to set it manually). This system simulates the brakedown of a lithium battery, caused by a short circuit between the electrodes via the crystal made of lithium dendrites.    
 The result is a 3D crystal. The image of the crystal and the plot of the farest crystal point from the active surface are both reported here.
 
-// TODO: metti immagini
+![alt text](images/Active_surface.png)
+![alt text](images/Active_surface_distance.png)
 
 The command used to generate this simulation is the following (change $\texttt{\\$OUT}$ dir with yours):
 ```
-python main.py --simulation SURFACE --size 25 100 25 --epochs 4000 --output $OUT --title "Lithium battery breakdown" --anisotropy-directions 0 1 0 --anisotropy-strength 0.75
+python main.py --simulation SURFACE --size 25 100 25 --epochs 4000 --output $OUT --title "Lithium battery breakdown" --anisotropy-strength 0.75
 ```
 
 ### Policrystal simulation

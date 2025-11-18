@@ -247,18 +247,19 @@ pytest testing.py
 This example shows the results of a 2D isotropic DLA simulation, with one nucleation seed.  
 The result is a 2D fractal crystal. The image of the crystal and the plot from which the Hausdorff dimention is extracted are both reported here.
 
-// TODO: metti immagini
+![alt text](images/2D_DLA_iso.png)
+![alt text](images/2D_DLA_iso_Hausdorff_dimention.png)
 
 The command used to generate this simulation is the following (change $\texttt{\\$OUT}$ dir with yours):
 ```
 python main.py --2D --simulation DLA --size 200 200 1 --epochs 4000 --output $OUT --title "2D isotropic DLA"
 ```
 
-### 2D anisotropic DLA simulation
-This example shows the results of a 2D anisotropic DLA simulation, with one nucleation seed.  
-The result is a 2D crystal developed along the y-axis. The image of the crystal and the plot from which the Hausdorff dimention is extracted are both reported here.
+### 2D anisotropic EDEN simulation
+This example shows the results of a 2D anisotropic EDEN simulation, with one nucleation seed.  
+The result is a 2D crystal developed along both the x-axis and the y-axis. The image of the crystal and the plot from which the Hausdorff dimention is extracted are both reported here.
 
-// TODO: metti immagini
+![alt text](images/2D_EDEN_aniso.png)
 
 The command used to generate this simulation is the following (change $\texttt{\$OUT}$ dir with yours):
 ```

@@ -55,7 +55,14 @@ def EDEN_simulation(lattice: Lattice, N_reps: int,
             raise ValueError("ERROR: in function 'DLA_simulation()', in a 2D simulation the nucleation seeds must have the same z-coord.")
     
     z_coord = lattice.get_active_border()[0][2] if not three_dim else None
-    for n in range(N_reps):
+    update_step = int(N_reps / 10)
+    completing_percentage = 0
+    for n in range(N_reps):        
+        if not verbose and n == completing_percentage * update_step:
+            if completing_percentage != 0:
+                print(f"=== Simulation completed at {int(completing_percentage*10)}% ===")
+            completing_percentage += 1
+        
         active_border = lattice.get_active_border()
         planar_border = [] if not three_dim else None
         if not three_dim:

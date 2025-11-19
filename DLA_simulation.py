@@ -124,7 +124,13 @@ def DLA_simulation(lattice: Lattice, N_particles: int, generation_padding: int, 
     restarts = np.zeros(N_particles)
     z_coord = lattice.get_nucleation_seeds()[0][2] if not three_dim else None
         
-    for n in range(N_particles):
+    update_step = int(N_particles / 10)
+    completing_percentage = 0
+    for n in range(N_particles):        
+        if not verbose and n == completing_percentage * update_step:
+            if completing_percentage != 0:
+                print(f"=== Simulation completed at {int(completing_percentage*10)}% ===")
+            completing_percentage += 1
         generation_box = lattice.get_crystal_bounding_box(padding=generation_padding)
         outer_limit_box = lattice.get_crystal_bounding_box(padding=outer_limit_padding)
         

@@ -4,6 +4,7 @@ import Analysis as ANLS
 import GUI as GUI
 from Lattice import Lattice
 from ArgParser import parse_inputs
+import numpy as np
 
 def perform_EDEN_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str, out_dir: str = None):
     LATTICE = Lattice(NX, NY, NZ)
@@ -38,9 +39,11 @@ def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: 
         
 
 def perform_active_surface_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, verbose: bool, title: str, out_dir: str = None):
-    LATTICE = Lattice(NX, NY, NZ)
-    for x in range(NX):
-        for z in range(NZ):
+    size = np.array([NX, NY, NZ])
+    ignored_dimention = np.delete(size, np.where(size == min(size))[0][0])
+    LATTICE = Lattice(max(ignored_dimention), int(N_EPOCHS / max(ignored_dimention)), min(ignored_dimention))
+    for x in range(max(ignored_dimention)):
+        for z in range(min(ignored_dimention)):
             LATTICE.set_nucleation_seed(x, 0, z)
             
     s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, N_EPOCHS, 1, 3, three_dim=True, verbose=verbose)

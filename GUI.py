@@ -111,10 +111,37 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         ax.set_ylabel('y')
         ax.set_zlabel('z')
 
-        max_range = max(lattice.shape)
-        ax.set_xlim(0, max_range)
-        ax.set_ylim(0, max_range)
-        ax.set_zlim(0, max_range)
+        nx, ny, nz = lattice.shape
+        if len(lattice.occupied) > 0:
+            try:
+                occ_arr = np.array(list(lattice.occupied), dtype=int)
+                max_y_occ = int(np.max(occ_arr[:, 1]))
+            except Exception:
+                max_y_occ = max(t[1] for t in lattice.occupied)
+        else:
+            max_y_occ = 0
+
+        y_limit = min(ny, max_y_occ + 5)  # +2 rispetto alla cella più alta, senza superare ny
+
+        try:
+            ax.set_box_aspect((nx, ny, nz))
+        except Exception:
+            ax.set_xlim(0, nx)
+            ax.set_ylim(0, y_limit)
+            ax.set_zlim(0, nz)
+
+        ax.set_xlim(0, nx)
+        ax.set_ylim(0, ny)
+        ax.set_zlim(0, nz)
+
+        ax.set_xticks([0, max(0, nx // 2), max(0, nx - 1)])
+        ax.set_yticks([0, max(0, ny // 2), max(0, ny - 1)])
+        ax.set_zticks([0, max(0, nz // 2), max(0, nz - 1)])
+
+        ax.set_xticklabels([str(0), str(nx // 2), str(nx - 1)])
+        ax.set_yticklabels([str(0), str(ny // 2), str(ny - 1)])
+        ax.set_zticklabels([str(0), str(nz // 2), str(nz - 1)])
+
         ax.view_init(elev=30, azim=45)
 
         # Scalarmap

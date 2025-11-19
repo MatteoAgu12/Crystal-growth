@@ -64,9 +64,8 @@ def fractal_dimention_analysis(lattice: Lattice, output_dir: str,
     D, sizes, counts = compute_fractal_dimention(lattice, min_box_size=min_box_size, max_box_size=max_box_size, num_scales=num_scales, 
                                                  three_dim=three_dim)
     
-    if verbose:
-        print("\nAnalysis of the Hausdorff (fractal) dimention completed!")
-        print(f"Computed fractal dimention: {D:.4f}")
+    print("\nAnalysis of the Hausdorff (fractal) dimention completed!")
+    print(f"Computed fractal dimention: {D:.4f}")
 
     plt.figure()
     plt.title("Hausdorff dimention of the generated crystal")
@@ -81,8 +80,7 @@ def fractal_dimention_analysis(lattice: Lattice, output_dir: str,
     filename = output_dir + "Hausdorff_dimention.png"
     plt.savefig(filename)
         
-    if verbose:
-        print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
+    print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
 
 def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: int, verbose: bool = True):
     history = lattice.history
@@ -98,8 +96,7 @@ def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: in
                 
         distance[epoch] = max_distance
             
-    if verbose:
-        print("\nAnalysis of the distance of the farest cell from the active surface as function of time completed!")
+    print("\nAnalysis of the distance of the farest cell from the active surface as function of time completed!")
 
     plt.figure()
     plt.title("Farest occupied cell VS time")
@@ -111,6 +108,5 @@ def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: in
     filename = output_dir + "Active_surface_distance.png"
     plt.savefig(filename)
         
-    if verbose:
-        print(f"Plot of distance of the farest cell from the active surface as function of time saved as {filename}.")       
+    print(f"Plot of distance of the farest cell from the active surface as function of time saved as {filename}.")       
     

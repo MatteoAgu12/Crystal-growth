@@ -14,13 +14,15 @@ class Lattice:
         if number_of_cells_x < 0 or number_of_cells_y < 0 or number_of_cells_z < 0:
             raise ValueError('ERROR: the size of the lattice must be an integer bigger or equal to zero!')
             
-        self.shape = (number_of_cells_x, number_of_cells_y, number_of_cells_z)
-        self.grid = np.zeros(self.shape, dtype=np.uint8)    # 0 = empty; 1 = occupied
-        self.history = np.ones(self.shape, dtype=np.int64) * (-1)
-        self.initial_seeds = []
-        self.occupied = set()
+        self.shape                = (number_of_cells_x, number_of_cells_y, number_of_cells_z)
+        self.grid                 = np.zeros(self.shape, dtype=np.uint8)
+        self.history              = np.ones(self.shape, dtype=np.int64) * (-1)
+        self.group_id             = np.zeros(self.shape, dtype=np.uint16)
+        self.group_counter        = 0
+        self.initial_seeds        = []
+        self.occupied             = set()
         self.anisotropyDirections = None
-        self.anisotropyStrength = 0.0
+        self.anisotropyStrength   = 0.0
 
     def __str__(self):
         return f"Lattice has shape: {self.shape} \
@@ -68,7 +70,7 @@ class Lattice:
                 
         return np.array(neighbors)
 
-    def occupy(self, x: int, y: int, z: int, epoch: int) -> None:
+    def occupy(self, x: int, y: int, z: int, epoch: int, id: int) -> None:
         """
         Set the status of the cell at coordinates (x,y,z) to occupied.
         It also keeps track of the epoch at which the new cell has been occupied.
@@ -94,6 +96,7 @@ class Lattice:
         self.grid[x, y, z] = 1
         self.history[x, y, z] = int(epoch)
         self.occupied.add((int(x), int(y), int(z)))
+        self.group_id[x, y, z] = id
             
     def is_occupied(self, x: int, y: int, z: int) -> bool:
         """
@@ -109,7 +112,30 @@ class Lattice:
         """
         return (int(x), int(y), int(z)) in self.occupied
 
-    def set_nucleation_seed(self, x: int, y: int, z: int) -> None:
+    def get_group_id(self, x: int, y: int, z: int) -> int:
+        """
+        Function that returns the group id of cell at coordinates (x,y,z).
+
+        Args:
+            x (int): x coord of the pixel
+            y (int): y coord of the pixel
+            z (int): z coord of the pixel
+
+        Returns:
+            int: group id of the selected cell.
+        """
+        return self.group_id[x, y, z]
+
+    def get_group_counter(self) -> int:
+        """
+        Function that return the total number of crystal groups in the lattice.
+
+        Returns:
+            int: total number of crystal groups in the lattice
+        """
+        return self.group_counter
+
+    def set_nucleation_seed(self, x: int, y: int, z: int, maintain_last_id: bool = False) -> None:
         """
         Function that initialize one nucleation seed.
         The function does nothing if the selected point is outside the lattice or if it's already a nucleation seed.
@@ -118,9 +144,14 @@ class Lattice:
             x (int): x coordinate of the nucleation seed
             y (int): y coordinate of the nucleation seed
             z (int): z coordinate of the nucleation seed
+            maintain_last_id (bool, optional): if True, it gives that nucleation seed the same group id than the previous one.
+                                               If self.group_counter is 0, this is bypassed to True
         """
         if self.is_point_inside(x, y, z) and (x, y, z) not in self.initial_seeds:
-            self.occupy(x, y, z, epoch=0)
+            if self.group_counter == 0 or not maintain_last_id:
+                self.group_counter += 1
+            
+            self.occupy(x, y, z, epoch=0, id=self.group_counter)
             self.initial_seeds.append((x, y, z))
     
     def get_nucleation_seeds(self) -> np.array:

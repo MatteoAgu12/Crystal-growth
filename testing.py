@@ -24,7 +24,7 @@ def test_lattice_class():
     assert LATTICE.is_point_inside(0, 0, 0)
     assert LATTICE.is_point_inside(2, 4, 6)
     
-    LATTICE.occupy(2, 2, 2, 0)
+    LATTICE.occupy(2, 2, 2, 0, 1)
     assert LATTICE.is_occupied(2, 2, 2)
     assert not LATTICE.is_occupied(2, 2, 1)
     
@@ -72,7 +72,7 @@ def test_lattice_history_member_update():
     Finally, it checks that the last cell, which is empty, has an associeted value of -1 in the history array.
     """
     LATTICE = Lattice(6, 1, 1)
-    for i in range(5): LATTICE.occupy(i, 0, 0, epoch=i+1)
+    for i in range(5): LATTICE.occupy(i, 0, 0, epoch=i+1, id=1)
     
     assert LATTICE.history.size == 6
     for i in range(5): assert LATTICE.history[i, 0, 0] == i+1
@@ -191,13 +191,13 @@ def test_get_visible_voxels_binary_mask_function():
     The test is performed by checking the central cell, that now is expected to be False, and the one of all others occupied, expected to be True.
     """
     lattice = Lattice(3, 3, 3)
-    lattice.occupy(1, 1, 1, 0)
-    lattice.occupy(1, 1, 0, 0)
-    lattice.occupy(1, 1, 2, 0)
-    lattice.occupy(1, 0, 1, 0)
-    lattice.occupy(1, 2, 1, 0)
-    lattice.occupy(0, 1, 1, 0)
-    lattice.occupy(2, 1, 1, 0)
+    lattice.occupy(1, 1, 1, 0, 1)
+    lattice.occupy(1, 1, 0, 0, 1)
+    lattice.occupy(1, 1, 2, 0, 1)
+    lattice.occupy(1, 0, 1, 0, 1)
+    lattice.occupy(1, 2, 1, 0, 1)
+    lattice.occupy(0, 1, 1, 0, 1)
+    lattice.occupy(2, 1, 1, 0, 1)
     visible_voxels = GUI.get_visible_voxels_binary_mask(lattice)
     
     assert np.sum(lattice.grid) == 7

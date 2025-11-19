@@ -70,8 +70,9 @@ def particle_random_walk_isotropic(lattice: Lattice, initial_coordinate: np.arra
         else:
             neighbors = lattice.get_neighbors(position[0], position[1], position[2])        
             for neighbor in neighbors:
-                if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]): 
-                    lattice.occupy(int(position[0]), int(position[1]), int(position[2]), epoch=epoch)
+                if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]):
+                    id = lattice.get_group_id(int(neighbor[0]), int(neighbor[1]), int(neighbor[2]))
+                    lattice.occupy(int(position[0]), int(position[1]), int(position[2]), epoch=epoch, id=id)
                     continue_walk = False
                     break
             
@@ -148,7 +149,8 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             neighbors = lattice.get_neighbors(position[0], position[1], position[2])        
             for neighbor in neighbors:
                 if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]): 
-                    lattice.occupy(int(position[0]), int(position[1]), int(position[2]), epoch=epoch)
+                    id = lattice.get_group_id(int(neighbor[0]), int(neighbor[1]), int(neighbor[2]))
+                    lattice.occupy(int(position[0]), int(position[1]), int(position[2]), epoch=epoch, id=id)
                     continue_walk = False
                     break
             

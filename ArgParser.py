@@ -11,7 +11,7 @@ def parse_inputs() -> argparse.Namespace:
     Returns:
         argparse.Namespace: parsed inputs.
     """
-    ALLOWED_SIM_OPTIONS = ["EDEN", "DLA", "SURFACE"]
+    ALLOWED_SIM_OPTIONS = ["EDEN", "DLA", "SURFACE", "POLI"]
     parser = argparse.ArgumentParser(
         description="Crystal growth simulation"
     )

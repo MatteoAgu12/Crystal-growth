@@ -196,7 +196,7 @@ crystal_bbox_with_padding = MY_LATTICE.get_crystal_bounding_box(padding = N)  # 
 During a growth simulation, more and more cells have to be occupied.  
 In a built-in simulation this is done automatically, but in you custom simulation you have to do it manually. The way to do so is:
 ```
-MY_LATTICE.occupy(X, Y, Z)
+MY_LATTICE.occupy(X, Y, Z, group_id)
 ```
 
 ### Run a built-in simulation

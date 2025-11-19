@@ -23,6 +23,32 @@ def perform_EDEN_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim:
     
     GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir)
     
+
+def perform_POLI_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str, out_dir: str = None,
+                            anisotropy_directions: np.array = None, anisotropy_strength: float = 0.0):
+    LATTICE = Lattice(NX, NY, NZ)
+    
+    how_many_seeds = 0
+    while how_many_seeds < 20:
+        X = np.random.randint(0, NX)
+        Y = np.random.randint(0, NY)
+        Z = np.random.randint(0, NZ)
+        
+        if not LATTICE.is_occupied(X, Y, Z):
+            LATTICE.set_nucleation_seed(X, Y, Z)
+            how_many_seeds += 1
+            
+    if anisotropy_directions is not None and anisotropy_strength > 0.0:
+        LATTICE.setAnisotropy(anisotropy_directions, anisotropy_strength)
+            
+    output_code = EDEN.EDEN_simulation(LATTICE, N_EPOCHS, three_dim=three_dim, verbose=verbose, real_time_reference_point_correction=False)
+    output_messages = ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
+                       "\nEDEN SIMULATION: EARLY STOP. NO INITIAL NUCLEATION SEEDS FOUND!",
+                       "\nEDEN SIMULATION: EARLY STOP. NO ACTIVE BORDER ON WHICH DEPOSIT THE PARTICLE!",
+                       "\nEDEN SIMULATION: EARLY STOP."]
+    print(output_messages[output_code])
+    
+    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir, color_mode="id")
     
 
 def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str, out_dir: str = None,
@@ -45,7 +71,6 @@ def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: 
         ANLS.fractal_dimention_analysis(LATTICE, out_dir, title=title, num_scales=25, three_dim=three_dim, verbose=verbose)
         
         
-
 def perform_active_surface_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, verbose: bool, title: str, out_dir: str = None, anisotropy_strength: float = 0.0):
     LATTICE = Lattice(NX, NY, NZ)
     for x in range(NX):
@@ -82,6 +107,9 @@ if __name__ == '__main__':
     
     if SIMULATION == 'EDEN':
         perform_EDEN_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE, OUTPUT_DIR, ANISOTROPIC_DIRECTIONS, ANISOTROPIC_STRENGTH)
+        
+    elif SIMULATION == 'POLI':
+        perform_POLI_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE, OUTPUT_DIR, ANISOTROPIC_DIRECTIONS, ANISOTROPIC_STRENGTH)
         
     elif SIMULATION == 'DLA':
         perform_DLA_simulation(NX, NY, NZ, EPOCHS, IS_3D, VERBOSE, TITLE, OUTPUT_DIR, ANISOTROPIC_DIRECTIONS, ANISOTROPIC_STRENGTH)

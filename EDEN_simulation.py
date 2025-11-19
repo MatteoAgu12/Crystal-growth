@@ -120,7 +120,21 @@ def EDEN_simulation(lattice: Lattice, N_reps: int,
             else: return 3
         
         x, y, z = new_cell
-        lattice.occupy(x, y, z, epoch=n+1)
+        
+        id = lattice.get_group_counter()
+        if id != 1:
+            neighbors = lattice.get_neighbors(x, y, z)
+            neighbors_ids = []
+            for neighbor in neighbors:
+                neigh_id = lattice.get_group_id(neighbor[0], neighbor[1], neighbor[2])
+                if neigh_id > 0:
+                    neighbors_ids.append(neigh_id)
+                    
+            id = np.random.choice(np.array(neighbors_ids))
+            if id == 0:
+                raise ValueError("[EDEN] the new cell was quite indecided so the program made a bad choice")
+            
+        lattice.occupy(x, y, z, epoch=n+1, id=id)
         
         if verbose: print(f"Procedure completed for particle {n+1}")
         

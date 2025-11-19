@@ -78,6 +78,35 @@ def test_lattice_history_member_update():
     for i in range(5): assert LATTICE.history[i, 0, 0] == i+1
     assert LATTICE.history[5, 0, 0] == -1
 
+def test_lattice_anisotropy_math():
+    """
+    Verify the anisotropy logic
+    weight = exp(strength * cos(theta))
+    """
+    L = Lattice(10, 10, 10)
+    
+    L.setAnisotropy([[1, 0, 0]], 0.0)
+    w = L.computeAnisotropyWeight(np.array([1, 0, 0]))
+    assert w == 1.0
+
+    strength = 2.0
+    L.clearAnisotropy()
+    L.setAnisotropy([[1, 0, 0]], strength)
+    
+    w_parallel = L.computeAnisotropyWeight(np.array([1, 0, 0]))
+    expected_parallel = np.exp(strength * 1.0)
+    assert np.isclose(w_parallel, expected_parallel)
+
+    w_ortho = L.computeAnisotropyWeight(np.array([0, 1, 0]))
+    expected_ortho = np.exp(strength * 0.0)
+    assert np.isclose(w_ortho, expected_ortho)
+        
+    w_opposite = L.computeAnisotropyWeight(np.array([-1, 0, 0]))
+    expected_opposite = np.exp(strength * -1.0)
+    assert np.isclose(w_opposite, expected_opposite)
+
+    assert w_parallel > w_ortho > w_opposite
+
 # === EDEN simulation section ==============================================    
 def test_choose_random_border_site_function():
     """
@@ -139,8 +168,9 @@ def test_particle_random_walk_function():
     for rep in range(repetitions):
         lattice_bbox = lattice.get_crystal_bounding_box()
         generation_pos = DLA.generate_random_point_on_box(lattice_bbox)
+        outer_box = lattice.get_crystal_bounding_box(3)
         # TODO: Update the line below to the new logic
-        _, _ = DLA.particle_random_walk_isotropic(lattice, generation_pos)
+        _, _ = DLA.particle_random_walk_isotropic(lattice, generation_pos, outer_box, 3)
 
 # === SURFACE simulation section ===========================================
 def test_active_surface_seeds_preserved():
@@ -150,8 +180,7 @@ def test_active_surface_seeds_preserved():
             L.set_nucleation_seed(x,0,z)
     DLA.DLA_simulation(L, N_particles=500, generation_padding=1, outer_limit_padding=3, three_dim=True, verbose=False)
     assert np.all(L.history[:,0,:] == 0), "Some cells have been rewritten!"
-            
-
+           
 # === GUI section ==========================================================        
 def test_get_visible_voxels_binary_mask_function():
     """
@@ -181,6 +210,7 @@ if __name__ == '__main__':
     test_lattice_class()
     test_lattice_get_crystal_bounding_box_method()
     test_lattice_history_member_update()
+    test_lattice_anisotropy_math()
     
     test_choose_random_border_site_function()
     test_EDEN_simulation_function()

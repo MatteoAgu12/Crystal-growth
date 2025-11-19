@@ -45,7 +45,7 @@ def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_
     
     return (D, sizes, counts)
 
-def fractal_dimention_analysis(lattice: Lattice, output_dir: str,
+def fractal_dimention_analysis(lattice: Lattice, output_dir: str, title: str,
                                min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
                                three_dim: bool = True, verbose: bool = True):
     """
@@ -77,7 +77,7 @@ def fractal_dimention_analysis(lattice: Lattice, output_dir: str,
     plt.ylabel(r"log(N($\epsilon$))")
     plt.legend()
     
-    filename = output_dir + "Hausdorff_dimention.png"
+    filename = output_dir + title + "Hausdorff_dimention.png"
     plt.savefig(filename)
         
     print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")

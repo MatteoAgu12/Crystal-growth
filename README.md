@@ -55,7 +55,7 @@ $$P(\mathbf{r}) = \frac{w(\mathbf{r})}{\sum_{\mathbf{r'} \in B(t)} w(\mathbf{r'}
 
 The simulator supports both fully 3D and 2D EDEN growth, with the 2D version having the $z$-plane fixed..
 
-### DLA growyh model
+### DLA growth model
 The DLA model describes growth limited by particle transport: particles diffuse in the empty region via random walk, and irreversibly attach to the crystal when they reach its neighborhood.
 
 For each new particle in the simulation:
@@ -263,7 +263,7 @@ The result is a 2D crystal developed along both the x-axis and the y-axis. The i
 
 The command used to generate this simulation is the following (change $\texttt{\\$OUT}$ dir with yours):
 ```
-python main.py --simulation EDEN --2d --size 200 200 1 --epochs 3000 --output /home/agu/Scrivania/Crystal-growth/images/ --title "2D anisotropic EDEN" --anisotropy-directions 1 0 0 0 1 0 -1 0 0 0 -1 0  --anisotropy-strength 7.5 --verbose
+python main.py --simulation EDEN --2d --size 200 200 1 --epochs 3000 --output $OUT --title "2D anisotropic EDEN" --anisotropy-directions 1 0 0 0 1 0 -1 0 0 0 -1 0  --anisotropy-strength 7.5 --verbose
 ```
 
 ### Active surface simulation

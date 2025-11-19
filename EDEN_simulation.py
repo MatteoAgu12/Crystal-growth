@@ -30,8 +30,9 @@ def choose_random_border_site(active_border: np.array, lattice: Lattice = None, 
     Returns:
         (np.array): coordinates of the randomly selected site of the active border.
     """
-    if len(reference_point) != 3 and reference_point.ndim != 1:
-        raise ValueError("The reference point must be in the form (x,y,z)")
+    if reference_point is not None:
+        if len(reference_point) != 3 and reference_point.ndim != 1:
+            raise ValueError("The reference point must be in the form (x,y,z)")
     
     if len(active_border) == 0: 
         return None
@@ -83,9 +84,13 @@ def EDEN_simulation(lattice: Lattice, N_reps: int,
     if N_reps <= 0:
         raise ValueError(f"ERROR: in function 'EDEN_simulation' the parameter N_reps must be an integer bigger than zero, you inserted {N_reps}")
     
+    seeds = lattice.get_nucleation_seeds()
+    
+    if seeds.size == 0:
+        return 1
+    
     if not three_dim:
         seeds_on_same_xy_plane = True
-        seeds = lattice.get_nucleation_seeds()
         for seed in seeds:
             seeds_on_same_xy_plane = (seeds[0][2] == seed[2])
             if not seeds_on_same_xy_plane: break

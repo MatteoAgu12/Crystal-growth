@@ -152,7 +152,7 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         plt.tight_layout()
 
         if out_dir is not None:
-            filename = out_dir + "Crystal.png"
+            filename = out_dir + title + ".png"
             plt.savefig(filename)
             print(f"Lattice image saved as {filename}!")
         plt.show()

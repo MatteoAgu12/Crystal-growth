@@ -42,7 +42,7 @@ def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: 
     GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir)
     
     if out_dir is not None:
-        ANLS.fractal_dimention_analysis(LATTICE, out_dir, num_scales=25, three_dim=three_dim, verbose=verbose)
+        ANLS.fractal_dimention_analysis(LATTICE, out_dir, title=title, num_scales=25, three_dim=three_dim, verbose=verbose)
         
         
 

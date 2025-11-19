@@ -57,12 +57,12 @@ def test_lattice_get_crystal_bounding_box_method():
     lattice = Lattice(5, 5, 5)
     lattice.set_nucleation_seed(2, 2, 2)
     
-    assert lattice.get_crystal_bounding_box() == ((2,3), (2,3), (2,3))
-    assert lattice.get_crystal_bounding_box(padding=1) == ((1, 4), (1, 4), (1, 4))
+    assert lattice.get_crystal_bounding_box() == [(2,3), (2,3), (2,3)]
+    assert lattice.get_crystal_bounding_box(padding=1) == [(1, 4), (1, 4), (1, 4)]
     
     lattice.set_nucleation_seed(1, 1, 1)
     
-    assert lattice.get_crystal_bounding_box() == ((1, 3), (1, 3), (1, 3))
+    assert lattice.get_crystal_bounding_box() == [(1, 3), (1, 3), (1, 3)]
 
 def test_lattice_history_member_update():
     """
@@ -139,7 +139,8 @@ def test_particle_random_walk_function():
     for rep in range(repetitions):
         lattice_bbox = lattice.get_crystal_bounding_box()
         generation_pos = DLA.generate_random_point_on_box(lattice_bbox)
-        _, _ = DLA.particle_random_walk(lattice, generation_pos)
+        # TODO: Update the line below to the new logic
+        _, _ = DLA.particle_random_walk_isotropic(lattice, generation_pos)
 
 # === SURFACE simulation section ===========================================
 def test_active_surface_seeds_preserved():

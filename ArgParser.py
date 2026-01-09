@@ -34,6 +34,13 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         parsed_input.external_flux = dirs
     if parsed_input.flux_strength < 0.0:
         raise ValueError("The external flux strength can't be negative.")
+    for i in parsed_input.miller:
+        if i < 0 or type(i) is not int:
+            raise ValueError(f"ERROR: in function 'parse_inputs()', {parsed_input.miller} are not valid miller indices.")
+    if parsed_input.anisotropy_coeff < 0.0:
+        raise ValueError("The anisotropy coefficient can't be negative.")
+    if parsed_input.anisotropy_sharpness < 0.0:
+        raise ValueError("The anisotropy sharpness can't be negative.")
 
 def parse_inputs() -> argparse.Namespace:
     """
@@ -64,10 +71,16 @@ def parse_inputs() -> argparse.Namespace:
                         help="If active prints extra info during the simulation.")
     parser.add_argument("--output", "-o", type=str, default="",
                         help="Directory where to save the plots produced.\nIf not specified, the analysis is not performed, only the simulation.")
-    parser.add_argument("--external-flux", "-ef", type=float, nargs="+", metavar="AX AY AZ...", default=None,
+    parser.add_argument("--external-flux", "--ef", type=float, nargs="+", metavar="AX AY AZ...", default=None,
                     help="List of directions for the external diffusion flux, in group of 3: AX1 AY1 AZ1 AX2 AY2 AZ2 ... Default to None.")
-    parser.add_argument("--flux-strength", "-fs", type=float, default=0.0,
+    parser.add_argument("--flux-strength", "--fs", type=float, default=0.0,
                         help="External diffusion flux strength (0.0 is isotropic). Default is 0.0")
+    parser.add_argument("--miller", "-m", type=int, nargs=3, metavar=("h", "k", "l"), default=[0, 0, 0],
+                        help="Miller indices that define the structural anisotropy directions. Default [0,0,0] (no anisotropy)")
+    parser.add_argument("--anisotropy-coeff", type=float, default=0.05,
+                        help="Sticking coefficient that tells how easily a particle attaches to the surface due to anisotropy. Default is 0.05")
+    parser.add_argument("--anisotropy-sharpness", type=float, default=4.0,
+                        help="Tells how smooth are the faces due to anisotropy. Default is 4.0, cannot be less than 1.0")
     
     # Checks the inputs
     parsed_input = parser.parse_args()

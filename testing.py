@@ -107,6 +107,61 @@ def test_lattice_external_flux_math():
 
     assert w_parallel > w_ortho > w_opposite
 
+def test_set_miller_anisotropy_basic_families():
+    """
+    Checks if the number of generated vectors is correct for some easy cases.
+    """
+    L = Lattice(5, 5, 5)
+
+    L.set_miller_anisotropy(1, 0, 0)
+    assert len(L.preferred_axes) == 6, f"Error: expected 6, obtained {len(L.preferred_axes)}"   # <100>
+
+    L.set_miller_anisotropy(1, 1, 0)
+    assert len(L.preferred_axes) == 12, f"Error: expected 12, obtained {len(L.preferred_axes)}"  # <110>
+
+    L.set_miller_anisotropy(1, 1, 1)
+    assert len(L.preferred_axes) == 8, f"Error: expected 8, obtained {len(L.preferred_axes)}"   # <111>
+
+def test_surface_normal_calculation():
+    """
+    Test the calculation of the vector normal to the surface.
+    Case of plain surface and angled surface
+    """
+    L = Lattice(5, 5, 5)
+    
+    # Plain surface
+    L.occupy(1, 1, 1, 1, 1)
+    n = L.get_surface_normal(1, 1, 2)
+    expected = np.array([0, 0, 1], dtype=float)
+    assert np.allclose(n, expected), f"Error: attended {expected}, obtained {n}"
+    
+    # L-shaped surface
+    L = Lattice(5, 5, 5)
+    L.occupy(1, 1, 1, 1, 1)
+    L.occupy(2, 1, 1, 1, 1)
+    n = L.get_surface_normal(1, 1, 0)
+
+    assert np.isclose(np.linalg.norm(n), 1.0), f"Error: obtained {n}"
+
+def test_structural_probability_calc():
+    """
+    Checks if the structural probability matches the expectations for three easy cases.
+    """
+    L = Lattice(5, 5, 5)
+    L.set_miller_anisotropy(1, 0, 0, sticking_coefficient=0.5, sharpness=2)
+
+    p_aligned = L.compute_structural_probability(np.array([1, 0, 0]))
+    p_misaligned = L.compute_structural_probability(np.array([0, 1, 0]))
+    assert p_aligned > p_misaligned
+    
+    p1 = L.compute_structural_probability(np.array([1, 0, 0]))
+    p2 = L.compute_structural_probability(np.array([-1, 0, 0]))
+    assert np.isclose(p1, p2)
+    
+    L.set_miller_anisotropy(1, 1, 1, sticking_coefficient=10.0)
+    p = L.compute_structural_probability(np.array([1, 1, 1]))
+    assert 0.0 <= p <= 1.0
+
 # === EDEN simulation section ==============================================    
 def test_choose_random_border_site_function():
     """
@@ -211,6 +266,9 @@ if __name__ == '__main__':
     test_lattice_get_crystal_bounding_box_method()
     test_lattice_history_member_update()
     test_lattice_external_flux_math()
+    test_set_miller_anisotropy_basic_families()
+    test_surface_normal_calculation()  
+    test_structural_probability_calc
     
     test_choose_random_border_site_function()
     test_EDEN_simulation_function()

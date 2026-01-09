@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from typing import Union
 
 class Lattice:
@@ -14,15 +15,19 @@ class Lattice:
         if number_of_cells_x < 0 or number_of_cells_y < 0 or number_of_cells_z < 0:
             raise ValueError('ERROR: the size of the lattice must be an integer bigger or equal to zero!')
             
-        self.shape                  = (number_of_cells_x, number_of_cells_y, number_of_cells_z)
-        self.grid                   = np.zeros(self.shape, dtype=np.uint8)
-        self.history                = np.ones(self.shape, dtype=np.int64) * (-1)
-        self.group_id               = np.zeros(self.shape, dtype=np.uint16)
-        self.group_counter          = 0
-        self.initial_seeds          = []
-        self.occupied               = set()
-        self.externalFluxDirections = None
-        self.externalFluxStrength   = 0.0
+        self.shape                           = (number_of_cells_x, number_of_cells_y, number_of_cells_z)
+        self.grid                            = np.zeros(self.shape, dtype=np.uint8)
+        self.history                         = np.ones(self.shape, dtype=np.int64) * (-1)
+        self.group_id                        = np.zeros(self.shape, dtype=np.uint16)
+        self.group_counter                   = 0
+        self.initial_seeds                   = []
+        self.occupied                        = set()
+        self.externalFluxDirections          = None
+        self.externalFluxStrength            = 0.0
+        self.preferred_axes                  = []
+        self.anisotropy_sticking_coefficient = 0.0
+        self.anisotropy_sharpness            = 1.0
+        self.base_sticking_prob              = 0.05
 
     def __str__(self):
         return f"Lattice has shape: {self.shape} \
@@ -203,6 +208,101 @@ class Lattice:
         maxs = np.clip(maxs, 0, np.array(self.shape) - 1)
         
         return list(zip(mins, maxs))
+
+    def set_miller_anisotropy(self, h: int, k: int, l: int, sticking_coefficient: float = 1.0, sharpness: float = 4.0):
+        """
+        Define anisotropic growth based on Miller index family <hkl>.
+
+        Args:
+            h, k, l (int): Miller indices (cannot all be zero)
+            sticking_coefficient (float): anisotropy strength
+            sharpness (float): angular selectivity exponent
+        """
+        
+        base = [h, k, l]
+        unique_integer_dirs = set()
+
+        for perm in set(itertools.permutations(base)):
+            for signs in itertools.product([-1, 1], repeat=3):
+                vec = np.array(
+                    [perm[0] * signs[0],
+                     perm[1] * signs[1],
+                     perm[2] * signs[2]],
+                    dtype=int
+                )
+
+                if np.all(vec == 0):
+                    continue
+
+                gcd = np.gcd.reduce(np.abs(vec))
+                vec = vec // gcd
+                unique_integer_dirs.add(tuple(vec))
+    
+        self.preferred_axes = [
+            np.array(v, dtype=float) / np.linalg.norm(v)
+            for v in unique_integer_dirs ]
+
+        self.anisotropy_sticking_coefficient = float(sticking_coefficient)
+        self.anisotropy_sharpness = float(sharpness)
+        self.base_sticking_prob = 0.05
+      
+    def get_surface_normal(self, x : int, y : int, z : int) -> np.array:
+        """
+        Compute the normal vector of the surface in the empty point (x,y,z).
+        Does it by considering the local occupied neighbors
+
+        Args:
+            x, y, z (int): empty point
+
+        Returns:
+            np.array: normal vector to the surface
+        """
+        accumulated_vec = np.zeros(3, dtype=float)
+        neighbors = self.get_neighbors(x, y, z)
+        occupied_count = 0
+        
+        for n in neighbors:
+            nx, ny, nz = int(n[0]), int(n[1]), int(n[2])
+            
+            if self.is_occupied(nx, ny, nz):
+                occupied_count += 1
+                direction = np.array([x-nx, y-ny, z-nz], dtype=float)
+                accumulated_vec += direction
+                
+        if occupied_count == 0:
+            return np.zeros(3)
+        
+        norm = np.linalg.norm(accumulated_vec)
+        if norm > 0:
+            return accumulated_vec / norm
+        
+        return accumulated_vec
+    
+    def compute_structural_probability(self, surface_normal: np.array) -> float:
+        """
+        Compute the sticking probability based on the surface normal and miller indices.
+
+        Args:
+            surface_normal (np.array): surface normal vector
+
+        Returns:
+            float: attachment probability
+        """
+        if not hasattr(self, "preferred_axes") or not self.preferred_axes:
+            return 1.0
+        
+        norm = np.linalg.norm(surface_normal)
+        if norm == 0:
+            return self.base_sticking_prob
+        
+        max_align = 0.0
+        for axis in self.preferred_axes:
+            alignment = abs(np.dot(surface_normal, axis))
+            if alignment > max_align:
+                max_align = alignment
+                
+        prob = self.base_sticking_prob + self.anisotropy_sticking_coefficient * (max_align ** self.anisotropy_sharpness)
+        return min(1.0, prob)
 
     def set_external_flux(self, directions: Union[np.ndarray, list], strength: float) -> None:
         """

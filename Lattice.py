@@ -14,15 +14,15 @@ class Lattice:
         if number_of_cells_x < 0 or number_of_cells_y < 0 or number_of_cells_z < 0:
             raise ValueError('ERROR: the size of the lattice must be an integer bigger or equal to zero!')
             
-        self.shape                = (number_of_cells_x, number_of_cells_y, number_of_cells_z)
-        self.grid                 = np.zeros(self.shape, dtype=np.uint8)
-        self.history              = np.ones(self.shape, dtype=np.int64) * (-1)
-        self.group_id             = np.zeros(self.shape, dtype=np.uint16)
-        self.group_counter        = 0
-        self.initial_seeds        = []
-        self.occupied             = set()
-        self.anisotropyDirections = None
-        self.anisotropyStrength   = 0.0
+        self.shape                  = (number_of_cells_x, number_of_cells_y, number_of_cells_z)
+        self.grid                   = np.zeros(self.shape, dtype=np.uint8)
+        self.history                = np.ones(self.shape, dtype=np.int64) * (-1)
+        self.group_id               = np.zeros(self.shape, dtype=np.uint16)
+        self.group_counter          = 0
+        self.initial_seeds          = []
+        self.occupied               = set()
+        self.externalFluxDirections = None
+        self.externalFluxStrength   = 0.0
 
     def __str__(self):
         return f"Lattice has shape: {self.shape} \
@@ -204,9 +204,9 @@ class Lattice:
         
         return list(zip(mins, maxs))
 
-    def setAnisotropy(self, directions: Union[np.ndarray, list], strength: float) -> None:
+    def set_external_flux(self, directions: Union[np.ndarray, list], strength: float) -> None:
         """
-        Initialize lattice anisotropy.
+        Initialize the external diffusive flux acting on the lattice.
 
         Args:
             directions (np.array or list): iterable of vectors of length 3.
@@ -221,14 +221,14 @@ class Lattice:
         # Check shape: we expect an array of shape (n_dirs, 3)
         if dirs.ndim != 2 or dirs.shape[1] != 3:
             # bad shape: disable anisotropy
-            self.anisotropyDirections = None
-            self.anisotropyStrength = 0.0
+            self.externalFluxDirections = None
+            self.externalFluxStrength = 0.0
             return
 
         # If strength is zero, disable anisotropy
         if strength == 0.0:
-            self.anisotropyDirections = None
-            self.anisotropyStrength = 0.0
+            self.externalFluxDirections = None
+            self.externalFluxStrength = 0.0
             return
 
         # Remove zero-length directions
@@ -236,30 +236,30 @@ class Lattice:
         mask = norms > 0.0
         if not np.any(mask):
             # no valid directions -> disable anisotropy
-            self.anisotropyDirections = None
-            self.anisotropyStrength = 0.0
+            self.externalFluxDirections = None
+            self.externalFluxStrength = 0.0
             return
 
         dirs = dirs[mask]
         norms = norms[mask].reshape(-1, 1)
 
         # Store normalized directions and strength
-        self.anisotropyDirections = dirs / norms
-        self.anisotropyStrength = strength
+        self.externalFluxDirections = dirs / norms
+        self.externalFluxStrength = strength
 
-    def clearAnisotropy(self) -> None:
+    def clear_external_flux(self) -> None:
         """
-        Disable the lattice anisotropy (removes it if was present).
+        Disable the external diffusion flux (removes it if was present).
         """
-        self.anisotropyDirections = None
-        self.anisotropyStrength = 0.0
+        self.externalFluxDirections = None
+        self.externalFluxStrength = 0.0
 
-    def computeAnisotropyWeight(self, direction: np.array) -> float:
+    def compute_external_flux_weights(self, direction: np.array) -> float:
         """
-        Return the anisotropy weight for the selected direction, based on lattice anisotropy.
+        Return the anisotropy weight for external flux for the selected direction, based on the flux selected.
         
         Returns:
-            (float): the weight if the anisotropy is activated, 1.0 otherwise
+            (float): the weight if the flux is activated, 1.0 otherwise
         """
         if len(direction) != 3:
             raise ValueError("The direction must be an array of lenght 3.")
@@ -269,14 +269,14 @@ class Lattice:
         if norm == 0.0:
             return 1.0
 
-        if self. anisotropyDirections is not None and self.anisotropyStrength > 0.0:
+        if self. externalFluxDirections is not None and self.externalFluxStrength > 0.0:
             dir = direction / norm
             weights = []
-            for a in self.anisotropyDirections:
+            for a in self.externalFluxDirections:
                 cos_t = float(np.dot(dir, a))
                 if cos_t > 1.0: cos_t = 1.0
                 elif cos_t < -1.0: cos_t = -1.0
-                weights.append(np.exp(self.anisotropyStrength * cos_t))
+                weights.append(np.exp(self.externalFluxStrength * cos_t))
 
             total = float(np.sum(weights))
             if total <= 0.0: return 1.0

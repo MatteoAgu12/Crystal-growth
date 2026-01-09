@@ -20,7 +20,7 @@ def choose_random_border_site_isotropy(active_border: np.array) -> Union[np.arra
 def choose_random_border_site(active_border: np.array, lattice: Lattice = None, reference_point: np.array = None) -> Union[np.array, None]:
     """
     This function randomly selects a site from the active border.
-    If a lattice with anisotropy is provided, selection is biased accordingly.
+    If a lattice with anisotropy and/or an external flux is provided, selection is biased accordingly.
 
     Args:
         active_border (np.array): active border of the crystal, obtained via Lattoce.get_active_border().
@@ -37,13 +37,13 @@ def choose_random_border_site(active_border: np.array, lattice: Lattice = None, 
     if len(active_border) == 0: 
         return None
 
-    if lattice is None or getattr(lattice, "computeAnisotropyWeight", None) is None:
+    if lattice is None or getattr(lattice, "compute_external_flux_weights", None) is None:
         return choose_random_border_site_isotropy(active_border)
 
     weights = np.zeros(len(active_border), dtype=float)
     for i, site in enumerate(active_border):
         direction_vec = site - reference_point
-        weights[i] = lattice.computeAnisotropyWeight(direction_vec)
+        weights[i] = lattice.compute_external_flux_weights(direction_vec)
 
     weight_sum = float(np.sum(weights))
     if weight_sum == 0.0:

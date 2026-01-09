@@ -78,30 +78,30 @@ def test_lattice_history_member_update():
     for i in range(5): assert LATTICE.history[i, 0, 0] == i+1
     assert LATTICE.history[5, 0, 0] == -1
 
-def test_lattice_anisotropy_math():
+def test_lattice_external_flux_math():
     """
     Verify the anisotropy logic
     weight = exp(strength * cos(theta))
     """
     L = Lattice(10, 10, 10)
     
-    L.setAnisotropy([[1, 0, 0]], 0.0)
-    w = L.computeAnisotropyWeight(np.array([1, 0, 0]))
+    L.set_external_flux([[1, 0, 0]], 0.0)
+    w = L.compute_external_flux_weights(np.array([1, 0, 0]))
     assert w == 1.0
 
     strength = 2.0
-    L.clearAnisotropy()
-    L.setAnisotropy([[1, 0, 0]], strength)
+    L.clear_external_flux()
+    L.set_external_flux([[1, 0, 0]], strength)
     
-    w_parallel = L.computeAnisotropyWeight(np.array([1, 0, 0]))
+    w_parallel = L.compute_external_flux_weights(np.array([1, 0, 0]))
     expected_parallel = np.exp(strength * 1.0)
     assert np.isclose(w_parallel, expected_parallel)
 
-    w_ortho = L.computeAnisotropyWeight(np.array([0, 1, 0]))
+    w_ortho = L.compute_external_flux_weights(np.array([0, 1, 0]))
     expected_ortho = np.exp(strength * 0.0)
     assert np.isclose(w_ortho, expected_ortho)
         
-    w_opposite = L.computeAnisotropyWeight(np.array([-1, 0, 0]))
+    w_opposite = L.compute_external_flux_weights(np.array([-1, 0, 0]))
     expected_opposite = np.exp(strength * -1.0)
     assert np.isclose(w_opposite, expected_opposite)
 
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     test_lattice_class()
     test_lattice_get_crystal_bounding_box_method()
     test_lattice_history_member_update()
-    test_lattice_anisotropy_math()
+    test_lattice_external_flux_math()
     
     test_choose_random_border_site_function()
     test_EDEN_simulation_function()

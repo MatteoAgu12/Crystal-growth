@@ -81,7 +81,7 @@ def particle_random_walk_isotropic(lattice: Lattice, initial_coordinate: np.arra
 def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_allowed_bounding_box: tuple, epoch: int,
                          max_steps: int = 100, three_dim : bool = True) -> tuple:
     """
-    This function creates a particle in position 'initial_coordinate' and performes a random walk, weighted by the anisotropy factor.
+    This function creates a particle in position 'initial_coordinate' and performes a random walk, weighted by the anisotropy factor and external flux.
     If the particles arrives in a site with an occupied neighbor, it stops and becomes part of the crystal.
     If the particle exits from the bounding box 'outer_allowed_bounding_box', its position is set to the initial one and the random walk restarts.
 
@@ -121,10 +121,10 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
     while continue_walk:
         total_steps += 1
         idx = None
-        if lattice.anisotropyStrength > 0.0 and lattice.anisotropyDirections is not None:
+        if lattice.externalFluxStrength > 0.0 and lattice.externalFluxDirections is not None:
             weights = np.zeros(len(candidate_step), dtype=float)
             for i, step_vec in enumerate(candidate_step):
-                weights[i] = lattice.computeAnisotropyWeight(step_vec)
+                weights[i] = lattice.compute_external_flux_weights(step_vec)
 
             weight_sum = float(np.sum(weights))
             if weight_sum == 0.0:

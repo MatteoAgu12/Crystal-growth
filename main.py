@@ -49,6 +49,7 @@ def perform_POLI_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim:
     print(output_messages[output_code])
     
     GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir, color_mode="id")
+    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title+'_boundaries', three_dim=three_dim, out_dir=out_dir, color_mode="boundaries")
     
 
 def perform_DLA_simulation(NX: int, NY: int, NZ: int, N_EPOCHS: int, three_dim: bool, verbose: bool, title: str, out_dir: str = None,

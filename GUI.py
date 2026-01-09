@@ -32,6 +32,37 @@ def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
     visible = occ & (~neighbors_all_occupied)
     return visible
 
+def get_grain_boundaries_mask(lattice: Lattice) -> np.array:
+    """
+    Creates a binary mask that identifies voxels (or pixels) at the edge between two or more cristalline domains.
+
+    Args:
+        lattice (Lattice): custom lattice object.
+
+    Returns:
+        np.array: binary mask.
+    """
+    ids = lattice.group_id
+    occupied = ids > 0
+    pad = np.pad(ids, ((1,1), (1,1), (1,1)), mode='constant', constant_values=0)
+    center = pad[1:-1, 1:-1, 1:-1]
+    
+    n_x_plus  = pad[2:, 1:-1, 1:-1]
+    n_x_minus = pad[:-2, 1:-1, 1:-1]
+    n_y_plus  = pad[1:-1, 2:, 1:-1]
+    n_y_minus = pad[1:-1, :-2, 1:-1]
+    n_z_plus  = pad[1:-1, 1:-1, 2:]
+    n_z_minus = pad[1:-1, 1:-1, :-2]
+    
+    neighbors_list = [n_x_plus, n_x_minus, n_y_plus, n_y_minus, n_z_plus, n_z_minus]
+    is_boundary_neighbor = np.zeros_like(center, dtype=bool)
+    
+    for neighbor in neighbors_list:
+        neighbor_different = (neighbor != 0) & (neighbor != center)
+        is_boundary_neighbor |= neighbor_different
+        
+    return occupied & is_boundary_neighbor
+
 def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", 
                  out_dir: str = None, three_dim : bool = True,
                  color_mode: str = "epoch"):
@@ -49,13 +80,13 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
     """
     if color_mode == "id":
         data_grid = lattice.group_id
-        cmap = plt.cm.get_cmap('tab20')
+        cmap = plt.cm.get_cmap('tab20b') 
         unique_vals = np.unique(data_grid[lattice.grid == 1])
         id_to_color = {uid: cmap(i % cmap.N) for i, uid in enumerate(unique_vals)}
         
         def get_color(val):
             return id_to_color.get(val, (0,0,0,0))
-            
+
     elif color_mode == "epoch":
         data_grid = lattice.history
         cmap = plt.cm.viridis
@@ -63,9 +94,12 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         
         def get_color(val):
             return cmap(norm(val))
-        
+            
+    elif color_mode == "boundaries":
+        pass
+
     else:
-        print(f"Crystal not plot: you choose color_mode = {color_mode}. The only accepted are [epoch, id].")
+        print(f"Crystal not plot: you choose color_mode = {color_mode}. The only accepted are [epoch, id, boundaries].")
         return
 
     if three_dim:
@@ -82,16 +116,15 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
             plt.show()
             return
 
-        occ = voxels
-        p = np.pad(occ, ((1,1),(1,1),(1,1)), mode='constant', constant_values=False)
-        neighbors_occupied = (p[2:,1:-1,1:-1] & p[:-2,1:-1,1:-1] & 
-                              p[1:-1,2:,1:-1] & p[1:-1,:-2,1:-1] & 
-                              p[1:-1,1:-1,2:] & p[1:-1,1:-1,:-2])
-        visible_voxels = occ & (~neighbors_occupied)
-        
+        visible_voxels = get_visible_voxels_binary_mask(lattice)
         colors = np.zeros(lattice.shape + (4,), dtype=np.float32)
 
-        if np.any(visible_voxels):
+        if color_mode == "boundaries":
+            boundary_mask = get_grain_boundaries_mask(lattice)
+            colors[visible_voxels] = (0.8, 0.8, 0.8, 0.3) 
+            colors[boundary_mask] = (1.0, 0.0, 0.0, 1.0)
+
+        elif np.any(visible_voxels):
             surface_values = data_grid[visible_voxels]
             unique_surface_vals = np.unique(surface_values)
 
@@ -101,8 +134,15 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
                     colors[mask] = id_to_color[val]
                 else:
                     colors[mask] = cmap(norm(val))
+        
+        if color_mode in ["id", "boundaries"]:
+            edge_color = None
+            line_width = 0.0
+        else:
+            edge_color = 'k'
+            line_width = 0.2
 
-        ax.voxels(visible_voxels, facecolors=colors, edgecolor='k', linewidth=0.2)
+        ax.voxels(visible_voxels, facecolors=colors, edgecolor=edge_color, linewidth=line_width)
 
         ax.set_title(title)
         ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_zlabel('z')
@@ -126,52 +166,24 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
 
     else:
         fig, ax = plt.subplots(figsize=(8, 7))
-        ax.set_title(title)
-        ax.set_xlabel('x'); ax.set_ylabel('y')
-
-        seeds = lattice.get_nucleation_seeds()
-        
-        if seeds is None or len(seeds) == 0 or not np.any(lattice.grid):
-            ax.set_aspect('equal')
-            if out_dir: plt.savefig(out_dir + "Crystal.png")
-            plt.show()
-            return
-
-        z_coord = seeds[0][2]
-        slice_occ = lattice.grid[:, :, z_coord]
-        slice_data = data_grid[:, :, z_coord]
-        
-        occupied = np.argwhere(slice_occ)
-
-        if occupied.size == 0:
-            ax.set_aspect('equal')
-            if out_dir: plt.savefig(out_dir + "Crystal.png")
-            plt.show()
-            return
-
-        for x, y in occupied:
-            val = slice_data[x, y]
-            if color_mode == "id":
-                c = id_to_color.get(val, (0,0,0,1))
-            else:
-                c = cmap(norm(val))
-            
-            ax.add_patch(Rectangle((x - 0.5, y - 0.5), 1, 1, facecolor=c, edgecolor='black'))
-
-        xs, ys = occupied[:, 0], occupied[:, 1]
-        ax.set_xlim(xs.min() - 1, xs.max() + 1)
-        ax.set_ylim(ys.min() - 1, ys.max() + 1)
-        ax.set_aspect('equal')
-        ax.grid(False)
+        pass
 
     if color_mode == "id":
         legend_elements = [Patch(facecolor=c, edgecolor='k', label=f'ID: {int(uid)}') for uid, c in id_to_color.items()]
         ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1, 0.5), title="Parameters")
-    else:
+        
+    elif color_mode == "epoch":
         sm = cm.ScalarMappable(cmap=cmap, norm=norm)
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
         cbar.set_label("Occupation epoch")
+        
+    elif color_mode == "boundaries":
+        legend_elements = [
+            Patch(facecolor=(1.0, 0.0, 0.0, 1.0), label='Grain Boundary'),
+            Patch(facecolor=(0.8, 0.8, 0.8, 0.3), label='Bulk Grain')
+        ]
+        ax.legend(handles=legend_elements,loc='center left', bbox_to_anchor=(1, 0.5))
 
     plt.tight_layout()
 

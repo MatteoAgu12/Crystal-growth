@@ -5,164 +5,176 @@ import GUI as GUI
 from Lattice import Lattice
 from ArgParser import parse_inputs
 import numpy as np
+from dataclasses import dataclass
+from typing import Union
 
-def perform_EDEN_simulation(NX: int, NY: int, NZ: int, 
-                            N_EPOCHS: int, three_dim: bool, verbose: bool, 
-                            title: str, out_dir: str = None,
-                            flux_direction: np.array = None, flux_strength: float = 0.0,
-                            miller_indices: tuple = None, miller_strength: float = 1.0, miller_sharpness: float = 1.0):
-    LATTICE = Lattice(NX, NY, NZ)
-    LATTICE.set_nucleation_seed(int(NX / 2), int(NY / 2), int(NZ / 2))
+@dataclass
+class cusom_input:
+    NX:               int
+    NY:               int
+    NZ:               int
+    EPOCHS:           int
+    THREE_DIM:        bool
+    VERBOSE:          bool
+    TITLE:            Union[str, None]
+    OUTPUT_DIR:       Union[str, None]
+    FLUX_DIRECTION:   Union[np.array, None]
+    FLUX_STRENGTH:    Union[float, None]
+    MILLER_INDICES:   Union[tuple, None]
+    MILLER_STRENGTH:  Union[float, None]
+    MILLER_SHARPNESS: Union[float, None]
+    # TODO: continue....
+    
+    def __str__(self):
+        return f"""
+        Simulation Settings:
+        --------------------
+        Size:             ({self.NX}, {self.NY}, {self.NZ})
+        Epochs:           {self.EPOCHS}
+        Dimensions:       {3 if self.THREE_DIM else 2}
+        Title:            {self.TITLE}
+        Output Dir:       {self.OUTPUT_DIR}
+        Flux Direction:   {self.FLUX_DIRECTION}
+        Flux Strength:    {self.FLUX_STRENGTH}
+        Miller Indices:   {self.MILLER_INDICES}
+        Miller Strength:  {self.MILLER_STRENGTH}
+        Miller Sharpness: {self.MILLER_SHARPNESS}
+        Verbose:          {self.VERBOSE}
+        """
 
-    if flux_direction is not None and flux_strength > 0.0:
-        LATTICE.set_external_flux(flux_direction, flux_strength)
+EDEN_OUTPUT_MESSAGES =  ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
+                        "\nEDEN SIMULATION: EARLY STOP. NO INITIAL NUCLEATION SEEDS FOUND!",
+                        "\nEDEN SIMULATION: EARLY STOP. NO ACTIVE BORDER ON WHICH DEPOSIT THE PARTICLE!",
+                        "\nEDEN SIMULATION: EARLY STOP."]
+POLI_OUTPUT_MESSAGES  = ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
+                         "\nEDEN SIMULATION: EARLY STOP. NO INITIAL NUCLEATION SEEDS FOUND!",
+                         "\nEDEN SIMULATION: EARLY STOP. NO ACTIVE BORDER ON WHICH DEPOSIT THE PARTICLE!",
+                         "\nEDEN SIMULATION: EARLY STOP."]
+ 
+def perform_EDEN_simulation(input: cusom_input):
+    LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
+    LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
+
+    if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
+        LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
         
-    if miller_indices is not None and len(miller_indices) == 3:
-        h, k, l = miller_indices
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=miller_strength, sharpness=miller_sharpness)
+    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
+        h, k, l = input.MILLER_INDICES
+        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
     
-    output_code = EDEN.EDEN_simulation(LATTICE, N_EPOCHS, three_dim=three_dim, verbose=verbose, real_time_reference_point_correction=False)
-    output_messages = ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
-                       "\nEDEN SIMULATION: EARLY STOP. NO INITIAL NUCLEATION SEEDS FOUND!",
-                       "\nEDEN SIMULATION: EARLY STOP. NO ACTIVE BORDER ON WHICH DEPOSIT THE PARTICLE!",
-                       "\nEDEN SIMULATION: EARLY STOP."]
-    print(output_messages[output_code])
+    output_code = EDEN.EDEN_simulation(LATTICE, input.EPOCHS, three_dim=input.THREE_DIM, verbose=input.VERBOSE, real_time_reference_point_correction=False)
+    print(EDEN_OUTPUT_MESSAGES[output_code])
     
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir)
+    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR)
     
 
-def perform_POLI_simulation(NX: int, NY: int, NZ: int,
-                            N_EPOCHS: int, three_dim: bool, verbose: bool, 
-                            title: str, out_dir: str = None,
-                            flux_direction: np.array = None, flux_strength: float = 0.0,
-                            miller_indices: tuple = None, miller_strength: float = 1.0, miller_sharpness: float = 1.0):
-    LATTICE = Lattice(NX, NY, NZ)
+def perform_POLI_simulation(input: cusom_input):
+    LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     
     how_many_seeds = 0
     while how_many_seeds < 20:
-        X = np.random.randint(0, NX)
-        Y = np.random.randint(0, NY)
-        Z = np.random.randint(0, NZ)
+        X = np.random.randint(0, input.NX)
+        Y = np.random.randint(0, input.NY)
+        Z = np.random.randint(0, input.NZ)
         
         if not LATTICE.is_occupied(X, Y, Z):
             LATTICE.set_nucleation_seed(X, Y, Z)
             how_many_seeds += 1
             
-    if flux_direction is not None and flux_strength > 0.0:
-        LATTICE.set_external_flux(flux_direction, flux_strength)
+    if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
+        LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
         
-    if miller_indices is not None and len(miller_indices) == 3:
-        h, k, l = miller_indices
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=miller_strength, sharpness=miller_sharpness)
+    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
+        h, k, l = input.MILLER_INDICES
+        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
             
-    output_code = EDEN.EDEN_simulation(LATTICE, N_EPOCHS, three_dim=three_dim, verbose=verbose, real_time_reference_point_correction=False)
-    output_messages = ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
-                       "\nEDEN SIMULATION: EARLY STOP. NO INITIAL NUCLEATION SEEDS FOUND!",
-                       "\nEDEN SIMULATION: EARLY STOP. NO ACTIVE BORDER ON WHICH DEPOSIT THE PARTICLE!",
-                       "\nEDEN SIMULATION: EARLY STOP."]
-    print(output_messages[output_code])
+    output_code = EDEN.EDEN_simulation(LATTICE, input.EPOCHS, three_dim=input.THREE_DIM, verbose=input.VERBOSE, real_time_reference_point_correction=False)
+    print(POLI_OUTPUT_MESSAGES[output_code])
     
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir, color_mode="id")
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title+'_boundaries', three_dim=three_dim, out_dir=out_dir, color_mode="boundaries")
+    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR, color_mode="id")
+    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE+'_boundaries', three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR, color_mode="boundaries")
     
 
-def perform_DLA_simulation(NX: int, NY: int, NZ: int,
-                           N_EPOCHS: int, three_dim: bool, verbose: bool,
-                           title: str, out_dir: str = None,
-                           flux_direction: np.array = None, flux_strength: float = 0.0,
-                           miller_indices: tuple = None, miller_strength: float = 1.0, miller_sharpness: float = 1.0):
-    LATTICE = Lattice(NX, NY, NZ)
-    LATTICE.set_nucleation_seed(int(NX / 2), int(NY / 2), int(NZ / 2))
+def perform_DLA_simulation(input: cusom_input):
+    LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
+    LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
 
-    if flux_direction is not None and flux_strength > 0.0:
-        LATTICE.set_external_flux(flux_direction, flux_strength)
+    if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
+        LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
         
-    if miller_indices is not None and len(miller_indices) == 3:
-        h, k, l = miller_indices
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=miller_strength, sharpness=miller_sharpness)
+    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
+        h, k, l = input.MILLER_INDICES
+        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
     
-    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, N_EPOCHS, 1, 3, three_dim=three_dim, verbose=verbose)
+    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, input.EPOCHS, 1, 3, three_dim=input.THREE_DIM, verbose=input.VERBOSE)
     print(f"\nDLA SIMULATION COMPLETED!\n \
           Statistics about the random walk:\n \
           \t* Mean number of steps in the random walk: {s_mean} +/- {s_std}\n \
           \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
     
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=three_dim, out_dir=out_dir)
+    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR)
     
-    if out_dir is not None:
-        ANLS.fractal_dimention_analysis(LATTICE, out_dir, title=title, num_scales=25, three_dim=three_dim, verbose=verbose)
+    if input.OUTPUT_DIR is not None:
+        ANLS.fractal_dimention_analysis(LATTICE, input.OUTPUT_DIR, title=input.TITLE, num_scales=25, three_dim=input.THREE_DIM, verbose=input.VERBOSE)
         
         
-def perform_active_surface_simulation(NX: int, NY: int, NZ: int,
-                                      N_EPOCHS: int, verbose: bool, 
-                                      title: str, out_dir: str = None, 
-                                      flux_strength: float = 0.0,
-                                      miller_indices: tuple = None, miller_strength: float = 1.0, miller_sharpness: float = 1.0):
-    LATTICE = Lattice(NX, NY, NZ)
-    for x in range(NX):
-        for z in range(NZ):
+def perform_active_surface_simulation(input: cusom_input):
+    LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
+    for x in range(input.NX):
+        for z in range(input.NZ):
             LATTICE.set_nucleation_seed(x, 0, z)
 
     # Default anisotropy: we aer simulating particles coming from +y direction
-    LATTICE.set_external_flux(np.array([0,1,0]), flux_strength)
+    LATTICE.set_external_flux(np.array([0,1,0]), input.FLUX_STRENGTH)
     
-    if miller_indices is not None and len(miller_indices) == 3:
-        h, k, l = miller_indices
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=miller_strength, sharpness=miller_sharpness)
+    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
+        h, k, l = input.MILLER_INDICES
+        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
     
             
-    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, N_EPOCHS, 1, 3, three_dim=True, verbose=verbose)
+    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, input.EPOCHS, 1, 3, three_dim=True, verbose=input.VERBOSE)
     print(f"\nDLA SIMULATION FOR ACTIVE SURFACE COMPLETED!\n \
           Statistics about the random walk:\n \
           \t* Mean number of steps in the random walk: {s_mean} +/- {s_std}\n \
           \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
     
-    GUI.plot_lattice(LATTICE, N_EPOCHS, title=title, three_dim=True, out_dir=out_dir)
+    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=True, out_dir=input.OUTPUT_DIR)
     
-    if out_dir is not None:
-        ANLS.distance_from_active_surface(LATTICE, out_dir, N_EPOCHS, verbose=verbose)
+    if input.OUTPUT_DIR is not None:
+        ANLS.distance_from_active_surface(LATTICE, input.OUTPUT_DIR, input.EPOCHS, verbose=input.VERBOSE)
     
     
 
 if __name__ == '__main__':
     parsed_inputs = parse_inputs()
-    EPOCHS = parsed_inputs.epochs
-    NX, NY, NZ = parsed_inputs.size
-    IS_3D = not parsed_inputs.two_dim
-    TITLE = parsed_inputs.title
+    
     SIMULATION = parsed_inputs.simulation
-    VERBOSE = parsed_inputs.verbose
-    OUTPUT_DIR = None if parsed_inputs.output == "" else parsed_inputs.output
-    FLUX_DIRECTIONS = parsed_inputs.external_flux
-    FLUX_STRENGTH = parsed_inputs.flux_strength
-    MILLER_INDICES = parsed_inputs.miller
-    MILLER_STRENGTH = parsed_inputs.anisotropy_coeff
-    MILLER_SHARPNESS = parsed_inputs.anisotropy_sharpness
+    epochs = parsed_inputs.epochs
+    nx, ny, nz = parsed_inputs.size
+    is_3D = not parsed_inputs.two_dim
+    title = parsed_inputs.title
+    verbose = parsed_inputs.verbose
+    out_dir = None if parsed_inputs.output == "" else parsed_inputs.output
+    flux_direction = parsed_inputs.external_flux
+    flux_strength = parsed_inputs.flux_strength
+    miller_indices = parsed_inputs.miller
+    miller_strength = parsed_inputs.anisotropy_coeff
+    miller_sharpness = parsed_inputs.anisotropy_sharpness
+    
+    simulation_input = cusom_input(NX=nx, NY=ny, NZ=nz, 
+                                   EPOCHS=epochs, THREE_DIM=is_3D, VERBOSE=verbose,
+                                   TITLE=title, OUTPUT_DIR=out_dir,
+                                   FLUX_DIRECTION=flux_direction, FLUX_STRENGTH=flux_strength,
+                                   MILLER_INDICES=miller_indices, MILLER_STRENGTH=miller_strength, MILLER_SHARPNESS=miller_sharpness)
     
     if SIMULATION == 'EDEN':
-        perform_EDEN_simulation(NX, NY, NZ, 
-                                EPOCHS, IS_3D, VERBOSE, 
-                                TITLE, OUTPUT_DIR, 
-                                FLUX_DIRECTIONS, FLUX_STRENGTH,
-                                MILLER_INDICES, MILLER_STRENGTH, MILLER_SHARPNESS)
+        perform_EDEN_simulation(simulation_input)
         
     elif SIMULATION == 'POLI':
-        perform_POLI_simulation(NX, NY, NZ,
-                                EPOCHS, IS_3D, VERBOSE,
-                                TITLE, OUTPUT_DIR,
-                                FLUX_DIRECTIONS, FLUX_STRENGTH,
-                                MILLER_INDICES, MILLER_STRENGTH, MILLER_SHARPNESS)
+        perform_POLI_simulation(simulation_input)
         
     elif SIMULATION == 'DLA':
-        perform_DLA_simulation(NX, NY, NZ, 
-                               EPOCHS, IS_3D, VERBOSE, 
-                               TITLE, OUTPUT_DIR,
-                               FLUX_DIRECTIONS, FLUX_STRENGTH,
-                               MILLER_INDICES, MILLER_STRENGTH, MILLER_SHARPNESS)
+        perform_DLA_simulation(simulation_input)
         
     elif SIMULATION == 'SURFACE':
-        perform_active_surface_simulation(NX, NY, NZ,
-                                          EPOCHS, VERBOSE, 
-                                          TITLE, OUTPUT_DIR, 
-                                          FLUX_DIRECTIONS,
-                                          MILLER_INDICES, MILLER_STRENGTH, MILLER_SHARPNESS)
+        perform_active_surface_simulation(simulation_input)

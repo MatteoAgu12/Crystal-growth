@@ -5,7 +5,7 @@ from typing import Union
 class Lattice:
     """
     """
-    def __init__(self, number_of_cells_x: int, number_of_cells_y: int, number_of_cells_z: int):
+    def __init__(self, number_of_cells_x: int, number_of_cells_y: int, number_of_cells_z: int, verbose: bool = False):
         """
         Args:
             number_of_cells_x (int): number of cells in the lattice along the x direction
@@ -28,6 +28,7 @@ class Lattice:
         self.anisotropy_sticking_coefficient = 0.0
         self.anisotropy_sharpness            = 1.0
         self.base_sticking_prob              = 0.05
+        self.verbose                         = verbose
 
     def __str__(self):
         return f"Lattice has shape: {self.shape} \
@@ -245,6 +246,16 @@ class Lattice:
         self.anisotropy_sticking_coefficient = float(sticking_coefficient)
         self.anisotropy_sharpness = float(sharpness)
         self.base_sticking_prob = 0.05
+        
+        # === DEBUG PRINT ===
+        if self.verbose:
+            print(f"\n[DEBUG LATTICE] Anisotropy Configured:")
+            print(f"  - Family: <{h} {k} {l}>")
+            print(f"  - Generated {len(self.preferred_axes)} axes.")
+            print(f"  - Axes list: {self.preferred_axes}")
+            print(f"  - Coeff: {self.anisotropy_sticking_coefficient}")
+            print(f"  - Sharpness: {self.anisotropy_sharpness}")
+            print(f"=========================================\n")
       
     def get_surface_normal(self, x : int, y : int, z : int) -> np.array:
         """
@@ -296,13 +307,22 @@ class Lattice:
             return self.base_sticking_prob
         
         max_align = 0.0
+        best_axis = None
         for axis in self.preferred_axes:
             alignment = abs(np.dot(surface_normal, axis))
             if alignment > max_align:
                 max_align = alignment
+                best_axis = axis
                 
         prob = self.base_sticking_prob + self.anisotropy_sticking_coefficient * (max_align ** self.anisotropy_sharpness)
-        return min(1.0, prob)
+        result = min(1.0, prob)
+        
+        # TODO: temporaneo
+        #=== DEBUG PRINT (ATTENZIONE: STAMPA MOLTO) ===
+        if self.verbose:
+            print(f"[DEBUG MATH] Norm: {surface_normal} | BestAxis: {best_axis} | Align: {max_align:.4f} | PROB: {result:.4f}")
+        
+        return result
 
     def set_external_flux(self, directions: Union[np.ndarray, list], strength: float) -> None:
         """

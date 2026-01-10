@@ -149,9 +149,11 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             neighbors = lattice.get_neighbors(position[0], position[1], position[2])        
             for neighbor in neighbors:
                 if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]):
-                    surface_normal = lattice.get_surface_normal(int(position[0]), int(position[1]), int(position[2]))
-                    p_stick = lattice.compute_structural_probability(surface_normal)
-                    if np.random.rand() > p_stick:
+                    p_struct = lattice.compute_structural_probability(int(position[0]), int(position[1]), int(position[2]))
+                    
+                    if p_struct == 0.0:
+                        break
+                    if np.random.rand() > min(1.0, p_struct):
                         break
                     
                     id = lattice.get_group_id(int(neighbor[0]), int(neighbor[1]), int(neighbor[2]))

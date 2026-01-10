@@ -43,9 +43,14 @@ def choose_random_border_site(active_border: np.array, lattice: Lattice = None, 
     weights = np.zeros(len(active_border), dtype=float)
     for i, site in enumerate(active_border):
         direction_vec = site - reference_point
-        surface_normal = lattice.get_surface_normal(site[0], site[1], site[2])
-        p_struct = lattice.compute_structural_probability(surface_normal)
-        weights[i] = lattice.compute_external_flux_weights(direction_vec) * p_struct
+        p_struct = lattice.compute_structural_probability(site[0], site[1], site[2])
+        
+        if p_struct == 0.0:
+            weights[i] = 0.0
+            continue
+        
+        flux_weight = lattice.compute_external_flux_weights(direction_vec)
+        weights[i] = flux_weight * p_struct
 
     weight_sum = float(np.sum(weights))
     if weight_sum == 0.0:

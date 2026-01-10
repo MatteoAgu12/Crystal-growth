@@ -257,7 +257,7 @@ class Lattice:
             print(f"  - Sharpness: {self.anisotropy_sharpness}")
             print(f"=========================================\n")
       
-    def get_surface_normal(self, x : int, y : int, z : int) -> np.array:
+    def get_surface_normals(self, x : int, y : int, z : int) -> list:
         """
         Compute the normal vector of the surface in the empty point (x,y,z).
         Does it by considering the local occupied neighbors
@@ -266,64 +266,52 @@ class Lattice:
             x, y, z (int): empty point
 
         Returns:
-            np.array: normal vector to the surface
+            list: list of normal vector to the surface from each occupied neighbor
         """
-        accumulated_vec = np.zeros(3, dtype=float)
+        normals = []
         neighbors = self.get_neighbors(x, y, z)
-        occupied_count = 0
         
         for n in neighbors:
             nx, ny, nz = int(n[0]), int(n[1]), int(n[2])
-            
             if self.is_occupied(nx, ny, nz):
-                occupied_count += 1
-                direction = np.array([x-nx, y-ny, z-nz], dtype=float)
-                accumulated_vec += direction
-                
-        if occupied_count == 0:
-            return np.zeros(3)
-        
-        norm = np.linalg.norm(accumulated_vec)
-        if norm > 0:
-            return accumulated_vec / norm
-        
-        return accumulated_vec
+                v = np.array([x-nx, y-ny, z-nz], dtype=float)
+                norm = np.linalg.norm(v)
+                if norm > 0.0:
+                    normals.append(v / norm)
+                    
+        return normals
     
-    def compute_structural_probability(self, surface_normal: np.array) -> float:
+    def compute_structural_probability(self,x: int, y: int, z: int) -> float:
         """
         Compute the sticking probability based on the surface normal and miller indices.
+        Returns 0 (impossible) if the surface is crystallographically forbidden.
 
         Args:
-            surface_normal (np.array): surface normal vector
+            x, y, z (int): coordinates of the candidate cell for the adesion.
 
         Returns:
             float: attachment probability
         """
-        if not hasattr(self, "preferred_axes") or not self.preferred_axes:
+        if not self.preferred_axes:
             return 1.0
         
-        norm = np.linalg.norm(surface_normal)
-        if norm == 0:
-            return self.base_sticking_prob
+        normals = self.get_surface_normals(x, y, z)
+        if not normals:
+            return 0.0
         
         max_align = 0.0
-        best_axis = None
-        for axis in self.preferred_axes:
-            alignment = abs(np.dot(surface_normal, axis))
-            if alignment > max_align:
-                max_align = alignment
-                best_axis = axis
-                
-        prob = self.base_sticking_prob + self.anisotropy_sticking_coefficient * (max_align ** self.anisotropy_sharpness)
-        result = min(1.0, prob)
+        for n in normals:
+            for axis in self.preferred_axes:
+                align = abs(np.dot(n, axis))
+                if align > max_align:
+                    max_align = align
+                    
+        ALIGNMENT_THRESHOLD = 0.6 # TODO: tmp
+        if max_align < ALIGNMENT_THRESHOLD:
+            return 0.0
         
-        # TODO: temporaneo
-        #=== DEBUG PRINT (ATTENZIONE: STAMPA MOLTO) ===
-        if self.verbose:
-            print(f"[DEBUG MATH] Norm: {surface_normal} | BestAxis: {best_axis} | Align: {max_align:.4f} | PROB: {result:.4f}")
+        return min(1.0, self.anisotropy_sticking_coefficient * (max_align ** self.anisotropy_sharpness))
         
-        return result
-
     def set_external_flux(self, directions: Union[np.ndarray, list], strength: float) -> None:
         """
         Initialize the external diffusive flux acting on the lattice.
@@ -404,6 +392,5 @@ class Lattice:
         
         return 1.0
         
-
 
 

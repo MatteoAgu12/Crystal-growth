@@ -131,7 +131,7 @@ def test_surface_normal_calculation():
     
     # Plain surface
     L.occupy(1, 1, 1, 1, 1)
-    n = L.get_surface_normal(1, 1, 2)
+    n = L.get_surface_normals(1, 1, 2)
     expected = np.array([0, 0, 1], dtype=float)
     assert np.allclose(n, expected), f"Error: attended {expected}, obtained {n}"
     
@@ -139,28 +139,46 @@ def test_surface_normal_calculation():
     L = Lattice(5, 5, 5)
     L.occupy(1, 1, 1, 1, 1)
     L.occupy(2, 1, 1, 1, 1)
-    n = L.get_surface_normal(1, 1, 0)
+    n = L.get_surface_normals(1, 1, 0)
 
     assert np.isclose(np.linalg.norm(n), 1.0), f"Error: obtained {n}"
 
 def test_structural_probability_calc():
     """
-    Checks if the structural probability matches the expectations for three easy cases.
+    Test structural probability using discrete local geometry.
     """
-    L = Lattice(5, 5, 5)
-    L.set_miller_anisotropy(1, 0, 0, sticking_coefficient=0.5, sharpness=2)
 
-    p_aligned = L.compute_structural_probability(np.array([1, 0, 0]))
-    p_misaligned = L.compute_structural_probability(np.array([0, 1, 0]))
-    assert p_aligned > p_misaligned
-    
-    p1 = L.compute_structural_probability(np.array([1, 0, 0]))
-    p2 = L.compute_structural_probability(np.array([-1, 0, 0]))
-    assert np.isclose(p1, p2)
-    
-    L.set_miller_anisotropy(1, 1, 1, sticking_coefficient=10.0)
-    p = L.compute_structural_probability(np.array([1, 1, 1]))
-    assert 0.0 <= p <= 1.0
+    L = Lattice(5, 5, 5)
+    L.set_miller_anisotropy(1, 0, 0, sticking_coefficient=1.0, sharpness=2)
+
+    # ---- case 1: site compatible with <100> ----
+    # Occupied cell at (2,2,2)
+    L.occupy(2, 2, 2, epoch=0, id=1)
+
+    # Test site at +x direction -> normal ~ (1,0,0)
+    p_aligned = L.compute_structural_probability(3, 2, 2)
+
+    # ---- case 2: misaligned site ----
+    # Site diagonal to the occupied cell
+    p_misaligned = L.compute_structural_probability(3, 3, 2)
+
+    assert p_aligned > p_misaligned, \
+        "Aligned <100> site should have higher probability than misaligned one"
+
+    # ---- case 3: symmetry +x / -x ----
+    p_pos = L.compute_structural_probability(3, 2, 2)
+    p_neg = L.compute_structural_probability(1, 2, 2)
+
+    assert np.isclose(p_pos, p_neg), \
+        "Structural probability must be symmetric under inversion"
+
+    # ---- case 4: bounded probability ----
+    L.set_miller_anisotropy(1, 1, 1, sticking_coefficient=10.0, sharpness=3)
+
+    p = L.compute_structural_probability(3, 3, 3)
+    assert 0.0 <= p <= 1.0, \
+        "Structural probability must be within [0,1]"
+
 
 # === EDEN simulation section ==============================================    
 def test_choose_random_border_site_function():

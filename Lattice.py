@@ -27,7 +27,8 @@ class Lattice:
         self.preferred_axes                  = []
         self.anisotropy_sticking_coefficient = 0.0
         self.anisotropy_sharpness            = 1.0
-        self.base_sticking_prob              = 0.05
+        self.anisotropy_selection_strength   = 1.0
+        self.base_sticking_prob              = 0.01
         self.verbose                         = verbose
 
     def __str__(self):
@@ -210,7 +211,8 @@ class Lattice:
         
         return list(zip(mins, maxs))
 
-    def set_miller_anisotropy(self, h: int, k: int, l: int, sticking_coefficient: float = 1.0, sharpness: float = 4.0):
+    def set_miller_anisotropy(self, h: int, k: int, l: int, base_stick_prob: float = 1.0,
+                              sticking_coefficient: float = 1.0, sharpness: float = 4.0, selection_strength: float = 5.0):
         """
         Define anisotropic growth based on Miller index family <hkl>.
 
@@ -218,6 +220,7 @@ class Lattice:
             h, k, l (int): Miller indices (cannot all be zero)
             sticking_coefficient (float): anisotropy strength
             sharpness (float): angular selectivity exponent
+            selection_strength (float): how strong is the selection rule, goes as exp(selection_strength * anisotropy_score)
         """
         
         base = [h, k, l]
@@ -245,6 +248,7 @@ class Lattice:
 
         self.anisotropy_sticking_coefficient = float(sticking_coefficient)
         self.anisotropy_sharpness = float(sharpness)
+        self.anisotropy_selection_strength = float(selection_strength)
         self.base_sticking_prob = 0.05
         
         # === DEBUG PRINT ===
@@ -255,12 +259,13 @@ class Lattice:
             print(f"  - Axes list: {self.preferred_axes}")
             print(f"  - Coeff: {self.anisotropy_sticking_coefficient}")
             print(f"  - Sharpness: {self.anisotropy_sharpness}")
+            print(f"  - Selection strength: {self.anisotropy_selection_strength}")
             print(f"=========================================\n")
       
     def get_surface_normals(self, x : int, y : int, z : int) -> list:
         """
-        Compute the normal vector of the surface in the empty point (x,y,z).
-        Does it by considering the local occupied neighbors
+        Return list of unit vectors pointing from each occupied neighbor toward (x,y,z).
+        No averaging here: keep the set of discrete normals.
 
         Args:
             x, y, z (int): empty point
@@ -281,36 +286,54 @@ class Lattice:
                     
         return normals
     
+    def anisotropy_function(self, normal: np.array) -> float:
+        """
+        Continuous anisotropy function a_s(n) >= 0 based on the preferred axes.
+
+        Args:
+            normals (np.array): vector normal to the surface.
+
+        Returns:
+            float: value of the anisotropy function.
+        """
+        if not self.preferred_axes:
+            return 1.0
+        
+        n_norm = np.linalg.norm(normal)
+        if n_norm == 0.0:
+            return 0.0
+        n_unit = normal / n_norm
+        
+        total = 0.0
+        for axis in self.preferred_axes:
+            total += abs(np.dot(n_unit, axis)) ** self.anisotropy_sharpness
+            
+        total /= max(1.0, len(self.preferred_axes))
+        return 1.0 + self.anisotropy_sticking_coefficient * total
+    
     def compute_structural_probability(self,x: int, y: int, z: int) -> float:
         """
-        Compute the sticking probability based on the surface normal and miller indices.
-        Returns 0 (impossible) if the surface is crystallographically forbidden.
-
+        Compute a structural score for site (x,y,z) based on local discrete normals and anisotropy_function.
+        Returns a non-negative score a_s >= 0.
+        NOTE: this is not a probability, it is a score, it has to be treated differently depending on the simulation you are running.
+        
         Args:
             x, y, z (int): coordinates of the candidate cell for the adesion.
 
         Returns:
             float: attachment probability
         """
-        if not self.preferred_axes:
-            return 1.0
-        
         normals = self.get_surface_normals(x, y, z)
         if not normals:
             return 0.0
         
-        max_align = 0.0
+        max_a = 0.0
         for n in normals:
-            for axis in self.preferred_axes:
-                align = abs(np.dot(n, axis))
-                if align > max_align:
-                    max_align = align
-                    
-        ALIGNMENT_THRESHOLD = 0.6 # TODO: tmp
-        if max_align < ALIGNMENT_THRESHOLD:
-            return 0.0
-        
-        return min(1.0, self.anisotropy_sticking_coefficient * (max_align ** self.anisotropy_sharpness))
+            a = self.anisotropy_function(n)
+            if a > max_a:
+                max_a = a
+                
+        return max_a
         
     def set_external_flux(self, directions: Union[np.ndarray, list], strength: float) -> None:
         """

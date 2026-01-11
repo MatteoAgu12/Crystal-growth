@@ -41,6 +41,10 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         raise ValueError("The anisotropy coefficient can't be negative.")
     if parsed_input.anisotropy_sharpness < 0.0:
         raise ValueError("The anisotropy sharpness can't be negative.")
+    if parsed_input.anisotropy_selection < 0.0:
+        raise ValueError("The anisotropy selection strength can't be negative.")
+    if parsed_input.base_stick < 0.0 or parsed_input.base_stick > 1.0:
+        raise ValueError("The base sticking probability must be in range [0,1].")
 
 def parse_inputs() -> argparse.Namespace:
     """
@@ -77,10 +81,14 @@ def parse_inputs() -> argparse.Namespace:
                         help="External diffusion flux strength (0.0 is isotropic). Default is 0.0")
     parser.add_argument("--miller", "-m", type=int, nargs=3, metavar=("h", "k", "l"), default=[0, 0, 0],
                         help="Miller indices that define the structural anisotropy directions. Default [0,0,0] (no anisotropy)")
+    parser.add_argument("--base-stick", type=float, default=0.01,
+                        help="Residual isotropic sticking probability, muste be in [0,1]. For strong anisotropy select values close to 0.")
     parser.add_argument("--anisotropy-coeff", type=float, default=0.05,
                         help="Sticking coefficient that tells how easily a particle attaches to the surface due to anisotropy. Default is 0.05")
     parser.add_argument("--anisotropy-sharpness", type=float, default=4.0,
                         help="Tells how smooth are the faces due to anisotropy. Default is 4.0, cannot be less than 1.0")
+    parser.add_argument("--anisotropy-selection", type=float, default=1.0,
+                        help="Selection parameter, tells how efficient the anisotropy is. Goes as exp(selection * ...)")
     
     # Checks the inputs
     parsed_input = parser.parse_args()

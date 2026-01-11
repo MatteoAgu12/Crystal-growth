@@ -19,10 +19,12 @@ class cusom_input:
     TITLE:            Union[str, None]
     OUTPUT_DIR:       Union[str, None]
     FLUX_DIRECTION:   Union[np.array, None]
-    FLUX_STRENGTH:    Union[float, None]
     MILLER_INDICES:   Union[tuple, None]
-    MILLER_STRENGTH:  Union[float, None]
-    MILLER_SHARPNESS: Union[float, None]
+    FLUX_STRENGTH:    float = 0.0
+    BASE_STICK_PROB:  float = 0.01
+    MILLER_STRENGTH:  float = 0.0
+    MILLER_SHARPNESS: float = 4.0
+    MILLER_SELECTION: float = 1.0
     # TODO: continue....
     
     def __str__(self):
@@ -60,7 +62,8 @@ def perform_EDEN_simulation(input: cusom_input):
         
     if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
         h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
+        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB, 
+                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
     
     output_code = EDEN.EDEN_simulation(LATTICE, input.EPOCHS, three_dim=input.THREE_DIM, verbose=input.VERBOSE, real_time_reference_point_correction=False)
     print(EDEN_OUTPUT_MESSAGES[output_code])
@@ -86,7 +89,8 @@ def perform_POLI_simulation(input: cusom_input):
         
     if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
         h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
+        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB,
+                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
             
     output_code = EDEN.EDEN_simulation(LATTICE, input.EPOCHS, three_dim=input.THREE_DIM, verbose=input.VERBOSE, real_time_reference_point_correction=False)
     print(POLI_OUTPUT_MESSAGES[output_code])
@@ -104,7 +108,8 @@ def perform_DLA_simulation(input: cusom_input):
         
     if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
         h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
+        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB,
+                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
     
     s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, input.EPOCHS, 1, 3, three_dim=input.THREE_DIM, verbose=input.VERBOSE)
     print(f"\nDLA SIMULATION COMPLETED!\n \
@@ -129,7 +134,8 @@ def perform_active_surface_simulation(input: cusom_input):
     
     if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
         h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS)
+        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB,
+                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
     
             
     s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, input.EPOCHS, 1, 3, three_dim=True, verbose=input.VERBOSE)
@@ -157,15 +163,18 @@ if __name__ == '__main__':
     out_dir = None if parsed_inputs.output == "" else parsed_inputs.output
     flux_direction = parsed_inputs.external_flux
     flux_strength = parsed_inputs.flux_strength
+    base_sticking_prob = parsed_inputs.base_stick
     miller_indices = parsed_inputs.miller
     miller_strength = parsed_inputs.anisotropy_coeff
     miller_sharpness = parsed_inputs.anisotropy_sharpness
+    miller_selection_strength = parsed_inputs.anisotropy_selection
     
     simulation_input = cusom_input(NX=nx, NY=ny, NZ=nz, 
                                    EPOCHS=epochs, THREE_DIM=is_3D, VERBOSE=verbose,
                                    TITLE=title, OUTPUT_DIR=out_dir,
                                    FLUX_DIRECTION=flux_direction, FLUX_STRENGTH=flux_strength,
-                                   MILLER_INDICES=miller_indices, MILLER_STRENGTH=miller_strength, MILLER_SHARPNESS=miller_sharpness)
+                                   BASE_STICK_PROB=base_sticking_prob,
+                                   MILLER_INDICES=miller_indices, MILLER_STRENGTH=miller_strength, MILLER_SHARPNESS=miller_sharpness, MILLER_SELECTION=miller_selection_strength)
     
     if SIMULATION == 'EDEN':
         perform_EDEN_simulation(simulation_input)

@@ -89,6 +89,8 @@ def parse_inputs() -> argparse.Namespace:
                         help="Tells how smooth are the faces due to anisotropy. Default is 4.0, cannot be less than 1.0")
     parser.add_argument("--anisotropy-selection", type=float, default=1.0,
                         help="Selection parameter, tells how efficient the anisotropy is. Goes as exp(selection * ...)")
+    parser.add_argument("--record", "-R", dest="record", action="store_true",
+                        help="If active records some diagnostic information during the simulation.")
     
     # Checks the inputs
     parsed_input = parser.parse_args()

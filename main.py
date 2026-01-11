@@ -16,6 +16,7 @@ class cusom_input:
     EPOCHS:           int
     THREE_DIM:        bool
     VERBOSE:          bool
+    RECORD:           bool
     TITLE:            Union[str, None]
     OUTPUT_DIR:       Union[str, None]
     FLUX_DIRECTION:   Union[np.array, None]
@@ -42,6 +43,7 @@ class cusom_input:
         Miller Strength:  {self.MILLER_STRENGTH}
         Miller Sharpness: {self.MILLER_SHARPNESS}
         Verbose:          {self.VERBOSE}
+        Record:           {self.RECORD}
         """
 
 EDEN_OUTPUT_MESSAGES =  ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
@@ -56,6 +58,9 @@ POLI_OUTPUT_MESSAGES  = ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
 def perform_EDEN_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
+    
+    if input.RECORD:
+        LATTICE.collect_anisotropy_stats = True
 
     if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
         LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
@@ -73,6 +78,9 @@ def perform_EDEN_simulation(input: cusom_input):
 
 def perform_POLI_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
+    
+    if input.RECORD:
+        LATTICE.collect_anisotropy_stats = True
     
     how_many_seeds = 0
     while how_many_seeds < 20:
@@ -102,6 +110,9 @@ def perform_POLI_simulation(input: cusom_input):
 def perform_DLA_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
+    
+    if input.RECORD:
+        LATTICE.collect_anisotropy_stats = True
 
     if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
         LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
@@ -128,6 +139,9 @@ def perform_active_surface_simulation(input: cusom_input):
     for x in range(input.NX):
         for z in range(input.NZ):
             LATTICE.set_nucleation_seed(x, 0, z)
+            
+    if input.RECORD:
+        LATTICE.collect_anisotropy_stats = True
 
     # Default anisotropy: we aer simulating particles coming from +y direction
     LATTICE.set_external_flux(np.array([0,1,0]), input.FLUX_STRENGTH)
@@ -160,6 +174,7 @@ if __name__ == '__main__':
     is_3D = not parsed_inputs.two_dim
     title = parsed_inputs.title
     verbose = parsed_inputs.verbose
+    record = parsed_inputs.record
     out_dir = None if parsed_inputs.output == "" else parsed_inputs.output
     flux_direction = parsed_inputs.external_flux
     flux_strength = parsed_inputs.flux_strength
@@ -170,7 +185,8 @@ if __name__ == '__main__':
     miller_selection_strength = parsed_inputs.anisotropy_selection
     
     simulation_input = cusom_input(NX=nx, NY=ny, NZ=nz, 
-                                   EPOCHS=epochs, THREE_DIM=is_3D, VERBOSE=verbose,
+                                   EPOCHS=epochs, THREE_DIM=is_3D, 
+                                   VERBOSE=verbose, RECORD=record,
                                    TITLE=title, OUTPUT_DIR=out_dir,
                                    FLUX_DIRECTION=flux_direction, FLUX_STRENGTH=flux_strength,
                                    BASE_STICK_PROB=base_sticking_prob,

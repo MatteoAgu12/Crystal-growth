@@ -150,6 +150,10 @@ def particle_random_walk(lattice: Lattice, initial_coordinate: np.array, outer_a
             for neighbor in neighbors:
                 if lattice.is_occupied(neighbor[0], neighbor[1], neighbor[2]):
                     a_s = lattice.compute_structural_probability(int(position[0]), int(position[1]), int(position[2]))
+                    
+                    if lattice.collect_anisotropy_stats:
+                        lattice.record_anisotropy_stats(neighbor, epoch)
+                    
                     if a_s <= 0.0:
                         break
                     

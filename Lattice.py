@@ -29,6 +29,8 @@ class Lattice:
         self.anisotropy_sharpness            = 1.0
         self.anisotropy_selection_strength   = 1.0
         self.base_sticking_prob              = 0.01
+        self.collect_anisotropy_stats        = False
+        self.anisotropy_stats                = {"epoch" : [], "a_s" : []}
         self.verbose                         = verbose
 
     def __str__(self):
@@ -415,5 +417,33 @@ class Lattice:
         
         return 1.0
         
+    def record_anisotropy_stats(self, sites: np.ndarray, epoch: int):
+        """
+        Records structural anisotropy scores for a givenlist of sites.
+        Mainly for diagnositcs.
 
+        Args:
+            sites (np.ndarray): active sites
+            epoch (int): epoch number
+        """
+        if not self.collect_anisotropy_stats:
+            return
+        
+        values = []
+        for s in sites:
+            a_s = self.compute_structural_probability(s[0], s[1], s[2])
+            if a_s > 0.0:
+                values.append(a_s)
+                
+        if values:
+            self.anisotropy_stats["epoch"].append(epoch)
+            self.anisotropy_stats["a_s"].append(a_s)
+            
+    def reset_anisotropy_stats(self):
+        """
+        Reset the statistics about the anisotropy.
+        """
+        self.anisotropy_stats["epoch"] = []
+        self.anisotropy_stats["a_s"] = []
+        
 

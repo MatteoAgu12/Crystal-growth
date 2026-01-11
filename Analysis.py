@@ -109,4 +109,31 @@ def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: in
     plt.savefig(filename)
         
     print(f"Plot of distance of the farest cell from the active surface as function of time saved as {filename}.")       
+
+def anisotropy_histogram(lattice: Lattice, out_dir: str, epoch: int = -1, bins: int = 50):
+    """
+    Plot histogram of a_s values for each epoch.
+    Epoch index -1 plots the last recorded.
+
+    Args:
+        lattice (Lattice): custom lattice object
+        epoch (int, optional): epoch number. Defaults to -1.
+        bins (int, optional): number of bins. Defaults to 50.
+    """
+    stats = lattice.anisotropy_stats
+    if not stats["a_s"]:
+        print("WARNING: no anisotropy statistics recorded!")
+        return
     
+    values = np.array(stats["a_s"][epoch]).flatten()
+    
+    plt.hist(values, bins=bins)
+    plt.xlabel("Structural anisotropy score a_s")
+    plt.ylabel("Count")
+    plt.title("Anisotropy dignostic histogram")
+    
+    filename = out_dir + "Anisotropy_diagnostic_histo.png"
+    plt.savefig(filename)
+        
+    print(f"Diagnostic histogram of the anisotropy saved as {filename}.")  
+        

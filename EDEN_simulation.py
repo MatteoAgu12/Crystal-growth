@@ -114,6 +114,12 @@ def EDEN_simulation(lattice: Lattice, N_reps: int,
         if not three_dim:
             for site in active_border:
                 if site[2] == z_coord: planar_border.append(site)
+        
+        if lattice.collect_anisotropy_stats:        
+            if not three_dim:
+                lattice.record_anisotropy_stats(planar_border, n)
+            else:
+                lattice.record_anisotropy_stats(active_border, n)
             
         # new_cell = choose_random_border_site(active_border) if three_dim else choose_random_border_site(planar_border)
         border_to_use = active_border if three_dim else planar_border

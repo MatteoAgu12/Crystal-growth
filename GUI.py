@@ -4,9 +4,9 @@ from matplotlib.colors import Normalize
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import Rectangle, Patch
 import numpy as np
-from Lattice import Lattice
-import DLA_simulation as DLA
-import EDEN_simulation as EDEN
+from classes.Lattice import Lattice
+import classes.DLAGrowth as DLA
+import classes.EDENGrowth as EDEN
 
 def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
     """

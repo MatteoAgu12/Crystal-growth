@@ -1,4 +1,5 @@
 import argparse
+import sys
 import os
 
 ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "SURFACE", "POLI"]
@@ -46,12 +47,58 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if parsed_input.base_stick < 0.0 or parsed_input.base_stick > 1.0:
         raise ValueError("The base sticking probability must be in range [0,1].")
 
-def parse_inputs() -> argparse.Namespace:
+def cast_file_input_to_value(value: str):
+    """
+    Convert a string value from a config file to an int, float, bool, list or str.
+
+    Args:
+        value (str): "value" of the input from the file.
+    """
+    value = value.strip()
+    
+    # bool
+    if value.lower() in ("true", "false"):
+        return value.lower() == "true"
+    
+    # list
+    if " " in value or "," in value:
+        sep = "," if "," in value else " "
+        parts = [v for v in value.split(sep) if v]
+        
+        # int list
+        try:
+            return [int(v) for v in parts]
+        except ValueError:
+            pass
+        
+        # float list
+        try:
+            return [float(v) for v in parts]
+        except ValueError:
+            pass
+        
+        # default: str list
+        return parts
+    
+    # int
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    
+    # float 
+    try:
+        return float(value)
+    except ValueError:
+        pass
+    
+    # string
+    return value
+
+def parse_inputs_from_terminal() -> argparse.Namespace:
     """
     Custom argument parser for the crystal structure symulation.
-    
-    Raises:
-        ValueError: for each possible input check if its value is allowed.
+    Does it with argparser library (inputs from terminal)
 
     Returns:
         argparse.Namespace: parsed inputs.
@@ -92,8 +139,51 @@ def parse_inputs() -> argparse.Namespace:
     parser.add_argument("--record", "-R", dest="record", action="store_true",
                         help="If active records some diagnostic information during the simulation.")
     
-    # Checks the inputs
     parsed_input = parser.parse_args()
+    return parsed_input
+    
+def parse_inputs_from_file_ini(filename: str) -> argparse.Namespace:
+    """
+    Custom argument parser for the crystal structure symulation.
+    Does it by reading a .ini configuration file
+    
+    Args:
+        filename (str): name of the configuration file.
+
+    Returns:
+        argparse.Namespace: parsed inputs.
+    """
+    params = {}
+    
+    with open(filename) as f:
+        for line in f:
+            line = line.strip()
+            
+            if not line or line.startswith("#"):
+                continue
+            
+            key, value = line.split("=", 1)
+            params[key.strip()] = cast_file_input_to_value(value.strip())
+            
+    return argparse.Namespace(**params)
+
+def parse_inputs() -> argparse.Namespace:
+    """
+    Custom argument parser for the crystal structure symulation.
+    It is a wrapper function, that decides which parser to call. Also checks the values of the inputs
+
+    Returns:
+        argparse.Namespace: parsed inputs.
+    """
+    from_file = True
+    parsed_input = None
+    
+    if len(sys.argv) == 2 and sys.argv[1].endswith(".ini"):
+        parsed_input = parse_inputs_from_file_ini(sys.argv[1])
+    else:
+        parsed_input = parse_inputs_from_terminal()
+    
+    # Checks the inputs
     check_parsed_inputs(parsed_input)
     
     return parsed_input

@@ -3,6 +3,7 @@ from Lattice import Lattice
 import EDEN_simulation as EDEN
 import DLA_simulation as DLA
 import GUI as GUI
+import ArgParser as parser
 
 # === Lattice class ========================================================
 def test_lattice_class():
@@ -276,7 +277,36 @@ def test_get_visible_voxels_binary_mask_function():
     assert np.sum(lattice.grid) == 7
     assert np.sum(visible_voxels) == 6
     assert not visible_voxels[1,1,1]
-    
+
+# === Parser section =======================================================
+def test_config_file_parsing():
+    """
+    Test correct parsing and casting of a configuration file.
+    """
+    params = parser.parse_inputs_from_file_ini("DAMMY_INPUTS/test_parser.ini")
+
+    # --- integers ---
+    assert params.size == [50, 60, 1]
+
+    # --- strings ---
+    assert params.simulation == "DLA"
+    assert params.output_name == "test_run"
+
+    # --- integers (again) ---
+    assert params.epochs == 4000
+
+    # --- list[int] ---
+    assert params.miller == [1, 0, 0]
+
+    # --- float ---
+    assert params.sticking == 2.5
+
+    # --- int from numeric string ---
+    assert params.sharpness == 6
+
+    # --- boolean ---
+    assert params.anisotropy is True
+
     
     
 if __name__ == '__main__':
@@ -297,3 +327,5 @@ if __name__ == '__main__':
     test_active_surface_seeds_preserved()
     
     test_active_surface_seeds_preserved()
+    
+    test_config_file_parsing()

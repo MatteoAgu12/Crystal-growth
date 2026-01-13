@@ -1,8 +1,9 @@
-import classes.EDENGrowth as EDEN
-import classes.DLAGrowth as DLA
 import Analysis as ANLS
 import GUI as GUI
 from classes.Lattice import Lattice
+from classes.ParticleFlux import ParticleFlux
+from classes.DLAGrowth import DLAGrowth
+from classes.EDENGrowth import EDENGrowthKinetic
 from ArgParser import parse_inputs
 import numpy as np
 from dataclasses import dataclass
@@ -19,9 +20,8 @@ class cusom_input:
     RECORD:           bool
     TITLE:            Union[str, None]
     OUTPUT_DIR:       Union[str, None]
-    FLUX_DIRECTION:   Union[np.array, None]
+    EXTERNAL_FLUX:    Union[ParticleFlux, None]
     MILLER_INDICES:   Union[tuple, None]
-    FLUX_STRENGTH:    float = 0.0
     BASE_STICK_PROB:  float = 0.01
     MILLER_STRENGTH:  float = 0.0
     MILLER_SHARPNESS: float = 4.0
@@ -37,8 +37,7 @@ class cusom_input:
         Dimensions:       {3 if self.THREE_DIM else 2}
         Title:            {self.TITLE}
         Output Dir:       {self.OUTPUT_DIR}
-        Flux Direction:   {self.FLUX_DIRECTION}
-        Flux Strength:    {self.FLUX_STRENGTH}
+        Flux Direction:   {self.FLUX_DIRECTION.fluxDirections}
         Miller Indices:   {self.MILLER_INDICES}
         Miller Strength:  {self.MILLER_STRENGTH}
         Miller Sharpness: {self.MILLER_SHARPNESS}
@@ -46,41 +45,26 @@ class cusom_input:
         Record:           {self.RECORD}
         """
 
-EDEN_OUTPUT_MESSAGES =  ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
-                        "\nEDEN SIMULATION: EARLY STOP. NO INITIAL NUCLEATION SEEDS FOUND!",
-                        "\nEDEN SIMULATION: EARLY STOP. NO ACTIVE BORDER ON WHICH DEPOSIT THE PARTICLE!",
-                        "\nEDEN SIMULATION: EARLY STOP."]
-POLI_OUTPUT_MESSAGES  = ["\nEDEN SIMULATION: COMPLETED SUCCESSFULLY!",
-                         "\nEDEN SIMULATION: EARLY STOP. NO INITIAL NUCLEATION SEEDS FOUND!",
-                         "\nEDEN SIMULATION: EARLY STOP. NO ACTIVE BORDER ON WHICH DEPOSIT THE PARTICLE!",
-                         "\nEDEN SIMULATION: EARLY STOP."]
- 
 def perform_EDEN_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
-    
-    if input.RECORD:
-        LATTICE.collect_anisotropy_stats = True
-
-    if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
-        LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
         
-    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
-        h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB, 
-                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
+    model = EDENGrowthKinetic(lattice=LATTICE,
+                              external_flux=input.EXTERNAL_FLUX,
+                              three_dim=input.THREE_DIM,
+                              verbose=input.VERBOSE)
+
+    model.run(input.EPOCHS)
     
-    output_code = EDEN.EDEN_simulation(LATTICE, input.EPOCHS, three_dim=input.THREE_DIM, verbose=input.VERBOSE, real_time_reference_point_correction=False)
-    print(EDEN_OUTPUT_MESSAGES[output_code])
-    
-    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR)
+    GUI.plot_lattice(LATTICE, 
+                     input.EPOCHS, 
+                     title=input.TITLE, 
+                     three_dim=input.THREE_DIM, 
+                     out_dir=input.OUTPUT_DIR)
     
 
 def perform_POLI_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
-    
-    if input.RECORD:
-        LATTICE.collect_anisotropy_stats = True
     
     how_many_seeds = 0
     while how_many_seeds < 20:
@@ -91,49 +75,54 @@ def perform_POLI_simulation(input: cusom_input):
         if not LATTICE.is_occupied(X, Y, Z):
             LATTICE.set_nucleation_seed(X, Y, Z)
             how_many_seeds += 1
-            
-    if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
-        LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
-        
-    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
-        h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB,
-                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
-            
-    output_code = EDEN.EDEN_simulation(LATTICE, input.EPOCHS, three_dim=input.THREE_DIM, verbose=input.VERBOSE, real_time_reference_point_correction=False)
-    print(POLI_OUTPUT_MESSAGES[output_code])
+
+    model = EDENGrowthKinetic(lattice=LATTICE,
+                              external_flux=input.EXTERNAL_FLUX,
+                              three_dim=input.THREE_DIM,
+                              verbose=input.VERBOSE)
+
+    model.run(input.EPOCHS)
     
-    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR, color_mode="id")
-    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE+'_boundaries', three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR, color_mode="boundaries")
+    GUI.plot_lattice(LATTICE, 
+                     input.EPOCHS, 
+                     title=input.TITLE, 
+                     three_dim=input.THREE_DIM,
+                     out_dir=input.OUTPUT_DIR, 
+                     color_mode="id")
+    GUI.plot_lattice(LATTICE, 
+                     input.EPOCHS,
+                     title=input.TITLE+'_boundaries', 
+                     three_dim=input.THREE_DIM, 
+                     out_dir=input.OUTPUT_DIR, 
+                     color_mode="boundaries")
     
 
 def perform_DLA_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
     
-    if input.RECORD:
-        LATTICE.collect_anisotropy_stats = True
-
-    if input.FLUX_DIRECTION is not None and input.FLUX_STRENGTH > 0.0:
-        LATTICE.set_external_flux(input.FLUX_DIRECTION, input.FLUX_STRENGTH)
-        
-    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
-        h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB,
-                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
+    model = DLAGrowth(lattice=LATTICE,
+                      n_particles=input.EPOCHS,
+                      generation_padding=1,
+                      outer_limit_padding=3,
+                      external_flux=input.EXTERNAL_FLUX,
+                      three_dim=input.THREE_DIM,
+                      verbose=input.VERBOSE)
     
-    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, input.EPOCHS, 1, 3, three_dim=input.THREE_DIM, verbose=input.VERBOSE)
-    print(f"\nDLA SIMULATION COMPLETED!\n \
-          Statistics about the random walk:\n \
-          \t* Mean number of steps in the random walk: {s_mean} +/- {s_std}\n \
-          \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
-    
-    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=input.THREE_DIM, out_dir=input.OUTPUT_DIR)
-    
-    if input.OUTPUT_DIR is not None:
-        ANLS.fractal_dimention_analysis(LATTICE, input.OUTPUT_DIR, title=input.TITLE, num_scales=25, three_dim=input.THREE_DIM, verbose=input.VERBOSE)
+    GUI.plot_lattice(LATTICE, 
+                     input.EPOCHS, 
+                     title=input.TITLE, 
+                     three_dim=input.THREE_DIM, 
+                     out_dir=input.OUTPUT_DIR)
+    ANLS.fractal_dimention_analysis(LATTICE, 
+                                    input.OUTPUT_DIR, 
+                                    title=input.TITLE, 
+                                    num_scales=25, 
+                                    three_dim=input.THREE_DIM, 
+                                    verbose=input.VERBOSE)
         
         
+# TODO: adattare alla nuova logica
 def perform_active_surface_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     for x in range(input.NX):

@@ -3,17 +3,12 @@ from typing import Union
 from GrowthModel import GrowthModel
 
 class EDENGrowthKinetic(GrowthModel):
-    def __init__(self, lattice, 
-                 growth_rate: float = 1.0,
-                 noise_strength: float = 0.0,
+    def __init__(self, lattice,
                  external_flux = None, 
                  rng_seed = 69, 
                  three_dim = True, 
                  verbose = False):
         super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
-        
-        self.growth_rate = growth_rate
-        self.noise_strength = noise_strength
         
     def __str__(self):
         return super().__str__()

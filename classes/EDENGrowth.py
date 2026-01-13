@@ -71,18 +71,4 @@ class EDENGrowthKinetic(GrowthModel):
             return
 
 
-class EDENGrowthPhaseField(GrowthModel):
-    def __init__(self, lattice, 
-                 external_flux = None, 
-                 rng_seed = 69, 
-                 three_dim = True, 
-                 verbose = False):
-        super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
-        
-    def __str__(self):
-        return super().__str__()
-        pass
-    
-    def step(self):
-        pass
 

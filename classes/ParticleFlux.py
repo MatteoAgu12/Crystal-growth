@@ -4,7 +4,9 @@ from typing import Union
 class ParticleFlux:
     """
     """
-    def __init__(self, flux_directions: Union[np.ndarray, list] = None, strength: float = 0.0, verbose: bool = False):
+    def __init__(self, flux_directions: Union[np.ndarray, list] = None, 
+                 strength: float = 0.0, 
+                 verbose: bool = False):
         """
         """
         self.fluxDirections = flux_directions

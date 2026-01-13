@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from Lattice import Lattice
-from ParticleFlux import ParticleFlux
+from classes.Lattice import Lattice
+from classes.ParticleFlux import ParticleFlux
 
 class GrowthModel(ABC):
     def __init__(self, lattice: Lattice,
@@ -15,13 +15,16 @@ class GrowthModel(ABC):
         self.rng           = np.random.default_rng(rng_seed)
         self.three_dim     = three_dim
         self.verbose       = verbose
+
+        if self.verbose:
+            print(self.__str__())
     
     def __str__(self):
-        return (
-            f"{self.__class__.__name__} | "
-            f"epoch={self.epoch} | "
-            f"occupied={len(self.lattice.occupied)}"
-    )
+        return f"""
+        {self.__class__.__name__}
+        -------------------------------------------------------------
+        epoch={self.epoch}
+        occupied={len(self.lattice.occupied)}"""
     
     @abstractmethod
     def step(self):
@@ -31,22 +34,7 @@ class GrowthModel(ABC):
         """
         pass
     
-    def run(self, n_steps: int):
-        if self.verbose:
-                print(f"=== [GrowthModel] STARTING THE SIMULATION ========")
-                
-        for i in range(n_steps):
-            if self.verbose:
-                print(f"[GrowthModel] Starting step {i+1}...")
-                
+    def run(self, n_steps: int):                
+        for i in range(n_steps):                
             self.step()
             self.epoch += 1
-            
-            if self.verbose:
-                print(f"[GrowthModel] Performed step {i+1}.")
-            else:
-                if (i / n_steps) % 10 == 0:
-                    print(f"[GrowthModel] Simulation at {int((i / n_steps) * 10)}%.")
-                    
-        if self.verbose:
-                print(f"=== [GrowthModel] SIMULATION COMPLETED ==========")

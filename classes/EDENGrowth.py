@@ -1,9 +1,10 @@
 import numpy as np
 from typing import Union
-from GrowthModel import GrowthModel
+from classes.Lattice import Lattice
+from classes.GrowthModel import GrowthModel
 
 class EDENGrowthKinetic(GrowthModel):
-    def __init__(self, lattice,
+    def __init__(self, lattice: Lattice,
                  external_flux = None, 
                  rng_seed = 69, 
                  three_dim = True, 

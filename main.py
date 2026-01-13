@@ -37,7 +37,7 @@ class cusom_input:
         Dimensions:       {3 if self.THREE_DIM else 2}
         Title:            {self.TITLE}
         Output Dir:       {self.OUTPUT_DIR}
-        Flux Direction:   {self.FLUX_DIRECTION.fluxDirections}
+        Flux Direction:   {"YES" if self.EXTERNAL_FLUX is not None else "None"}
         Miller Indices:   {self.MILLER_INDICES}
         Miller Strength:  {self.MILLER_STRENGTH}
         Miller Sharpness: {self.MILLER_SHARPNESS}
@@ -100,14 +100,29 @@ def perform_POLI_simulation(input: cusom_input):
 def perform_DLA_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
+
+    if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
+        if not all(v == 0 for v in input.MILLER_INDICES):
+            h, k, l = input.MILLER_INDICES
+            LATTICE.set_miller_anisotropy(h, k, l, 
+                                          base_stick_prob=input.BASE_STICK_PROB,
+                                          sticking_coefficient=input.MILLER_STRENGTH, 
+                                          sharpness=input.MILLER_SHARPNESS, 
+                                          selection_strength=input.MILLER_SELECTION)
+            if input.RECORD:
+                LATTICE.collect_anisotropy_stats = True
+
+    print("Lattice initialized!")
     
     model = DLAGrowth(lattice=LATTICE,
-                      n_particles=input.EPOCHS,
                       generation_padding=1,
                       outer_limit_padding=3,
                       external_flux=input.EXTERNAL_FLUX,
                       three_dim=input.THREE_DIM,
                       verbose=input.VERBOSE)
+
+    print("Model initialized!")
+    model.run(input.EPOCHS)
     
     GUI.plot_lattice(LATTICE, 
                      input.EPOCHS, 
@@ -121,36 +136,40 @@ def perform_DLA_simulation(input: cusom_input):
                                     three_dim=input.THREE_DIM, 
                                     verbose=input.VERBOSE)
         
-        
-# TODO: adattare alla nuova logica
+
 def perform_active_surface_simulation(input: cusom_input):
     LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     for x in range(input.NX):
         for z in range(input.NZ):
             LATTICE.set_nucleation_seed(x, 0, z)
-            
-    if input.RECORD:
-        LATTICE.collect_anisotropy_stats = True
 
     # Default anisotropy: we aer simulating particles coming from +y direction
-    LATTICE.set_external_flux(np.array([0,1,0]), input.FLUX_STRENGTH)
+    flux = ParticleFlux(np.array([0, 1, 0]), 
+                        input.EXTERNAL_FLUX.fluxStrength if input.EXTERNAL_FLUX.fluxStrength > 0.0 else 5.0, 
+                        input.verbose)
     
     if input.MILLER_INDICES is not None and len(input.MILLER_INDICES) == 3:
         h, k, l = input.MILLER_INDICES
-        LATTICE.set_miller_anisotropy(h, k, l, base_stick_prob=input.BASE_STICK_PROB,
-                                      sticking_coefficient=input.MILLER_STRENGTH, sharpness=input.MILLER_SHARPNESS, selection_strength=input.MILLER_SELECTION)
+        LATTICE.set_miller_anisotropy(h, k, l, 
+                                      base_stick_prob=input.BASE_STICK_PROB,
+                                      sticking_coefficient=input.MILLER_STRENGTH, 
+                                      sharpness=input.MILLER_SHARPNESS, 
+                                      selection_strength=input.MILLER_SELECTION)
     
-            
-    s_mean, s_std, r_mean, r_std = DLA.DLA_simulation(LATTICE, input.EPOCHS, 1, 3, three_dim=True, verbose=input.VERBOSE)
-    print(f"\nDLA SIMULATION FOR ACTIVE SURFACE COMPLETED!\n \
-          Statistics about the random walk:\n \
-          \t* Mean number of steps in the random walk: {s_mean} +/- {s_std}\n \
-          \t* Mean number of restarts during random walk: {r_mean} +/- {r_std}")
+    model = DLAGrowth(LATTICE,
+                      generation_padding=1,
+                      outer_limit_padding=3,
+                      external_flux=flux,
+                      three_dim=input.THREE_DIM,
+                      verbose=input.VERBOSE)
+
+    model.run(input.EPOCHS)
     
-    GUI.plot_lattice(LATTICE, input.EPOCHS, title=input.TITLE, three_dim=True, out_dir=input.OUTPUT_DIR)
-    
-    if input.OUTPUT_DIR is not None:
-        ANLS.distance_from_active_surface(LATTICE, input.OUTPUT_DIR, input.EPOCHS, verbose=input.VERBOSE)
+    GUI.plot_lattice(LATTICE, 
+                     input.EPOCHS, 
+                     title=input.TITLE, 
+                     three_dim=True, 
+                     out_dir=input.OUTPUT_DIR)
     
     
 
@@ -165,8 +184,9 @@ if __name__ == '__main__':
     verbose = parsed_inputs.verbose
     record = parsed_inputs.record
     out_dir = None if parsed_inputs.output == "" else parsed_inputs.output
-    flux_direction = parsed_inputs.external_flux
-    flux_strength = parsed_inputs.flux_strength
+    external_flux = ParticleFlux(parsed_inputs.external_flux,
+                                 parsed_inputs.flux_strength,
+                                 parse_inputs.verbose) if parsed_inputs.external_flux is not None else None
     base_sticking_prob = parsed_inputs.base_stick
     miller_indices = parsed_inputs.miller
     miller_strength = parsed_inputs.anisotropy_coeff
@@ -177,10 +197,13 @@ if __name__ == '__main__':
                                    EPOCHS=epochs, THREE_DIM=is_3D, 
                                    VERBOSE=verbose, RECORD=record,
                                    TITLE=title, OUTPUT_DIR=out_dir,
-                                   FLUX_DIRECTION=flux_direction, FLUX_STRENGTH=flux_strength,
+                                   EXTERNAL_FLUX=external_flux,
                                    BASE_STICK_PROB=base_sticking_prob,
                                    MILLER_INDICES=miller_indices, MILLER_STRENGTH=miller_strength, MILLER_SHARPNESS=miller_sharpness, MILLER_SELECTION=miller_selection_strength)
     
+    if simulation_input.VERBOSE:
+        print(simulation_input)
+
     if SIMULATION == 'EDEN':
         perform_EDEN_simulation(simulation_input)
         
@@ -192,3 +215,9 @@ if __name__ == '__main__':
         
     elif SIMULATION == 'SURFACE':
         perform_active_surface_simulation(simulation_input)
+
+    else:
+        print(f"***************************************************************************** \
+                [MAIN LOOP] ERROR: simulation mode {SIMULATION} is not a valid option! \
+                TERMINATING THE PROGRAM... \
+                *****************************************************************************")

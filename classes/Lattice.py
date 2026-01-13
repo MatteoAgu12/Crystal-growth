@@ -31,10 +31,17 @@ class Lattice:
         self.anisotropy_stats                = {"epoch" : [], "a_s" : []}
         self.verbose                         = verbose
 
+        if self.verbose:
+            print(self.__str__())
+
     def __str__(self):
-        return f"Lattice has shape: {self.shape} \
-            \nNucleation seeds: {self.initial_seeds} \
-            \nNumber of occupied sites: {np.sum(self.grid)}"
+        return f"""
+        === Lattice Object ======================================== 
+         * Shape:               {self.shape}
+         * Nucleation seeds:    {self.initial_seeds}
+         * Verbose:             {self.verbose}
+         ===========================================================
+         """
 
     def is_point_inside(self, x: int, y: int, z: int) -> bool:
         """

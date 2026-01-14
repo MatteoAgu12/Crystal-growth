@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 
-ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "SURFACE", "POLI"]
+ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "SURFACE"]
 
 def check_parsed_inputs(parsed_input: argparse.Namespace):
     """
@@ -20,10 +20,11 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if not hasattr(parsed_input, 'epochs'):               parsed_input.epochs = 1000            # TODO: qui niente default: se non ci sono niente simulazione
     if not hasattr(parsed_input, 'size'):                 parsed_input.size = [100, 100, 100]   # TODO: qui niente default: se non ci sono niente simulazione
     if not hasattr(parsed_input, 'simulation'):           parsed_input.simulation = 'EDEN'      # TODO: qui niente default: se non ci sono niente simulazione
+    if not hasattr(parsed_input, 'output'):               parsed_input.output = ""              # TODO: qui niente default: se non ci sono niente simulazione
     if not hasattr(parsed_input, 'two_dim'):              parsed_input.two_dim = False
+    if not hasattr(parsed_input, "seeds"):                parsed_input.seeds = 1
     if not hasattr(parsed_input, 'title'):                parsed_input.title = "Crystal lattice"
     if not hasattr(parsed_input, 'verbose'):              parsed_input.verbose = False
-    if not hasattr(parsed_input, 'output'):               parsed_input.output = ""
     if not hasattr(parsed_input, 'external_flux'):        parsed_input.external_flux = None
     if not hasattr(parsed_input, 'flux_strength'):        parsed_input.flux_strength = 0.0
     if not hasattr(parsed_input, 'miller'):               parsed_input.miller = [0, 0, 0]
@@ -50,6 +51,10 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     # Simulation Type
     if parsed_input.simulation not in ALLOWED_NATIVE_SIMULATION_OPTIONS:
         raise ValueError(f"ERROR: 'simulation' must be one of {ALLOWED_NATIVE_SIMULATION_OPTIONS}. Got: {parsed_input.simulation}")
+
+    # Initial nucleation seeds
+    if parsed_input.seeds <= 0:
+        raise ValueError(f"ERROR: 'seeds' must be an integer > 0. Got {parsed_input.seeds}")
 
     # Output Directory
     if parsed_input.output != "":
@@ -160,6 +165,8 @@ def parse_inputs_from_terminal() -> argparse.Namespace:
                         help="Number of epochs in the simulation, default 1000")
     parser.add_argument("--size", "-s", type=int, nargs=3, metavar=("NX", "NY", "NZ"), default=[100, 100, 100],
                         help="Grid dimention, in the form: X Y Z. Default 100 100 100")
+    parser.add_argument("--seeds", type=int, default=1,
+                        help="Number of initial nucleation seeds That are randomly scattered. By default 1 at the center.")
     parser.add_argument("--2d", "--2D", dest="two_dim", action="store_true",
                         help="Simulate a 2D crystal instead of a 3D one")
     parser.add_argument("--title", "-t", type=str, default="Crystal lattice",

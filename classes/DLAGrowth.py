@@ -21,7 +21,20 @@ class DLAGrowth(GrowthModel):
         
         self.steps = []
         self.restarts = []
+
+        print(self.__str__())
     
+    def __str__(self):
+        return f"""
+        DLAGrowth
+        -------------------------------------------------------------
+        epoch={self.epoch}
+        occupied={len(self.lattice.occupied)}
+        generation padding={self.generation_padding}
+        outer_padding={self.outer_limit_padding}
+        -------------------------------------------------------------
+        """
+
     def _generate_random_point_on_box(self, bounding_box: list) -> np.array:
         """
         Generates a random point on the surface of the bounding box.
@@ -58,18 +71,7 @@ class DLAGrowth(GrowthModel):
 
         while True:
             total_steps += 1
-            idx = 0
-            if self.external_flux is not None and self.external_flux.fluxStrength > 0:
-                weights = np.array([
-                    self.external_flux.compute_external_flux_weights(step) for step in candidate_steps
-                ])
-                w_sum = weights.sum()
-                if w_sum > 0:
-                    idx = self.rng.choice(len(candidate_steps), p=weights/w_sum)
-                else:
-                    idx = self.rng.integers(len(candidate_steps))
-            else:
-                idx = self.rng.integers(len(candidate_steps))
+            idx = self.rng.integers(len(candidate_steps))
 
             position += candidate_steps[idx]
 

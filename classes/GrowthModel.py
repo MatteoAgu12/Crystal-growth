@@ -15,16 +15,15 @@ class GrowthModel(ABC):
         self.rng           = np.random.default_rng(rng_seed)
         self.three_dim     = three_dim
         self.verbose       = verbose
-
-        if self.verbose:
-            print(self.__str__())
     
     def __str__(self):
         return f"""
         {self.__class__.__name__}
         -------------------------------------------------------------
         epoch={self.epoch}
-        occupied={len(self.lattice.occupied)}"""
+        occupied={len(self.lattice.occupied)}
+        -------------------------------------------------------------
+        """
     
     @abstractmethod
     def step(self):

@@ -69,14 +69,15 @@ class EDENGrowthKinetic(GrowthModel):
         new_site = self._choose_random_border_site(candidates, reference_point=reference_point)
         
         for nx, ny, nz in self.lattice.get_neighbors(*new_site):
-            gid = self.lattice.get_group_id(nx, ny, nz)
-            self.lattice.occupy(*new_site, epoch=self.epoch, id=gid)
-
-            if self.verbose:
-                print(f"\t\t[EDENKineticGrowth] Attached at {new_site} (Id: {gid})")
-                print(f"\t\t[EDENKineticGrowth] Finished epoch {self.epoch + 1}!\n \
-                        _____________________________________________________________")
-            return
+            if self.lattice.is_occupied(nx, ny, nz):
+                gid = self.lattice.get_group_id(nx, ny, nz)
+                self.lattice.occupy(*new_site, epoch=self.epoch, id=gid)
+    
+                if self.verbose:
+                    print(f"\t\t[EDENKineticGrowth] Attached at {new_site} (Id: {gid})")
+                    print(f"\t\t[EDENKineticGrowth] Finished epoch {self.epoch + 1}!\n \
+                            _____________________________________________________________")
+                return
 
 
 

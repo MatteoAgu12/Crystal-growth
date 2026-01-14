@@ -80,7 +80,7 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
     """
     if color_mode == "id":
         data_grid = lattice.group_id
-        cmap = plt.cm.get_cmap('tab20b') 
+        cmap = plt.cm.get_cmap('tab20b')    # TODO: ATTENZIONE: notificare che più di 20 colori non sono supportati!!!
         unique_vals = np.unique(data_grid[lattice.grid == 1])
         id_to_color = {uid: cmap(i % cmap.N) for i, uid in enumerate(unique_vals)}
         
@@ -118,8 +118,13 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
 
         if color_mode == "boundaries":
             boundary_mask = get_grain_boundaries_mask(lattice)
-            colors[visible_voxels] = (0.8, 0.8, 0.8, 0.3) 
-            colors[boundary_mask] = (1.0, 0.0, 0.0, 1.0)
+            plot_mask = visible_voxels | boundary_mask 
+            
+            colors = np.zeros(lattice.shape + (4,), dtype=np.float32)
+            colors[visible_voxels] = (0.9, 0.9, 0.9, 0.1)
+            colors[boundary_mask] = (0.0, 0.0, 0.0, 1.0)
+            
+            ax.voxels(plot_mask, facecolors=colors, edgecolor=None, linewidth=0)
 
         elif np.any(visible_voxels):
             surface_values = data_grid[visible_voxels]
@@ -137,7 +142,7 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
         else:
             edge_color = 'k'; line_width = 0.2
 
-        ax.voxels(visible_voxels, facecolors=colors, edgecolor=edge_color, linewidth=line_width)
+        ax.voxels(visible_voxels, facecolors=colors, edgecolor=None, linewidth=line_width)
         ax.set_title(title)
         ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_zlabel('z')
         
@@ -174,8 +179,17 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
             ax.imshow(rgba_img, origin='lower', interpolation='nearest')
             
         elif color_mode == "boundaries":
-            # TODO
-            pass
+            boundary_mask = get_grain_boundaries_mask(lattice)
+            mask_2d = np.any(boundary_mask, axis=2)
+            occ_2d = np.any(lattice.grid, axis=2)
+            
+            nx, ny = mask_2d.shape
+            rgba_img = np.ones((ny, nx, 4))
+            
+            rgba_img[occ_2d.T] = [0.9, 0.9, 0.9, 1.0]
+            rgba_img[mask_2d.T] = [0.0, 0.0, 0.0, 1.0]
+            
+            ax.imshow(rgba_img, origin='lower', interpolation='nearest')
 
         ax.set_title(title)
         ax.set_xlabel('x')

@@ -17,10 +17,25 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     # =========================================================================
     # SAFETY DEFAULTS
     # =========================================================================
-    if not hasattr(parsed_input, 'epochs'):               parsed_input.epochs = 1000            # TODO: qui niente default: se non ci sono niente simulazione
-    if not hasattr(parsed_input, 'size'):                 parsed_input.size = [100, 100, 100]   # TODO: qui niente default: se non ci sono niente simulazione
-    if not hasattr(parsed_input, 'simulation'):           parsed_input.simulation = 'EDEN'      # TODO: qui niente default: se non ci sono niente simulazione
-    if not hasattr(parsed_input, 'output'):               parsed_input.output = ""              # TODO: qui niente default: se non ci sono niente simulazione
+    failure_message = f"""
+    |==========================================================================|
+    | !!! FATAL ERROR IN INPUT !!!                                             |
+    |                                                                          |
+    | The following parameters are essentials and cannot be omitted:           |
+    |    * epochs                                                              |      
+    |    * size                                                                |   
+    |    * simulation                                                          |      
+    |    * output                                                              |
+    |                                                                          |  
+    |==========================================================================|
+    """
+
+    if (not hasattr(parsed_input, 'epochs') 
+        or not hasattr(parsed_input, 'size') 
+        or not hasattr(parsed_input, 'simulation') 
+        or not hasattr(parsed_input, 'output')):    
+            raise ValueError(f"{failure_message}")
+
     if not hasattr(parsed_input, 'two_dim'):              parsed_input.two_dim = False
     if not hasattr(parsed_input, "seeds"):                parsed_input.seeds = 1
     if not hasattr(parsed_input, 'title'):                parsed_input.title = "Crystal lattice"
@@ -55,6 +70,14 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     # Initial nucleation seeds
     if parsed_input.seeds <= 0:
         raise ValueError(f"ERROR: 'seeds' must be an integer > 0. Got {parsed_input.seeds}")
+    if parsed_input.seeds > 20:
+        print(f"""
+        ************************************************************************
+         ATTENTION:
+        \tThe GUI supports at most 20 different colors.
+        \tWith {parsed_input.seeds} some will be repeted.
+        ************************************************************************
+        """)
 
     # Output Directory
     if parsed_input.output != "":

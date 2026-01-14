@@ -80,7 +80,7 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
     """
     if color_mode == "id":
         data_grid = lattice.group_id
-        cmap = plt.cm.get_cmap('tab20b')    # TODO: ATTENZIONE: notificare che più di 20 colori non sono supportati!!!
+        cmap = plt.cm.get_cmap('tab20b')
         unique_vals = np.unique(data_grid[lattice.grid == 1])
         id_to_color = {uid: cmap(i % cmap.N) for i, uid in enumerate(unique_vals)}
         

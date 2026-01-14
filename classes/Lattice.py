@@ -22,8 +22,6 @@ class Lattice:
         self.group_counter                   = 0
         self.initial_seeds                   = []
         self.occupied                        = set()
-        self.externalFluxDirections          = None
-        self.externalFluxStrength            = 0.0
         self.preferred_axes                  = []
         self.anisotropy_sticking_coefficient = 0.0
         self.anisotropy_sharpness            = 1.0
@@ -33,10 +31,16 @@ class Lattice:
         self.anisotropy_stats                = {"epoch" : [], "a_s" : []}
         self.verbose                         = verbose
 
+        print(self.__str__())
+
     def __str__(self):
-        return f"Lattice has shape: {self.shape} \
-            \nNucleation seeds: {self.initial_seeds} \
-            \nNumber of occupied sites: {np.sum(self.grid)}"
+        return f"""
+        === Lattice Object ======================================== 
+         * Shape:               {self.shape}
+         * Nucleation seeds:    {self.initial_seeds}
+         * Verbose:             {self.verbose}
+        ============================================================
+         """
 
     def is_point_inside(self, x: int, y: int, z: int) -> bool:
         """
@@ -336,87 +340,7 @@ class Lattice:
                 max_a = a
                 
         return max_a
-        
-    def set_external_flux(self, directions: Union[np.ndarray, list], strength: float) -> None:
-        """
-        Initialize the external diffusive flux acting on the lattice.
-
-        Args:
-            directions (np.array or list): iterable of vectors of length 3.
-            strength (float): must be >= 0. If 0, anisotropy is disabled.
-        """
-        # Convert input to numpy array
-        dirs = np.array(directions, dtype=float)
-
-        if strength < 0.0:
-            raise ValueError("The anisotropy strength can't be negative.")
-
-        # Check shape: we expect an array of shape (n_dirs, 3)
-        if dirs.ndim != 2 or dirs.shape[1] != 3:
-            # bad shape: disable anisotropy
-            self.externalFluxDirections = None
-            self.externalFluxStrength = 0.0
-            return
-
-        # If strength is zero, disable anisotropy
-        if strength == 0.0:
-            self.externalFluxDirections = None
-            self.externalFluxStrength = 0.0
-            return
-
-        # Remove zero-length directions
-        norms = np.linalg.norm(dirs, axis=1)
-        mask = norms > 0.0
-        if not np.any(mask):
-            # no valid directions -> disable anisotropy
-            self.externalFluxDirections = None
-            self.externalFluxStrength = 0.0
-            return
-
-        dirs = dirs[mask]
-        norms = norms[mask].reshape(-1, 1)
-
-        # Store normalized directions and strength
-        self.externalFluxDirections = dirs / norms
-        self.externalFluxStrength = strength
-
-    def clear_external_flux(self) -> None:
-        """
-        Disable the external diffusion flux (removes it if was present).
-        """
-        self.externalFluxDirections = None
-        self.externalFluxStrength = 0.0
-
-    def compute_external_flux_weights(self, direction: np.array) -> float:
-        """
-        Return the anisotropy weight for external flux for the selected direction, based on the flux selected.
-        
-        Returns:
-            (float): the weight if the flux is activated, 1.0 otherwise
-        """
-        if len(direction) != 3:
-            raise ValueError("The direction must be an array of lenght 3.")
-
-        direction = np.array(direction, dtype=float)
-        norm = np.linalg.norm(direction)
-        if norm == 0.0:
-            return 1.0
-
-        if self. externalFluxDirections is not None and self.externalFluxStrength > 0.0:
-            dir = direction / norm
-            weights = []
-            for a in self.externalFluxDirections:
-                cos_t = float(np.dot(dir, a))
-                if cos_t > 1.0: cos_t = 1.0
-                elif cos_t < -1.0: cos_t = -1.0
-                weights.append(np.exp(self.externalFluxStrength * cos_t))
-
-            total = float(np.sum(weights))
-            if total <= 0.0: return 1.0
-            return total
-        
-        return 1.0
-        
+             
     def record_anisotropy_stats(self, sites: np.ndarray, epoch: int):
         """
         Records structural anisotropy scores for a givenlist of sites.

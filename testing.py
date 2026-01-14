@@ -1,7 +1,7 @@
 import numpy as np
-from Lattice import Lattice
-import EDEN_simulation as EDEN
-import DLA_simulation as DLA
+from classes.Lattice import Lattice
+import classes.EDENGrowth as EDEN
+import classes.DLAGrowth as DLA
 import GUI as GUI
 import ArgParser as parser
 

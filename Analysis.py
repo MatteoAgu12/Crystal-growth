@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Lattice import Lattice
+from classes.Lattice import Lattice
 
 def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
                            three_dim: bool = True) -> tuple:

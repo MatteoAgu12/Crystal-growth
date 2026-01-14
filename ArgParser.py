@@ -2,50 +2,126 @@ import argparse
 import sys
 import os
 
-ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "SURFACE", "POLI"]
+ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "SURFACE"]
 
 def check_parsed_inputs(parsed_input: argparse.Namespace):
     """
     Checks if the numerical values and/or the number of inputs are correct for each input parameter.
+    Ensures all attributes exist (setting defaults if missing) to prevent crashes when loading incomplete config files.
     Raises a ValueError if something is wrong.
 
     Args:
-        parser (argparse.Namespace): parser object from argparse.ArgumentParser.parse_args()
+        parsed_input (argparse.Namespace): parser object from argparse.ArgumentParser.parse_args()
     """
-    
-    if parsed_input.epochs < 0 or type(parsed_input.epochs) is not int:
-        raise ValueError(f"ERROR: in function 'parse_inputs()', {parsed_input.epochs} is not a valid epoch value.")
-    for input in parsed_input.size:
-        if input <= 0 or type(input) is not int:
-            raise ValueError(f"ERROR: in function 'parse_inputs()', {parsed_input.size} is not a valid size value.")    
+
+    # =========================================================================
+    # SAFETY DEFAULTS
+    # =========================================================================
+    failure_message = f"""
+    |==========================================================================|
+    | !!! FATAL ERROR IN INPUT !!!                                             |
+    |                                                                          |
+    | The following parameters are essentials and cannot be omitted:           |
+    |    * epochs                                                              |      
+    |    * size                                                                |   
+    |    * simulation                                                          |      
+    |    * output                                                              |
+    |                                                                          |  
+    |==========================================================================|
+    """
+
+    if (not hasattr(parsed_input, 'epochs') 
+        or not hasattr(parsed_input, 'size') 
+        or not hasattr(parsed_input, 'simulation') 
+        or not hasattr(parsed_input, 'output')):    
+            raise ValueError(f"{failure_message}")
+
+    if not hasattr(parsed_input, 'two_dim'):              parsed_input.two_dim = False
+    if not hasattr(parsed_input, "seeds"):                parsed_input.seeds = 1
+    if not hasattr(parsed_input, 'title'):                parsed_input.title = "Crystal lattice"
+    if not hasattr(parsed_input, 'verbose'):              parsed_input.verbose = False
+    if not hasattr(parsed_input, 'external_flux'):        parsed_input.external_flux = None
+    if not hasattr(parsed_input, 'flux_strength'):        parsed_input.flux_strength = 0.0
+    if not hasattr(parsed_input, 'miller'):               parsed_input.miller = [0, 0, 0]
+    if not hasattr(parsed_input, 'base_stick'):           parsed_input.base_stick = 0.01
+    if not hasattr(parsed_input, 'anisotropy_coeff'):     parsed_input.anisotropy_coeff = 0.05
+    if not hasattr(parsed_input, 'anisotropy_sharpness'): parsed_input.anisotropy_sharpness = 4.0
+    if not hasattr(parsed_input, 'anisotropy_selection'): parsed_input.anisotropy_selection = 1.0
+    if not hasattr(parsed_input, 'record'):               parsed_input.record = False
+
+    # =========================================================================
+    # VALIDATION CHECKS
+    # =========================================================================
+    # Epochs
+    if not isinstance(parsed_input.epochs, int) or parsed_input.epochs < 0:
+        raise ValueError(f"ERROR: 'epochs' must be a non-negative integer. Got: {parsed_input.epochs}")
+
+    # Size
+    if not isinstance(parsed_input.size, list) or len(parsed_input.size) != 3:
+        raise ValueError(f"ERROR: 'size' must be a list of 3 integers (X Y Z). Got: {parsed_input.size}")
+    for val in parsed_input.size:
+        if not isinstance(val, int) or val <= 0:
+            raise ValueError(f"ERROR: dimensions in 'size' must be positive integers. Got: {parsed_input.size}")
+
+    # Simulation Type
     if parsed_input.simulation not in ALLOWED_NATIVE_SIMULATION_OPTIONS:
-        raise ValueError(f"ERROR: in function 'parse_inputs()', {parsed_input.simulation} is not a valid simulation option.")
-    if not parsed_input.output == "":
+        raise ValueError(f"ERROR: 'simulation' must be one of {ALLOWED_NATIVE_SIMULATION_OPTIONS}. Got: {parsed_input.simulation}")
+
+    # Initial nucleation seeds
+    if parsed_input.seeds <= 0:
+        raise ValueError(f"ERROR: 'seeds' must be an integer > 0. Got {parsed_input.seeds}")
+    if parsed_input.seeds > 20:
+        print(f"""
+        ************************************************************************
+         ATTENTION:
+        \tThe GUI supports at most 20 different colors.
+        \tWith {parsed_input.seeds} some will be repeted.
+        ************************************************************************
+        """)
+
+    # Output Directory
+    if parsed_input.output != "":
         if not os.path.isdir(parsed_input.output):
-            raise ValueError(f"ERROR: in function 'parse_inputs()', directory {parsed_input.output} does not exist.")
+            raise ValueError(f"ERROR: The output directory '{parsed_input.output}' does not exist.")
+
+    # External Flux Logic
     if parsed_input.external_flux is not None:
         vals = parsed_input.external_flux
-        if len(vals) % 3 != 0:
-            raise ValueError(
-                f"ERROR: option '--external-flux' expects a number of values multiple of 3 "
-                f"(AX AY AZ ...). You provided {len(vals)} values: {vals}")
-        dirs = []
-        for i in range(0, len(vals), 3):
-            dirs.append([vals[i], vals[i+1], vals[i+2]])
-        parsed_input.external_flux = dirs
+        if isinstance(vals, list) and not all(isinstance(x, list) for x in vals):
+            if len(vals) % 3 != 0:
+                raise ValueError(
+                    f"ERROR: '--external-flux' expects values in groups of 3 (AX AY AZ ...). "
+                    f"You provided {len(vals)} values: {vals}")
+            
+            dirs = []
+            for i in range(0, len(vals), 3):
+                dirs.append([vals[i], vals[i+1], vals[i+2]])
+            parsed_input.external_flux = dirs
+
+    # Flux Strength
     if parsed_input.flux_strength < 0.0:
-        raise ValueError("The external flux strength can't be negative.")
-    for i in parsed_input.miller:
-        if i < 0 or type(i) is not int:
-            raise ValueError(f"ERROR: in function 'parse_inputs()', {parsed_input.miller} are not valid miller indices.")
+        raise ValueError(f"ERROR: 'flux-strength' cannot be negative. Got: {parsed_input.flux_strength}")
+
+    # Miller Indices
+    if not isinstance(parsed_input.miller, list) or len(parsed_input.miller) != 3:
+        raise ValueError(f"ERROR: 'miller' must be a list of 3 integers. Got: {parsed_input.miller}")
+    for val in parsed_input.miller:
+        if not isinstance(val, int) or val < 0:
+             raise ValueError(f"ERROR: Miller indices must be integers >= 0. Got: {parsed_input.miller}")
+
+    # Anisotropy Parameters
     if parsed_input.anisotropy_coeff < 0.0:
-        raise ValueError("The anisotropy coefficient can't be negative.")
+        raise ValueError(f"ERROR: 'anisotropy-coeff' cannot be negative. Got: {parsed_input.anisotropy_coeff}")
+    
     if parsed_input.anisotropy_sharpness < 0.0:
-        raise ValueError("The anisotropy sharpness can't be negative.")
+        raise ValueError(f"ERROR: 'anisotropy-sharpness' cannot be negative. Got: {parsed_input.anisotropy_sharpness}")
+    
     if parsed_input.anisotropy_selection < 0.0:
-        raise ValueError("The anisotropy selection strength can't be negative.")
+        raise ValueError(f"ERROR: 'anisotropy-selection' cannot be negative. Got: {parsed_input.anisotropy_selection}")
+
+    # Base Stick Probability
     if parsed_input.base_stick < 0.0 or parsed_input.base_stick > 1.0:
-        raise ValueError("The base sticking probability must be in range [0,1].")
+        raise ValueError(f"ERROR: 'base-stick' probability must be in range [0,1]. Got: {parsed_input.base_stick}")
 
 def cast_file_input_to_value(value: str):
     """
@@ -112,6 +188,8 @@ def parse_inputs_from_terminal() -> argparse.Namespace:
                         help="Number of epochs in the simulation, default 1000")
     parser.add_argument("--size", "-s", type=int, nargs=3, metavar=("NX", "NY", "NZ"), default=[100, 100, 100],
                         help="Grid dimention, in the form: X Y Z. Default 100 100 100")
+    parser.add_argument("--seeds", type=int, default=1,
+                        help="Number of initial nucleation seeds That are randomly scattered. By default 1 at the center.")
     parser.add_argument("--2d", "--2D", dest="two_dim", action="store_true",
                         help="Simulate a 2D crystal instead of a 3D one")
     parser.add_argument("--title", "-t", type=str, default="Crystal lattice",

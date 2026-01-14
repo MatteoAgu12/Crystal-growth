@@ -34,7 +34,18 @@ class GrowthModel(ABC):
         """
         pass
     
-    def run(self, n_steps: int):                
-        for i in range(n_steps):                
+    def run(self, n_steps: int):
+        if n_steps <= 0:
+            return
+    
+        update_step = max(1, n_steps // 10)
+        next_update = update_step
+
+        for i in range(n_steps):
             self.step()
             self.epoch += 1
+
+            if not self.verbose and (i + 1) >= next_update:
+                percent = int(100 * (i + 1) / n_steps)
+                print(f"=== Simulation completed at {percent}% ===")
+                next_update += update_step

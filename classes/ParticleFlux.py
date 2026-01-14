@@ -14,11 +14,14 @@ class ParticleFlux:
         self.verbose        = verbose
     
     def __str__(self):
-        info = f"ParticleFlux object:\n \
-                 Flux direction: {self.fluxDirections} \n \
-                 Flux strength:  {self.fluxStrength} \n \
-                 Verbose:        {self.verbose}"
-        return info
+        info = f"""
+        === Particle Flux =========================================
+         * Flux direction: {self.fluxDirections}
+         * Flux strength:  {self.fluxStrength}
+         * Verbose:        {self.verbose}
+        ===========================================================
+        """
+        return info if self.fluxDirections is not None else "None"
     
     def set_external_flux(self, directions: Union[np.ndarray, list], strength: float):
         """

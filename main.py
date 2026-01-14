@@ -37,7 +37,7 @@ class cusom_input:
         Dimensions:       {3 if self.THREE_DIM else 2}
         Title:            {self.TITLE}
         Output Dir:       {self.OUTPUT_DIR}
-        Flux Direction:   {"YES" if self.EXTERNAL_FLUX is not None else "None"}
+        Flux Direction:   {self.EXTERNAL_FLUX}
         Miller Indices:   {self.MILLER_INDICES}
         Miller Strength:  {self.MILLER_STRENGTH}
         Miller Sharpness: {self.MILLER_SHARPNESS}
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     out_dir = None if parsed_inputs.output == "" else parsed_inputs.output
     external_flux = ParticleFlux(parsed_inputs.external_flux,
                                  parsed_inputs.flux_strength,
-                                 parse_inputs.verbose) if parsed_inputs.external_flux is not None else None
+                                 parsed_inputs.verbose) if parsed_inputs.external_flux is not None else None
     base_sticking_prob = parsed_inputs.base_stick
     miller_indices = parsed_inputs.miller
     miller_strength = parsed_inputs.anisotropy_coeff

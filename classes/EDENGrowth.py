@@ -1,20 +1,20 @@
 import numpy as np
 from typing import Union
 from classes.Lattice import Lattice
+from classes.ParticleFlux import ParticleFlux
 from classes.GrowthModel import GrowthModel
 
 class EDENGrowthKinetic(GrowthModel):
     def __init__(self, lattice: Lattice,
-                 external_flux = None, 
-                 rng_seed = 69, 
-                 three_dim = True, 
-                 verbose = False):
+                 external_flux: ParticleFlux = None, 
+                 rng_seed:int = 69, 
+                 three_dim: bool = True, 
+                 verbose: bool = False):
         super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
         
     def __str__(self):
         return super().__str__()
     
-    @staticmethod
     def _choose_random_border_site(self, active_border: np.array, reference_point: np.array = None) -> Union[np.array, None]:
         """
         This function randomly selects a site from the active border.
@@ -47,14 +47,21 @@ class EDENGrowthKinetic(GrowthModel):
         site = active_border[idx].astype(int)
         
         if self.verbose:
-            print(f"[EDENGrowthKinetic::_choose_random_border_site]: \
-                    new particle in ({site[0], site[1], site[2]})")
+            print(f"\t\t[EDENGrowthKinetic::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
         
         return site
     
     def step(self):
+        if self.verbose:
+            print(f"\t\t[EDENKineticGrowth] Starting epoch {self.epoch + 1}...")
+
         candidates = self.lattice.get_active_border()
-        if not candidates:
+        if candidates.size == 0:
+            print(f"""
+            ##############################################################
+            [EDENKineticGrowth] WARNING: at step {self.epoch} no active border has been found!
+            Skipped...
+            ##############################################################""")
             return
         
         (xmin, xmax), (ymin, ymax), (zmin, zmax) = self.lattice.get_crystal_bounding_box()
@@ -64,6 +71,11 @@ class EDENGrowthKinetic(GrowthModel):
         for nx, ny, nz in self.lattice.get_neighbors(*new_site):
             gid = self.lattice.get_group_id(nx, ny, nz)
             self.lattice.occupy(*new_site, epoch=self.epoch, id=gid)
+
+            if self.verbose:
+                print(f"\t\t[EDENKineticGrowth] Attached at {new_site} (Id: {gid})")
+                print(f"\t\t[EDENKineticGrowth] Finished epoch {self.epoch + 1}!\n \
+                        _____________________________________________________________")
             return
 
 

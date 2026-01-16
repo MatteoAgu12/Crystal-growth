@@ -291,6 +291,19 @@ python main.py --simulation POLI --size 500 500 1 --epochs 10000 --output $OUT -
 ```
 **N.B.**: this simulaion is particularly heavy, so be patient.
 
+### Kobayashi
+$$ 
+   \frac{\partial \phi}{\partial t} = \frac{1}{\tau(\theta)}
+   \left [ 
+      \epsilon^2(\theta) \nabla^2 \phi +
+      \phi (1 - \phi) (\phi - \frac{1}{2} + m(u))
+   \right ]
+$$
+
+$$
+   \frac{\partial u}{\partial t} = D \nabla^2 u + \frac{1}{2}\frac{\partial \phi}{\partial t}
+$$
+
 
 ## References
 [^1]: T. A. Witten & L. M. Sander, *Diffusion-Limited Aggregation, a Kinetic Critical Phenomenon*, Phys. Rev. Lett. 47, 1400–1403 (1981).

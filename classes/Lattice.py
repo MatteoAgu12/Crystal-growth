@@ -13,17 +13,15 @@ class Lattice(BaseLattice):
             ny (int): number of cells in the lattice along the y direction
             nz (int): number of cells in the lattice along the z direction
         """
-        super.__init__(nx, ny, nz, verbose)
+        super().__init__(nx, ny, nz, verbose)
         if nx < 0 or ny < 0 or nz < 0:
             raise ValueError('ERROR: the size of the lattice must be an integer bigger or equal to zero!')
-            
-        self.initial_seeds                   = []
-        self.occupied                        = set()
 
+        self.grid    = np.zeros(self.shape, dtype=np.uint8)
         print(self.__str__())
 
     def __str__(self):
-        super.__str__(self)
+        super().__str__(self)
     
     def occupy(self, x: int, y: int, z: int, epoch: int, id: int) -> None:
         """

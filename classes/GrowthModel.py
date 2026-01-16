@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 import numpy as np
-from classes.Lattice import Lattice
+from classes.BaseLattice import BaseLattice
 from classes.ParticleFlux import ParticleFlux
 
 class GrowthModel(ABC):
-    def __init__(self, lattice: Lattice,
+    def __init__(self, lattice: BaseLattice,
                  external_flux: ParticleFlux = None,
                  rng_seed: int = 69,
                  three_dim: bool = True,

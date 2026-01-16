@@ -87,11 +87,6 @@ class DLAGrowth(GrowthModel):
             neighbors = self.lattice.get_neighbors(*position)
             for nx, ny, nz in neighbors:
                 if self.lattice.is_occupied(nx, ny, nz):
-                    if len(self.lattice.preferred_axes) > 0:
-                        a_s = self.lattice.compute_structural_probability(*position)
-                        p_stick = min(1.0, a_s)
-                        if self.rng.random() > p_stick:
-                            break 
 
                     gid = self.lattice.get_group_id(nx, ny, nz)
                     self.lattice.occupy(*position, epoch=self.epoch, id=gid)

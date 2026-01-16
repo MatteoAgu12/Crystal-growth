@@ -11,13 +11,13 @@ class PhaseFieldLattice(BaseLattice):
             raise ValueError(f"Interface threshold must be a float in range [0,1]")
 
         self.phi = np.zeros(self.shape, dtype=float)
-        self.u = np.ones(self.shape, dtype=float)
+        self.u = np.zeros(self.shape, dtype=float)
         self.interface_threshold = interface_threshold
 
-        print(self.__str__(self))
+        print(self.__str__())
 
     def __str__(self):
-        super().__str__(self)
+        return super().__str__()
 
     def set_nucleation_seed(self, x,y,z, group_id=None):
         if self.is_point_inside(x,y,z):

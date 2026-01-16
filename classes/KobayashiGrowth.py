@@ -23,7 +23,7 @@ class KobayashiGrowth(GrowthModel):
                  external_flux: ParticleFlux = None,
                  rng_seed: int = 69,
                  three_dim: bool = True,
-                 verbose: bool = False)
+                 verbose: bool = False):
         super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
 
         self.epsilon0 = epsilon0
@@ -36,14 +36,13 @@ class KobayashiGrowth(GrowthModel):
         self.dt = dt
         self.prev_phi = lattice.phi
 
-        print(self.__str__(self))
+        print(self.__str__())
 
     def __str__(self):
         return f"""
         KobayashiGrowth
         -------------------------------------------------------------
         epoch={self.epoch}
-        occupied={len(self.lattice.occupied)}
         epsilon0={self.epsilon0}
         delta={self.delta}
         n_folds={self.n_folds}
@@ -110,7 +109,7 @@ class KobayashiGrowth(GrowthModel):
                 neighbors = self.lattice.get_neighbors(x, y, z)
                 assigned = False
 
-                for nx. ny, nx in neighbors:
+                for nx, ny, nz in neighbors:
                     gid = self.lattice.group_id[nx, ny, nz]
                     if gid > 0:
                         self.lattice.group_id[x, y, z] = gid
@@ -118,9 +117,10 @@ class KobayashiGrowth(GrowthModel):
                         break
 
                 if not assigned:
-                    print(f"-------------------------------------------------------------\n \
-                    [KobayashiGrowth] WARNING: at step {self.epoch+1} a new nucleation has occoured at ({x}, {y}, {z})\n \
-                    -------------------------------------------------------------")
+                    print(f"""
+                    -------------------------------------------------------------
+                    [KobayashiGrowth] WARNING: at step {self.epoch+1} a new nucleation has occoured at ({x}, {y}, {z})
+                    -------------------------------------------------------------""")
                     self.lattice.group_counter += 1
                     self.lattice.group_id[x, y, z] = self.lattice.group_counter
 

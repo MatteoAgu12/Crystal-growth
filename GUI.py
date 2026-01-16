@@ -3,6 +3,7 @@ import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import Rectangle, Patch
+from skimage import measure 
 import numpy as np
 from classes.Lattice import Lattice
 import classes.DLAGrowth as DLA
@@ -62,6 +63,30 @@ def get_grain_boundaries_mask(lattice: Lattice) -> np.array:
         is_boundary_neighbor |= neighbor_different
         
     return occupied & is_boundary_neighbor
+
+def plot_continuous_field(lattice, field_name='phi', title="Phase Field", three_dim=True):
+    field = getattr(lattice, field_name)
+    
+    if not three_dim:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        im = ax.imshow(field[:, :, 0].T if field.ndim == 3 else field.T, 
+                       origin='lower', cmap='magma', interpolation='bilinear')
+        plt.colorbar(im, label=r"$\phi$")
+        ax.set_title(title)
+        plt.show()
+    else:
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        try:
+            verts, faces, normals, values = measure.marching_cubes(field, level=lattice.interface_threshold)
+            ax.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2],
+                            cmap='Spectral', lw=1)
+        except:
+            print("Surface not yet formed.")
+            
+        ax.set_title(title)
+        plt.show()
 
 def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", 
                  out_dir: str = None, three_dim : bool = True,

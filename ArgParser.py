@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 
-ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "SURFACE"]
+ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "KOBAYASHI", "SURFACE"]
 
 def check_parsed_inputs(parsed_input: argparse.Namespace):
     """
@@ -42,25 +42,29 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if not hasattr(parsed_input, 'verbose'):              parsed_input.verbose = False
     if not hasattr(parsed_input, 'external_flux'):        parsed_input.external_flux = None
     if not hasattr(parsed_input, 'flux_strength'):        parsed_input.flux_strength = 0.0
-    if not hasattr(parsed_input, 'miller'):               parsed_input.miller = [0, 0, 0]
-    if not hasattr(parsed_input, 'base_stick'):           parsed_input.base_stick = 0.01
-    if not hasattr(parsed_input, 'anisotropy_coeff'):     parsed_input.anisotropy_coeff = 0.05
-    if not hasattr(parsed_input, 'anisotropy_sharpness'): parsed_input.anisotropy_sharpness = 4.0
-    if not hasattr(parsed_input, 'anisotropy_selection'): parsed_input.anisotropy_selection = 1.0
-    if not hasattr(parsed_input, 'record'):               parsed_input.record = False
+
+    if not hasattr(parsed_input, 'interface_thr'):        parsed_input.interface_thr = 0.5          
+    if not hasattr(parsed_input, 'epsilon0'):             parsed_input.epsilon0 = 0.0           
+    if not hasattr(parsed_input, 'delta'):                parsed_input.delta = 0.0          
+    if not hasattr(parsed_input, 'n_folds'):              parsed_input.n_folds = 0.0            
+    if not hasattr(parsed_input, 'alpha'):                parsed_input.alpha = 0.0          
+    if not hasattr(parsed_input, 'u_equilibrium'):        parsed_input.u_equilibrium = 1.0          
+    if not hasattr(parsed_input, 'tau'):                  parsed_input.tau = 1.0            
+    if not hasattr(parsed_input, 'diffusivity'):          parsed_input.diffusivity = 0.0            
+    if not hasattr(parsed_input, 'dt'):                   parsed_input.dt = 1e-4            
 
     # =========================================================================
     # VALIDATION CHECKS
     # =========================================================================
     # Epochs
-    if not isinstance(parsed_input.epochs, int) or parsed_input.epochs < 0:
+    if parsed_input.epochs < 0:
         raise ValueError(f"ERROR: 'epochs' must be a non-negative integer. Got: {parsed_input.epochs}")
 
     # Size
-    if not isinstance(parsed_input.size, list) or len(parsed_input.size) != 3:
+    if len(parsed_input.size) != 3:
         raise ValueError(f"ERROR: 'size' must be a list of 3 integers (X Y Z). Got: {parsed_input.size}")
     for val in parsed_input.size:
-        if not isinstance(val, int) or val <= 0:
+        if val <= 0:
             raise ValueError(f"ERROR: dimensions in 'size' must be positive integers. Got: {parsed_input.size}")
 
     # Simulation Type
@@ -90,7 +94,7 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         if isinstance(vals, list) and not all(isinstance(x, list) for x in vals):
             if len(vals) % 3 != 0:
                 raise ValueError(
-                    f"ERROR: '--external-flux' expects values in groups of 3 (AX AY AZ ...). "
+                    f"ERROR: 'external-flux' expects values in groups of 3 (AX AY AZ ...). "
                     f"You provided {len(vals)} values: {vals}")
             
             dirs = []
@@ -102,26 +106,28 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if parsed_input.flux_strength < 0.0:
         raise ValueError(f"ERROR: 'flux-strength' cannot be negative. Got: {parsed_input.flux_strength}")
 
-    # Miller Indices
-    if not isinstance(parsed_input.miller, list) or len(parsed_input.miller) != 3:
-        raise ValueError(f"ERROR: 'miller' must be a list of 3 integers. Got: {parsed_input.miller}")
-    for val in parsed_input.miller:
-        if not isinstance(val, int) or val < 0:
-             raise ValueError(f"ERROR: Miller indices must be integers >= 0. Got: {parsed_input.miller}")
+    # Kobayashi parameters
+    if (parsed_input.interface_thr  < 0.0 or
+        parsed_input.epsilon0       < 0.0 or    
+        parsed_input.delta          < 0.0 or        
+        parsed_input.n_folds        < 0.0 or      
+        parsed_input.alpha          < 0.0 or        
+        parsed_input.u_equilibrium  < 0.0 or
+        parsed_input.tau           <= 0.0 or          
+        parsed_input.diffusivity    < 0.0 or  
+        parsed_input.dt             < 0):
+            raise ValueError(f"ERROR: all the parameters in the Kobayashi growth must be >= 0.0\n \
+                                      Only excpetion for dt, which must be > 0.0")
 
-    # Anisotropy Parameters
-    if parsed_input.anisotropy_coeff < 0.0:
-        raise ValueError(f"ERROR: 'anisotropy-coeff' cannot be negative. Got: {parsed_input.anisotropy_coeff}")
-    
-    if parsed_input.anisotropy_sharpness < 0.0:
-        raise ValueError(f"ERROR: 'anisotropy-sharpness' cannot be negative. Got: {parsed_input.anisotropy_sharpness}")
-    
-    if parsed_input.anisotropy_selection < 0.0:
-        raise ValueError(f"ERROR: 'anisotropy-selection' cannot be negative. Got: {parsed_input.anisotropy_selection}")
-
-    # Base Stick Probability
-    if parsed_input.base_stick < 0.0 or parsed_input.base_stick > 1.0:
-        raise ValueError(f"ERROR: 'base-stick' probability must be in range [0,1]. Got: {parsed_input.base_stick}")
+    # Integration time
+    if parsed_input.dt >= 1e-2:
+        print(f"""
+        ************************************************************************************
+         ATTENTION:
+        \tThe integration time should be kept small (~1e-4) to have high realism.
+        \tThe value {parsed_input.dt} may cause numerical instability.
+        ************************************************************************************
+        """)
 
 def cast_file_input_to_value(value: str):
     """
@@ -171,6 +177,7 @@ def cast_file_input_to_value(value: str):
     # string
     return value
 
+# TODO: rimuovere questa funzione
 def parse_inputs_from_terminal() -> argparse.Namespace:
     """
     Custom argument parser for the crystal structure symulation.
@@ -259,7 +266,7 @@ def parse_inputs() -> argparse.Namespace:
     if len(sys.argv) == 2 and sys.argv[1].endswith(".ini"):
         parsed_input = parse_inputs_from_file_ini(sys.argv[1])
     else:
-        parsed_input = parse_inputs_from_terminal()
+        raise ValueError(f"FATAL ERROR: input {[sys.argv[1:]]} was not a correct file .ini")
     
     # Checks the inputs
     check_parsed_inputs(parsed_input)

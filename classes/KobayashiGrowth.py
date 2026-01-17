@@ -113,7 +113,7 @@ class KobayashiGrowth(GrowthModel):
         # dphi = (eps**2 * lap_phi + phi * (1 - phi) * (phi - 0.5 + m)) / self.tau
         # self.lattice.phi += self.dt * dphi
 
-    def update_phase_field(self):
+    def update_phase_field_v2(self):
         phi = self.lattice.phi
         ndim = 3 if self.three_dim else 2
 
@@ -153,6 +153,32 @@ class KobayashiGrowth(GrowthModel):
                   "reaction max:", np.max(np.abs(reaction)),
                   "lap max:", np.max(np.abs(div)))
 
+    def update_phase_field(self):
+        phi = self.lattice.phi
+        
+        dx = (np.roll(phi, -1, axis=0) - np.roll(phi, 1, axis=0)) / 2.0
+        dy = (np.roll(phi, -1, axis=1) - np.roll(phi, 1, axis=1)) / 2.0
+        theta = np.arctan2(dy, dx)
+
+        aniso = np.cos(self.n_folds * theta)
+        epsilon = self.epsilon0 * (1.0 + self.delta * aniso)
+
+        epsilon_prime = -self.epsilon0 * self.delta * self.n_folds * np.sin(self.n_folds * theta)
+        eps2 = epsilon**2
+        term1 = (np.roll(eps2 * dx, -1, axis=0) - np.roll(eps2 * dx, 1, axis=0)) / 2.0 + \
+                (np.roll(eps2 * dy, -1, axis=1) - np.roll(eps2 * dy, 1, axis=1)) / 2.0
+
+        mixed = epsilon * epsilon_prime
+        term2 = (np.roll(mixed * dy, -1, axis=0) - np.roll(mixed * dy, 1, axis=0)) / 2.0
+        term3 = -(np.roll(mixed * dx, -1, axis=1) - np.roll(mixed * dx, 1, axis=1)) / 2.0
+
+        double_well = phi * (1.0 - phi) * (phi - 0.5)
+        driving_force = self.supersaturation * phi * (1.0 - phi)
+
+        dphi_dt = (term1 + term2 + term3 + double_well + driving_force) * self.mobility
+
+        self.lattice.phi += self.dt * dphi_dt
+        self.lattice.phi = np.clip(self.lattice.phi, 0.0, 1.0)
 
     def step(self):
         if self.verbose:

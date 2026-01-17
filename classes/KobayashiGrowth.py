@@ -158,24 +158,51 @@ class KobayashiGrowth(GrowthModel):
         
         dx = (np.roll(phi, -1, axis=0) - np.roll(phi, 1, axis=0)) / 2.0
         dy = (np.roll(phi, -1, axis=1) - np.roll(phi, 1, axis=1)) / 2.0
+
+        if self.three_dim:
+            dz = (np.roll(phi, -1, axis=2) - np.roll(phi, 1, axis=2)) / 2.0
+        else:
+            dz = np.zeros_like(dx)
+
         theta = np.arctan2(dy, dx)
+        aniso_xy = np.cos(self.n_folds * theta)
 
-        aniso = np.cos(self.n_folds * theta)
-        epsilon = self.epsilon0 * (1.0 + self.delta * aniso)
+        if self.three_dim:
+            magnitude_xy = np.sqrt(dx**2 + dy**2)
+            magnitude_z  = np.abs(dz)
+            magnitude_tot = np.sqrt(dx**2 + dy**2 + dz**2) + 1e-12
 
-        epsilon_prime = -self.epsilon0 * self.delta * self.n_folds * np.sin(self.n_folds * theta)
+            projection_factor = magnitude_xy / magnitude_tot
+            current_delta = self.delta * projection_factor
+
+            epsilon = self.epsilon0 * (1.0 + current_delta * aniso_xy)
+            epsilon_prime = -self.epsilon0 * current_delta * self.n_folds * np.sin(self.n_folds * theta)
+
+        else:
+            epsilon = self.epsilon0 * (1.0 + self.delta * aniso_xy)
+            epsilon_prime = -self.epsilon0 * self.delta * self.n_folds * np.sin(self.n_folds * theta)
+
         eps2 = epsilon**2
-        term1 = (np.roll(eps2 * dx, -1, axis=0) - np.roll(eps2 * dx, 1, axis=0)) / 2.0 + \
-                (np.roll(eps2 * dy, -1, axis=1) - np.roll(eps2 * dy, 1, axis=1)) / 2.0
-
         mixed = epsilon * epsilon_prime
-        term2 = (np.roll(mixed * dy, -1, axis=0) - np.roll(mixed * dy, 1, axis=0)) / 2.0
-        term3 = -(np.roll(mixed * dx, -1, axis=1) - np.roll(mixed * dx, 1, axis=1)) / 2.0
+
+        term_x = (np.roll(eps2 * dx, -1, axis=0) - np.roll(eps2 * dx, 1, axis=0)) / 2.0
+        term_y = (np.roll(eps2 * dy, -1, axis=1) - np.roll(eps2 * dy, 1, axis=1)) / 2.0
+
+        total_laplacian = term_x + term_y
+
+        term_mix_1 = (np.roll(mixed * dy, -1, axis=0) - np.roll(mixed * dy, 1, axis=0)) / 2.0
+        term_mix_2 = -(np.roll(mixed * dx, -1, axis=1) - np.roll(mixed * dx, 1, axis=1)) / 2.0
+
+        total_laplacian += (term_mix_1 + term_mix_2)
+
+        if self.three_dim:
+            term_z = (np.roll(eps2 * dz, -1, axis=2) - np.roll(eps2 * dz, 1, axis=2)) / 2.0
+            total_laplacian += term_z
 
         double_well = phi * (1.0 - phi) * (phi - 0.5)
         driving_force = self.supersaturation * phi * (1.0 - phi)
 
-        dphi_dt = (term1 + term2 + term3 + double_well + driving_force) * self.mobility
+        dphi_dt = (total_laplacian + double_well + driving_force) * self.mobility
 
         self.lattice.phi += self.dt * dphi_dt
         self.lattice.phi = np.clip(self.lattice.phi, 0.0, 1.0)

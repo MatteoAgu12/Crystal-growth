@@ -293,15 +293,11 @@ python main.py --simulation POLI --size 500 500 1 --epochs 10000 --output $OUT -
 
 ### Kobayashi
 $$ 
-   \frac{\partial \phi}{\partial t} = \frac{1}{\tau(\theta)}
-   \left [ 
-      \epsilon^2(\theta) \nabla^2 \phi +
-      \phi (1 - \phi) (\phi - \frac{1}{2} + m(u))
+   \frac{\partial \phi}{\partial t} = M
+   \left [
+      \nabla \cdot (\epsilon^2(\widehat{n}) \nabla \phi) +
+      \phi (1 - \phi) (\phi - \frac{1}{2} + m)
    \right ]
-$$
-
-$$
-   \frac{\partial u}{\partial t} = D \nabla^2 u + \frac{1}{2}\frac{\partial \phi}{\partial t}
 $$
 
 

@@ -33,10 +33,13 @@ class custom_input:
     U_EQ:             float
     TAU:              float
     DIFFUSIVITY:      float
+    MOBILITY:         float
+    SUPERSATURATION:  float
     TIME_STEP:        float
     # TODO: continue....
     
     def __str__(self):
+        # TODO: aggiorna il print
         return f"""
         Simulation Settings:
         --------------------
@@ -165,10 +168,8 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                             epsilon0=input.EPSILON,
                             delta=input.DELTA,
                             n_folds=input.N_FOLDS,
-                            alpha=input.ALPHA,
-                            u_eq=input.U_EQ,
-                            tau=input.TAU,
-                            diffusivity=input.DIFFUSIVITY,
+                            mobility=input.MOBILITY,
+                            supersaturation=input.SUPERSATURATION,
                             dt=input.TIME_STEP,
                             external_flux=None,
                             three_dim=input.THREE_DIM,
@@ -247,15 +248,17 @@ if __name__ == '__main__':
                                  parsed_inputs.verbose) if parsed_inputs.external_flux is not None else None
 
     # Kobayashi only
-    interface_thr = parsed_inputs.interface_thr
-    epsilon0      = parsed_inputs.epsilon0
-    delta         = parsed_inputs.delta
-    n_folds       = parsed_inputs.n_folds
-    alpha         = parsed_inputs.alpha
-    u_eq          = parsed_inputs.u_equilibrium
-    tau           = parsed_inputs.tau
-    diffusivity   = parsed_inputs.diffusivity
-    time_step     = parsed_inputs.dt
+    interface_thr   = parsed_inputs.interface_thr
+    epsilon0        = parsed_inputs.epsilon0
+    delta           = parsed_inputs.delta
+    n_folds         = parsed_inputs.n_folds
+    alpha           = parsed_inputs.alpha
+    u_eq            = parsed_inputs.u_equilibrium
+    tau             = parsed_inputs.tau
+    diffusivity     = parsed_inputs.diffusivity
+    mobility        = parsed_inputs.mobility
+    supersaturation = parsed_inputs.supersaturation
+    time_step      = parsed_inputs.dt
     
     # ================================================================
     # Creating the input objects
@@ -274,7 +277,9 @@ if __name__ == '__main__':
                                    ALPHA=alpha,
                                    U_EQ=u_eq,
                                    TAU=tau,
+                                   MOBILITY=mobility,
                                    DIFFUSIVITY=diffusivity,
+                                   SUPERSATURATION=supersaturation,
                                    TIME_STEP=time_step)
     
     print(simulation_input)

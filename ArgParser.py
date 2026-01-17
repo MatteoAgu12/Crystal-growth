@@ -50,7 +50,9 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if not hasattr(parsed_input, 'alpha'):                parsed_input.alpha = 0.0          
     if not hasattr(parsed_input, 'u_equilibrium'):        parsed_input.u_equilibrium = 1.0          
     if not hasattr(parsed_input, 'tau'):                  parsed_input.tau = 1.0            
-    if not hasattr(parsed_input, 'diffusivity'):          parsed_input.diffusivity = 0.0            
+    if not hasattr(parsed_input, 'diffusivity'):          parsed_input.diffusivity = 0.0 
+    if not hasattr(parsed_input, 'mobility'):             parsed_input.mobility = 0.0 
+    if not hasattr(parsed_input, 'supersaturation'):      parsed_input.supersaturation = 0.0            
     if not hasattr(parsed_input, 'dt'):                   parsed_input.dt = 1e-4            
 
     # =========================================================================
@@ -107,15 +109,17 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         raise ValueError(f"ERROR: 'flux-strength' cannot be negative. Got: {parsed_input.flux_strength}")
 
     # Kobayashi parameters
-    if (parsed_input.interface_thr  < 0.0 or
-        parsed_input.epsilon0       < 0.0 or    
-        parsed_input.delta          < 0.0 or        
-        parsed_input.n_folds        < 0.0 or      
-        parsed_input.alpha          < 0.0 or        
-        parsed_input.u_equilibrium  < 0.0 or
-        parsed_input.tau           <= 0.0 or          
-        parsed_input.diffusivity    < 0.0 or  
-        parsed_input.dt             < 0):
+    if (parsed_input.interface_thr      < 0.0 or
+        parsed_input.epsilon0           < 0.0 or    
+        parsed_input.delta              < 0.0 or        
+        parsed_input.n_folds            < 0.0 or      
+        parsed_input.alpha              < 0.0 or        
+        parsed_input.u_equilibrium      < 0.0 or
+        parsed_input.tau               <= 0.0 or          
+        parsed_input.diffusivity        < 0.0 or  
+        parsed_input.mobility           < 0.0 or  
+        parsed_input.supersaturation    < 0.0 or  
+        parsed_input.dt                 < 0):
             raise ValueError(f"ERROR: all the parameters in the Kobayashi growth must be >= 0.0\n \
                                       Only excpetion for dt, which must be > 0.0")
 

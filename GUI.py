@@ -5,6 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import Rectangle, Patch
 from skimage import measure 
 import numpy as np
+from scipy.ndimage import map_coordinates
 from classes.Lattice import Lattice
 import classes.DLAGrowth as DLA
 import classes.EDENGrowth as EDEN
@@ -64,14 +65,73 @@ def get_grain_boundaries_mask(lattice: Lattice) -> np.array:
         
     return occupied & is_boundary_neighbor
 
-def plot_continuous_field(lattice, field_name='phi', title="Phase Field", three_dim=True):
+
+
+
+def compute_mean_curvature(phi):
+    """
+    Formula: H = -0.5 * div(grad(phi) / |grad(phi)|)
+    """
+    gx = np.gradient(phi, axis=0)
+    gy = np.gradient(phi, axis=1)
+    gz = np.gradient(phi, axis=2) if phi.ndim == 3 else np.zeros_like(gx)
+
+    norm_grad = np.sqrt(gx**2 + gy**2 + gz**2) + 1e-8
+
+    nx = gx / norm_grad
+    ny = gy / norm_grad
+    nz = gz / norm_grad
+
+    dnx_dx = np.gradient(nx, axis=0)
+    dny_dy = np.gradient(ny, axis=1)
+    dnz_dz = np.gradient(nz, axis=2) if phi.ndim == 3 else np.zeros_like(nx)
+
+    divergence = dnx_dx + dny_dy + dnz_dz
+    return -0.5 * divergence
+
+def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Phase Field", three_dim=True):
+    """
+    Args:
+        color_field_name (str): Options: 'u' (diff_field), 'history', 'curvature', 'z'.
+    """
     field = getattr(lattice, field_name)
     
+    if color_field_name == 'curvature':
+        color_data = compute_mean_curvature(field)
+        cmap_name = 'coolwarm'
+        label_name = "Mean Curvature (H)"
+
+    elif color_field_name == 'history':
+        if hasattr(lattice, 'history'):
+            color_data = lattice.history.astype(float)
+            color_data[color_data < 0] = 0 
+            cmap_name = 'magma_r'
+            label_name = "Solidification Epoch (Time)"
+        else:
+            print("Error: 'history' attribute not found.")
+            color_data = None
+        
+    elif color_field_name == 'z':
+        color_data = None 
+        cmap_name = 'viridis'
+        label_name = "Height (Z)"
+        
+    elif hasattr(lattice, color_field_name):
+        color_data = getattr(lattice, color_field_name)
+        cmap_name = 'plasma' if color_field_name == 'u' else 'viridis'
+        label_name = f"Value of {color_field_name}"
+        
+    else:
+        print(f"Warning: Field '{color_field_name}' not found. No plots produced.")
+        return 
+
     if not three_dim:
-        fig, ax = plt.subplots(figsize=(8, 6))
-        im = ax.imshow(field[:, :, 0].T if field.ndim == 3 else field.T, 
-                       origin='lower', cmap='magma', interpolation='bilinear')
-        plt.colorbar(im, label=r"$\phi$")
+        fig, ax = plt.subplots(figsize=(8, 6))        
+        data_to_show = color_data if color_data is not None else field
+        if data_to_show.ndim == 3: data_to_show = data_to_show[:,:,0]
+        
+        im = ax.imshow(data_to_show.T, origin='lower', cmap=cmap_name, interpolation='bilinear')
+        plt.colorbar(im, label=label_name)
         ax.set_title(title)
         plt.show()
     else:
@@ -80,13 +140,34 @@ def plot_continuous_field(lattice, field_name='phi', title="Phase Field", three_
         
         try:
             verts, faces, normals, values = measure.marching_cubes(field, level=lattice.interface_threshold)
-            ax.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2],
-                            cmap='Spectral', lw=1)
-        except:
-            print("Surface not yet formed.")
             
+            if color_field_name == 'z':
+                sampled_values = verts[:, 2]
+            else:
+                sampled_values = map_coordinates(color_data, verts.T, order=1)
+
+            surf = ax.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2],
+                                   cmap=cmap_name, lw=0.1, antialiased=True)
+            
+            surf.set_array(sampled_values)
+            surf.autoscale()
+            
+            cbar = plt.colorbar(surf, ax=ax, shrink=0.6)
+            cbar.set_label(label_name)
+
+        except Exception as e:
+            print(f"Could not plot surface: {e}")
+        
         ax.set_title(title)
+        max_dim = max(lattice.shape)
+        ax.set_xlim(0, max_dim)
+        ax.set_ylim(0, max_dim)
+        ax.set_zlim(0, max_dim)
+        
         plt.show()
+
+
+
 
 def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", 
                  out_dir: str = None, three_dim : bool = True,

@@ -10,6 +10,7 @@ from ArgParser import parse_inputs
 import numpy as np
 from dataclasses import dataclass
 from typing import Union
+import Diagnostic as Diagnostic
 
 @dataclass
 class custom_input:
@@ -177,9 +178,22 @@ def perform_KOBAYASHI_simulation(input: custom_input):
 
     model.run(input.EPOCHS)
 
+    print("\n\n" + "="*60)
+    print("RUNNING FINAL SYSTEM DIAGNOSTICS")
+    print("="*60)
+
+    Diagnostic.check_interface_stability(LATTICE)
+    Diagnostic.analyze_symmetry_slice(LATTICE, z_index=input.NZ//2, n_folds_expected=int(input.N_FOLDS))
+    Diagnostic.verify_growth_law(LATTICE)
+
     # TODO: qui va cambiato
     GUI.plot_continuous_field(LATTICE,
-                              title=input.TITLE,
+                              color_field_name="history",
+                              title=input.TITLE + "_history",
+                              three_dim=input.THREE_DIM)
+    GUI.plot_continuous_field(LATTICE,
+                              color_field_name="curvature",
+                              title=input.TITLE + "_curvature",
                               three_dim=input.THREE_DIM)
     # GUI.plot_lattice(LATTICE, 
     #                  input.EPOCHS, 

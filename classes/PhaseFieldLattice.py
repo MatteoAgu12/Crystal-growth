@@ -60,6 +60,11 @@ class PhaseFieldLattice(BaseLattice):
         self.group_id[solid_mask] = group_id
         self.history[solid_mask] = 0
 
+        if np.any(self.phi > 1.0 + 1e-12) or np.any(self.phi < -1e-12):
+            print("[DEBUG PhaseFieldLattice] phi out of range after nucleation: ",
+                  np.min(self.phi), np.max(self.phi))
+
+
         print(
             "seed stats:",
             np.min(self.phi),

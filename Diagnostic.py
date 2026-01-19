@@ -3,6 +3,102 @@ import matplotlib.pyplot as plt
 from skimage import measure
 from scipy.fft import fft, fftfreq
 
+class CFLMonitor:
+    """
+    Monitor della CFL condition per modelli di phase-field espliciti.
+    """
+
+    def __init__(self, threshold_warning=0.3):
+        self.cfl_history = []
+        self.threshold_warning = threshold_warning
+
+    def update(self, dt, mobility, laplacian_term):
+        """
+        Aggiorna la CFL history.
+
+        Parameters
+        ----------
+        dt : float
+        mobility : float
+        laplacian_term : 2D np.ndarray
+            Termine totale che moltiplica mobility (es: laplaciano + forcing)
+        """
+        import numpy as np
+
+        cfl = dt * mobility * np.max(np.abs(laplacian_term))
+        self.cfl_history.append(cfl)
+
+        if cfl > self.threshold_warning:
+            print(f"[DEBUG][CFL] valore alto: {cfl:.3e}")
+
+        return cfl
+
+    def plot(self, ax=None):
+        """
+        Plot della CFL nel tempo.
+        """
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        ax.plot(self.cfl_history, lw=2)
+        ax.axhline(self.threshold_warning, color="r", ls="--", label="warning")
+
+        ax.set_xlabel("Step")
+        ax.set_ylabel("CFL")
+        ax.set_title("CFL condition")
+        ax.legend()
+
+        return ax
+
+
+def plot_grad_phi_norm(phi, dx, dy, ax=None):
+    """
+    Plot del modulo del gradiente |∇φ|.
+
+    Parameters
+    ----------
+    phi : 2D np.ndarray
+        Campo di fase
+    dx, dy : float
+        Spaziatura della griglia
+    ax : matplotlib axis, optional
+        Axis su cui disegnare
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # Derivate centrali
+    dphidx = (np.roll(phi, -1, axis=1) - np.roll(phi, 1, axis=1)) / (2.0 * dx)
+    dphidy = (np.roll(phi, -1, axis=0) - np.roll(phi, 1, axis=0)) / (2.0 * dy)
+
+    grad_norm = np.sqrt(dphidx**2 + dphidy**2)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    # Scala robusta: ignora il bulk
+    mask = (phi > 0.05) & (phi < 0.95)
+    vmax = np.percentile(grad_norm[mask], 99) if np.any(mask) else grad_norm.max()
+
+    im = ax.imshow(
+        grad_norm,
+        origin="lower",
+        cmap="inferno",
+        vmin=0.0,
+        vmax=vmax
+    )
+
+    ax.set_title(r"$|\nabla \phi|$")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+
+    plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+    return ax
+
+
 def analyze_symmetry_slice(lattice, z_index=None, n_folds_expected=None):
     """
     Analizza una fetta 2D del cristallo per verificare matematicamente la simmetria.
@@ -52,7 +148,7 @@ def analyze_symmetry_slice(lattice, z_index=None, n_folds_expected=None):
     freqs = xf[0:n_samples] / (2*np.pi) # Normalizziamo a "folds"
     
     # --- PLOTTING ---
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig, axes = plt.subplots(1, 2)
     
     # Plot 1: La forma reale
     axes[0].imshow(slice_img, cmap='gray_r')
@@ -65,15 +161,7 @@ def analyze_symmetry_slice(lattice, z_index=None, n_folds_expected=None):
     axes[1].set_ylabel("Radius (pixels)")
     axes[1].set_title("Radial Profile (Anisotropy Signature)")
     axes[1].grid(True)
-    
-    # Plot 3: Spettro delle frequenze (La prova schiacciante)
-    axes[2].plot(freqs[:20], power[:20], 'o-') # Mostriamo solo le prime 20 armoniche
-    axes[2].set_xlabel("Symmetry Mode (n-fold)")
-    axes[2].set_ylabel("Amplitude")
-    axes[2].set_title("Symmetry Spectrum (FFT)")
-    axes[2].set_xticks(range(0, 21))
-    axes[2].grid(True)
-    
+
     plt.tight_layout()
     plt.show()
 

@@ -68,103 +68,107 @@ def get_grain_boundaries_mask(lattice: Lattice) -> np.array:
 
 
 
-def compute_mean_curvature(phi):
+def compute_curvature_2d(phi_slice):
     """
-    Formula: H = -0.5 * div(grad(phi) / |grad(phi)|)
+    Calcola la curvatura media H di una fetta 2D.
+    H = div(grad(phi) / |grad(phi)|)
     """
-    gx = np.gradient(phi, axis=0)
-    gy = np.gradient(phi, axis=1)
-    gz = np.gradient(phi, axis=2) if phi.ndim == 3 else np.zeros_like(gx)
+    # Gradienti 2D
+    gy, gx = np.gradient(phi_slice) # Attenzione all'ordine (row, col) -> (y, x)
+    
+    norm = np.sqrt(gx**2 + gy**2) + 1e-8
+    nx, ny = gx / norm, gy / norm
+    
+    # Divergenza 2D
+    div_nx = np.gradient(nx, axis=1) # d/dx
+    div_ny = np.gradient(ny, axis=0) # d/dy
+    
+    # Curvatura (negativa per convenzione convessa)
+    return - (div_nx + div_ny)
 
-    norm_grad = np.sqrt(gx**2 + gy**2 + gz**2) + 1e-8
+def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D Simulation"):
+    """
+    Plotta una sezione 2D della simulazione con diagnostica colori corretta.
+    """
+    # Estraiamo la fetta centrale 2D (assumendo shape (NX, NY, 1))
+    mid_z = lattice.shape[2] // 2
+    
+    # Dati grezzi dal reticolo
+    if field_name == 'phi':
+        data_2d = lattice.phi[:, :, mid_z]
+    elif field_name == 'u':
+        data_2d = lattice.u[:, :, mid_z]
+    else:
+        print(f"[GUI] Error: Unknown field {field_name}")
+        return
 
-    nx = gx / norm_grad
-    ny = gy / norm_grad
-    nz = gz / norm_grad
+    # Preparazione Figure
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # --- LOGICA COLORE ---
+    if color_mode == 'phase':
+        # Visualizza semplicemente il campo di fase (forma)
+        im = ax.imshow(data_2d.T, origin='lower', cmap='gray_r', vmin=0, vmax=1)
+        label = "Phase Field $\phi$"
+        
+    elif color_mode == 'temperature':
+        # Visualizza la temperatura
+        im = ax.imshow(data_2d.T, origin='lower', cmap='inferno')
+        label = "Temperature $u$"
+        
+    elif color_mode == 'curvature':
+        # Calcola la curvatura della linea di interfaccia
+        curv = compute_curvature_2d(data_2d)
+        
+        # Maschera: mostriamo la curvatura solo vicino all'interfaccia (0.1 < phi < 0.9)
+        # Altrimenti il rumore numerico nel liquido/solido distrugge la scala.
+        mask = (data_2d > 0.1) & (data_2d < 0.9)
+        curv_masked = np.full_like(curv, np.nan)
+        curv_masked[mask] = curv[mask]
+        
+        # Contrasto automatico intelligente sui soli valori validi
+        valid_vals = curv[mask]
+        if len(valid_vals) > 0:
+            vmax = np.percentile(np.abs(valid_vals), 95)
+            vmin = -vmax
+        else:
+            vmin, vmax = -1, 1
+            
+        im = ax.imshow(curv_masked.T, origin='lower', cmap='coolwarm', vmin=vmin, vmax=vmax)
+        label = "Curvature $\kappa$"
+        
+    elif color_mode == 'history':
+        # Storia temporale
+        hist = lattice.history[:, :, mid_z].astype(float)
+        hist_masked = np.ma.masked_where(hist < 0, hist) # Nascondi il background (-1)
+        
+        im = ax.imshow(hist_masked.T, origin='lower', cmap='turbo')
+        label = "Solidification Epoch"
 
-    dnx_dx = np.gradient(nx, axis=0)
-    dny_dy = np.gradient(ny, axis=1)
-    dnz_dz = np.gradient(nz, axis=2) if phi.ndim == 3 else np.zeros_like(nx)
-
-    divergence = dnx_dx + dny_dy + dnz_dz
-    return -0.5 * divergence
+    # --- DECORAZIONI ---
+    plt.colorbar(im, ax=ax, label=label)
+    ax.set_title(f"{title} - {color_mode.capitalize()}")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    
+    # Sovrapponiamo il contorno del cristallo per chiarezza
+    ax.contour(data_2d.T, levels=[0.5], colors='white', linewidths=1, origin='lower')
+    
+    plt.show()
 
 def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Phase Field", three_dim=True):
-    """
-    Args:
-        color_field_name (str): Options: 'u' (diff_field), 'history', 'curvature', 'z'.
-    """
-    field = getattr(lattice, field_name)
-    
-    if color_field_name == 'curvature':
-        color_data = compute_mean_curvature(field)
-        cmap_name = 'coolwarm'
-        label_name = "Mean Curvature (H)"
-
-    elif color_field_name == 'history':
-        if hasattr(lattice, 'history'):
-            color_data = lattice.history.astype(float)
-            color_data[color_data < 0] = 0 
-            cmap_name = 'magma_r'
-            label_name = "Solidification Epoch (Time)"
-        else:
-            print("Error: 'history' attribute not found.")
-            color_data = None
-        
-    elif color_field_name == 'z':
-        color_data = None 
-        cmap_name = 'viridis'
-        label_name = "Height (Z)"
-        
-    elif hasattr(lattice, color_field_name):
-        color_data = getattr(lattice, color_field_name)
-        cmap_name = 'plasma' if color_field_name == 'u' else 'viridis'
-        label_name = f"Value of {color_field_name}"
-        
-    else:
-        print(f"Warning: Field '{color_field_name}' not found. No plots produced.")
-        return 
-
     if not three_dim:
-        fig, ax = plt.subplots(figsize=(8, 6))        
-        data_to_show = color_data if color_data is not None else field
-        if data_to_show.ndim == 3: data_to_show = data_to_show[:,:,0]
-        
-        im = ax.imshow(data_to_show.T, origin='lower', cmap=cmap_name, interpolation='bilinear')
-        plt.colorbar(im, label=label_name)
-        ax.set_title(title)
-        plt.show()
+        # Mappa i vecchi nomi ai nuovi modi 2D
+        mode_map = {
+            'u': 'temperature',
+            'curvature': 'curvature',
+            'history': 'history',
+            'phi': 'phase'
+        }
+        mode = mode_map.get(color_field_name, 'phase')
+        plot_2d_simulation(lattice, field_name, color_mode=mode, title=title)
     else:
-        fig = plt.figure(figsize=(10, 8))
-        ax = fig.add_subplot(111, projection='3d')
-        
-        try:
-            verts, faces, normals, values = measure.marching_cubes(field, level=lattice.interface_threshold)
-            
-            if color_field_name == 'z':
-                sampled_values = verts[:, 2]
-            else:
-                sampled_values = map_coordinates(color_data, verts.T, order=1)
-
-            surf = ax.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2],
-                                   cmap=cmap_name, lw=0.1, antialiased=True)
-            
-            surf.set_array(sampled_values)
-            surf.autoscale()
-            
-            cbar = plt.colorbar(surf, ax=ax, shrink=0.6)
-            cbar.set_label(label_name)
-
-        except Exception as e:
-            print(f"Could not plot surface: {e}")
-        
-        ax.set_title(title)
-        max_dim = max(lattice.shape)
-        ax.set_xlim(0, max_dim)
-        ax.set_ylim(0, max_dim)
-        ax.set_zlim(0, max_dim)
-        
-        plt.show()
+        print("[GUI] 3D plotting requested but we are focusing on 2D debug.")
 
 
 

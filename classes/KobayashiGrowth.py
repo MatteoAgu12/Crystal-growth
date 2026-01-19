@@ -2,6 +2,7 @@ import numpy as np
 from classes.GrowthModel import GrowthModel
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.ParticleFlux import ParticleFlux
+from Diagnostic import CFLMonitor, plot_grad_phi_norm
 
 class KobayashiGrowth(GrowthModel):
     def __init__(self, lattice: PhaseFieldLattice,
@@ -17,6 +18,19 @@ class KobayashiGrowth(GrowthModel):
                  verbose: bool = False):
         super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
 
+        if mobility == 0.0:
+            print(f"""
+            -------------------------------------------------------------
+            [KobayashiGrowth] WARNING: you selected mobility=0, so the behavior will be different.
+            -------------------------------------------------------------
+            """)
+        if delta == 0.0:
+            print(f"""
+            -------------------------------------------------------------
+            [KobayashiGrowth] WARNING: you selected delta=0, so you'll see no anisotropy.
+            -------------------------------------------------------------
+            """)
+
         self.epsilon0 = epsilon0
         self.delta = delta
         self.n_folds = n_folds
@@ -24,6 +38,9 @@ class KobayashiGrowth(GrowthModel):
         self.supersaturation = supersaturation
         self.dt = dt
         # self.prev_phi = lattice.phi
+
+        # TODO: tmp debug
+        self.cfl_monitor = CFLMonitor()
 
         print(self.__str__())
 
@@ -178,9 +195,19 @@ class KobayashiGrowth(GrowthModel):
             epsilon = self.epsilon0 * (1.0 + current_delta * aniso_xy)
             epsilon_prime = -self.epsilon0 * current_delta * self.n_folds * np.sin(self.n_folds * theta)
 
+            # TODO: DEBUG
+            interface_mask = (phi > 0.05) & (phi < 0.95)
+            epsilon[~interface_mask] = self.epsilon0
+            epsilon_prime[~interface_mask] = 0.0
+
         else:
             epsilon = self.epsilon0 * (1.0 + self.delta * aniso_xy)
             epsilon_prime = -self.epsilon0 * self.delta * self.n_folds * np.sin(self.n_folds * theta)
+
+            # TODO: DEBUG
+            interface_mask = (phi > 0.05) & (phi < 0.95)
+            epsilon[~interface_mask] = self.epsilon0
+            epsilon_prime[~interface_mask] = 0.0
 
         eps2 = epsilon**2
         mixed = epsilon * epsilon_prime
@@ -193,11 +220,32 @@ class KobayashiGrowth(GrowthModel):
         term_mix_1 = (np.roll(mixed * dy, -1, axis=0) - np.roll(mixed * dy, 1, axis=0)) / 2.0
         term_mix_2 = -(np.roll(mixed * dx, -1, axis=1) - np.roll(mixed * dx, 1, axis=1)) / 2.0
 
+        if __debug__:
+            max_tx = np.max(np.abs(term_x))
+            max_ty = np.max(np.abs(term_y))
+            max_tm1 = np.max(np.abs(term_mix_1))
+            max_tm2 = np.max(np.abs(term_mix_2))
+            print(f"[DEBUG] Laplacian terms: "
+                  f"x={max_tx:.3e}, y={max_ty:.3e}, mix_x={max_tm1:.3e}, mix_y={max_tm2:.3e}")
+
+
         total_laplacian += (term_mix_1 + term_mix_2)
 
         if self.three_dim:
             term_z = (np.roll(eps2 * dz, -1, axis=2) - np.roll(eps2 * dz, 1, axis=2)) / 2.0
             total_laplacian += term_z
+
+        if __debug__:
+            cfl = self.dt * self.mobility * np.max(np.abs(total_laplacian))
+            if cfl > 0.3:
+                print(f"[DEBUG][CFL] high value: {cfl:.3f}")        
+
+        # TODO: tmp debug
+        self.cfl_monitor.update(self.dt, self.mobility, total_laplacian)
+        if self.epoch % 200 == 0:
+            plot_grad_phi_norm(phi, dx, dy)
+            self.cfl_monitor.plot()
+
 
         double_well = phi * (1.0 - phi) * (phi - 0.5)
         driving_force = self.supersaturation * phi * (1.0 - phi)
@@ -228,7 +276,8 @@ class KobayashiGrowth(GrowthModel):
                         self.lattice.group_id[x, y, z] = gid
                         assigned = True
                         break
-
+                
+                # TODO: questo blocco mi puzza
                 if not assigned:
                     print(f"""
                     -------------------------------------------------------------
@@ -236,6 +285,12 @@ class KobayashiGrowth(GrowthModel):
                     -------------------------------------------------------------""")
                     self.lattice.group_counter += 1
                     self.lattice.group_id[x, y, z] = self.lattice.group_counter
+
+        if __debug__:
+            mask_incoherent = (self.lattice.group_id > 0) & (self.lattice.phi < self.lattice.interface_threshold)
+            if np.any(mask_incoherent):
+                print("[DEBUG] Incoherence group_id / phi:",
+                      np.sum(mask_incoherent))
 
         if self.verbose:
             print(f"\t\t[KobayashiGrowth] Finished evolving step {self.epoch + 1}!\n \

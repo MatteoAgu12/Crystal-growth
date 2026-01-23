@@ -21,7 +21,7 @@ class Lattice(BaseLattice):
         print(self.__str__())
 
     def __str__(self):
-        super().__str__(self)
+        return super().__str__(self)
     
     def occupy(self, x: int, y: int, z: int, epoch: int, id: int) -> None:
         """

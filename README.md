@@ -1,8 +1,12 @@
 # Crystal-growth
-This software is a lattice–based simulator for the growth of crystalline structures under different kinetic regimes, inspired by this paper[^1]. 
-It implements both an EDEN type model (interface–controlled growth) and a diffusion–limited aggregation (DLA) model (transport–controlled growth), on 2D and 3D cubic lattices.  
-It expands the work in the paper by adding new features that allow to simulate a bigger set of physical phenomena.  
-The software allows both a quantitative analysis, by computing relevant properties, and qualitative analysis, by plotting the final cristal, so that the user can directly see its final structure.
+This software is a lattice–based simulator for the growth of crystalline structures under different kinetic regimes, inspired by this paper[^1]. # TODO: new cite
+It implements various growing regimes, in both 2D and 3D. The regimes implemented in this software are:
+   * EDEN growth: isotropic growth into a saturated enviroment
+   * DLA growth: diffusion limited growth, where new particles reach the crystal via a random walk
+   * KOBAYASHI growth: growth into a saturated enviroment, taking into account crystal surface tension
+   * MULLINS growth: growth into an enviroment whose saturation depends on a phisical field (temperature, concentration, ...) and on crystal surface tension
+ 
+The software allows both a quantitative analysis, by computing relevant properties, and qualitative analysis, by plotting the final crystal, so that the user can directly see its final structure.
 
 
 
@@ -16,28 +20,26 @@ The main physical phenomena in which these objects are involved are:
 * **Defects** - vacancies, dislocations, impurities and grain boundaries break perfect order; they control mechanical strength, plasticity, transport, and often where and how growth proceeds.
 * **Phase transitions** - crystals can melt, transform into other crystalline phases, or undergo order–disorder transitions when temperature, pressure, or composition change.
 
-### Lattice representation
+## Lattice implementation
+### Base Lattice
+### Kinetic Lattice
 The system is defined on a discrete cubic lattice
 
-$$\Lambda = \\{(x,y,z) | x=0,\dots,N_x-1, y=0,\dots,N_y-1, z=0,\dots,N_z-1\\}$$
+$$\Lambda = \{(x,y,z) | x=0,\dots,N_x-1, y=0,\dots,N_y-1, z=0,\dots,N_z-1\}$$
 
 Each site carries:
-* a **binary occupancy** variable $n(\mathbf{r}) \in \\{0,1\\}, \quad \mathbf{r} = (x,y,z)$  
-where $n(\mathbf{r}) = 1$ denotates an occupied site and $n(\mathbf{r})=0$ denotates an empty cell.
-* an **hisotry** field $h(\mathbf{r}) \in \\{-1,1,2,\dots \\}$  
+* an **occupancy** variable $n(\mathbf{r}) \in [0,1], \quad \mathbf{r} = (x,y,z)$  
+The meaning of the value depends on the simulation logic: for kinetic growth (EDEN, DLA) 0 means empty cell and 1 means occuied. For phase field growth (KOBAYASHI, MULLINS) the value is continuous, with 0 being liquid phase, 1 being solid phase, and the values in between accounts for the dynamics of the interface.
+* an **hisotry** field $h(\mathbf{r}) \in \{-1,1,2,\dots \}$  
 where $h(\mathbf{r})=-1$ for empty sites, and $h(\mathbf{r})=t$ if the site was occupied at time step $t$.
 * an **id** field $id(\mathbf{r})$, used to mimic different cristalline domains.
 * an optional **crystal seed set** $S_0 \subset  \Lambda$, used to define the initial occupied regions.
+TODO: continue
 
-Nearest-neighbor connectivity is defined in the usual 6-neighbors sense in 3D (restricted accordingly in 2D):
+### Phase field lattice
 
-$$N(\mathbf{r}) = \\{ \mathbf{r} \pm \hat{x}, \mathbf{r} \pm \hat{y}, \mathbf{r} \pm \hat{z} \\}$$
-
-The **active border** $B(t)$ of the crystal at epoch $t$ is defined as the set of empty sites that are nearest neighbors of at least one occupied sites:
-
-$$B(t) = \\{ \mathbf{r} \in \Lambda | n(\mathbf{r}) = 0, \\; \exists \mathbf{r'} \in N(\mathbf{r}) \text{ with } n(\mathbf{r'})=1 \\}$$
-
-### EDEN growth model
+## Growth models
+### EDEN growth
 The Eden model implemented here describes growth controlled primarily by the interface kinetics: the crystal expands by occupying sites on its active border.
 
 At each epoch $t$:
@@ -55,7 +57,7 @@ $$P(\mathbf{r}) = \frac{w(\mathbf{r})}{\sum_{\mathbf{r'} \in B(t)} w(\mathbf{r'}
 
 The simulator supports both fully 3D and 2D EDEN growth, with the 2D version having the $z$-plane fixed..
 
-### DLA growth model
+### DLA growth
 The DLA model describes growth limited by particle transport: particles diffuse in the empty region via random walk, and irreversibly attach to the crystal when they reach its neighborhood.
 
 For each new particle in the simulation:
@@ -69,26 +71,13 @@ For each new particle in the simulation:
 
 The simulator collects simple statistics on the random walk, such as mean number of steps and mean number of restarts per attached particle.
 
-### Directional anisotropy
-The software provides a general anisotropy mechanism implemented at the lattice level. 
-Anisotropy is controlled by:
-* a set of preferred **growth directions** $\\{ \mathbf{\hat{a}_i} \\}$, each being a unit vecotr in $\mathcal{R}^3$.
-* a scalar **anisotropy strength** $\kappa \ge 0$.
+### Kobayashi growth
 
-For any direction $\mathbf{v} \ne 0$ (e.g. a border–site position relative to a reference point, or a random–walk step), the lattice computes an **anisotropy weight**:
 
-$$w(\mathbf{r}) = \sum_i e^{\kappa \cdot cos\theta_i}, \quad cos\theta_i = \frac{\mathbf{v \cdot \hat{a}_i}}{|\left| \mathbf{v} \right||}$$
+### Mullins growth
 
-In the EDEN model, $\mathbf{v}$ is typically taken as the vector from a fixed reference (e.g. the mean seed position) to the candidate border site, biasing the selection of growth sites.  
-In the DLA model, $\mathbf{v}$ is taken as the candidate random–walk step $\mathbf{\Delta r}$; the probability of choosing a step from the set of nearest–neighbor directions $\\{\mathbf{\Delta r}_j\\}$ becomes:
 
-$$P(\mathbf{\Delta r}_j) = \frac{w(\mathbf{\Delta r}_j)}{\sum_k w(\mathbf{\Delta r}_k)}$$
-
-By choosing appropriate sets of $\\{ \mathbf{\hat{a}_i} \\}$ (e.g. three directions at 120° in 2D) and tuning $\kappa$, the user can generate crystals with a controlled number of preferred growth arms or with strongly biased growth along specific axes.
-
-When anisotropy is disabled (no directions or $\kappa=0$), all weights reduce to $w=1$, and the models revert to their standard isotropic versions.
-
-### Analysis tools
+## Outputs and Analysis tools
 The software includes basic analysis utilities, including:
 * **Fractal dimention estimation** of DLA clusters via box-counting over multiple length scales: if $N(l)$ is the number of occupied boxes of side $l$, the dimension $D_f$ is estimated from:
 
@@ -97,6 +86,9 @@ $$N(l) \approx l^{-D_f}$$
 * **Distance from active surface analysis**, used in a built-in simulation, quantifying how far occupied sites are from the initial growth plane as a function of epoch.
 
 These tools are intended to provide quick quantitative diagnostics of the generated morphologies.
+
+
+
 
 
 ## Repository Structure
@@ -290,15 +282,6 @@ The command used to generate this simulation is the following (change $\texttt{\
 python main.py --simulation POLI --size 500 500 1 --epochs 10000 --output $OUT --title "Policrystal"
 ```
 **N.B.**: this simulaion is particularly heavy, so be patient.
-
-### Kobayashi
-$$ 
-   \frac{\partial \phi}{\partial t} = M
-   \left [
-      \nabla \cdot (\epsilon^2(\widehat{n}) \nabla \phi) +
-      \phi (1 - \phi) (\phi - \frac{1}{2} + m)
-   \right ]
-$$
 
 
 ## References

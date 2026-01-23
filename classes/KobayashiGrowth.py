@@ -1,301 +1,97 @@
 import numpy as np
-from classes.GrowthModel import GrowthModel
 from classes.PhaseFieldLattice import PhaseFieldLattice
+from classes.GrowthModel import GrowthModel
 from classes.ParticleFlux import ParticleFlux
-from Diagnostic import CFLMonitor, plot_grad_phi_norm
+from Diagnostic import CFLMonitor
 
 class KobayashiGrowth(GrowthModel):
+    """
+    """
     def __init__(self, lattice: PhaseFieldLattice,
-                 epsilon0: float = 0.0,
+                 dt: float = 0.01,
+                 mobility: float = 1.0,
+                 epsilon0: float = 1.0,
                  delta: float = 0.0,
                  n_folds: float = 0.0,
-                 mobility: float = 0.0,
                  supersaturation: float = 0.0,
-                 dt: float = 1e-3,
                  external_flux: ParticleFlux = None,
-                 rng_seed: int = 69,
                  three_dim: bool = True,
                  verbose: bool = False):
-        super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
+        super().__init__(lattice, three_dim=three_dim, verbose=verbose)
 
-        if mobility == 0.0:
-            print(f"""
-            -------------------------------------------------------------
-            [KobayashiGrowth] WARNING: you selected mobility=0, so the behavior will be different.
-            -------------------------------------------------------------
-            """)
-        if delta == 0.0:
-            print(f"""
-            -------------------------------------------------------------
-            [KobayashiGrowth] WARNING: you selected delta=0, so you'll see no anisotropy.
-            -------------------------------------------------------------
-            """)
-
+        self.dt = dt
+        self.M = mobility
         self.epsilon0 = epsilon0
         self.delta = delta
         self.n_folds = n_folds
-        self.mobility = mobility
         self.supersaturation = supersaturation
-        self.dt = dt
-        # self.prev_phi = lattice.phi
 
-        # TODO: tmp debug
-        self.cfl_monitor = CFLMonitor()
+        self._cfl = CFLMonitor(0.3)
+
+        if self.three_dim:
+            raise NotImplementedError("[KobayashiGrowth] three_dim=True not implemented (requested: only 2D).")
 
         print(self.__str__())
 
     def __str__(self):
-        return f"""
-        KobayashiGrowth
-        -------------------------------------------------------------
-        epoch={self.epoch}
-        epsilon0={self.epsilon0}
-        delta={self.delta}
-        n_folds={self.n_folds}
-        mobility={self.mobility}
-        supersaturation={self.supersaturation}
-        dt={self.dt}
-        -------------------------------------------------------------
-        """
-
-    def update_phase_field_old(self):
-        """
-        """
-        phi = self.lattice.phi
-        ndim = 3 if self.three_dim else 2
-
-        grads = []
-        for axis in range(ndim):
-            grad = (np.roll(phi, -1, axis=axis) - np.roll(phi, 1, axis=axis)) / 2.0
-            grads.append(grad)
-
-        grad_sq = np.zeros_like(phi)
-        for g in grads:
-            grad_sq += g**2
-        magnitude = np.sqrt(grad_sq + 1e-12)
-        normals = [g / magnitude for g in grads]
-
-        # anisotropy = np.zeros_like(phi)
-        # for n in normals:
-        #     anisotropy += n**4
-        # eps = self.epsilon0 * (1.0 + self.delta * anisotropy)
-        # eps2 = eps ** 2
-
-        # TODO: per ora è solo 2D!!!!
-        gx, gy = grads
-        theta = np.arctan2(gy, gx)
-        eps = self.epsilon0 * (1 + self.delta * np.cos(self.n_folds * theta))
-        eps2 = eps**2
-
-        div = np.zeros_like(phi)
-
-        for axis in range(ndim):
-            flux = eps2 * grads[axis]
-            div += (np.roll(flux, -1, axis=axis) - np.roll(flux, 1, axis=axis)) / 2.0
-
-
-        reaction_term = phi * (1.0 - phi) * (phi - 0.5 + self.supersaturation)
-        phi_new = phi + self.dt * self.mobility * (div + reaction_term)
-        #self.lattice.phi = np.clip(phi_new, 0.0, 1.0)
-        self.lattice.phi = phi_new
-
-        if self.epoch % 100 == 0:
-            print(
-                self.epoch,
-                "phi max:", np.max(phi),
-                "phi mean:", np.mean(phi),
-                "reaction max:", np.max(phi * (1-phi) * (phi - 0.5 + self.mobility)),
-                "lap max:", np.max(np.abs(div))
-            )
-        # phi = self.lattice.phi
-        # u   = self.lattice.u
- 
-        # gx = (np.roll(phi, -1, 0) - np.roll(phi, 1, 0)) / 2
-        # gy = (np.roll(phi, -1, 1) - np.roll(phi, 1, 1)) / 2
-        # gz = (np.roll(phi, -1, 2) - np.roll(phi, 1, 2)) / 2 if self.three_dim else np.zeros_like(gx)
- 
-        # magnitude = np.sqrt(gx**2 + gy**2 + gz**2)
-        # phi_az = np.arctan2(gy, gx)
- 
-        # if self.three_dim:
-        #     theta = np.arccos(np.clip(gz / magnitude, -1.0, 1.0))
-        #     aniso = (1.0 + self.delta * np.cos(self.n_folds * phi_az) * np.sin(theta))        
-        # else:
-        #     aniso = (1.0 + self.delta * np.cos(self.n_folds * phi_az))
-        #     
-        # eps = self.epsilon0 * aniso
-        # lap_phi = laplacian(phi, self.three_dim)
-        # m = (self.alpha / np.pi) * np.arctan(self.alpha * (self.u_eq - u))
-
-        # dphi = (eps**2 * lap_phi + phi * (1 - phi) * (phi - 0.5 + m)) / self.tau
-        # self.lattice.phi += self.dt * dphi
-
-    def update_phase_field_v2(self):
-        phi = self.lattice.phi
-        ndim = 3 if self.three_dim else 2
-
-        grads = []
-        for axis in range(ndim):
-            grads.append((np.roll(phi, -1, axis=axis) -
-                          np.roll(phi, 1, axis=axis)) / 2.0)
-
-        # anisotropia (2D Kobayashi)
-        if not self.three_dim:
-            gx, gy = grads
-            theta = np.arctan2(gy, gx)
-            eps = self.epsilon0 * (1.0 + self.delta * np.cos(self.n_folds * theta))
-        else:
-            eps = self.epsilon0
-
-        eps2 = eps**2
-
-        div = np.zeros_like(phi)
-        for axis in range(ndim):
-            flux = eps2 * grads[axis]
-            div += (np.roll(flux, -1, axis=axis) -
-                    np.roll(flux, 1, axis=axis)) / 2.0
-
-        double_well = phi * (1.0 - phi) * (phi - 0.5)
-        driving     = self.supersaturation * phi * (1.0 - phi)
-        reaction    = double_well + driving
-
-        phi_new = phi + self.dt * self.mobility * (div + reaction)
-
-        self.lattice.phi = np.clip(phi_new, 0.0, 1.0)
-
-        if self.epoch % 100 == 0:
-            print(self.epoch,
-                  "phi max:", np.max(phi),
-                  "phi mean:", np.mean(phi),
-                  "reaction max:", np.max(np.abs(reaction)),
-                  "lap max:", np.max(np.abs(div)))
-
-    def update_phase_field(self):
-        phi = self.lattice.phi
-        
-        dx = (np.roll(phi, -1, axis=0) - np.roll(phi, 1, axis=0)) / 2.0
-        dy = (np.roll(phi, -1, axis=1) - np.roll(phi, 1, axis=1)) / 2.0
-
-        if self.three_dim:
-            dz = (np.roll(phi, -1, axis=2) - np.roll(phi, 1, axis=2)) / 2.0
-        else:
-            dz = np.zeros_like(dx)
-
-        theta = np.arctan2(dy, dx)
-        aniso_xy = np.cos(self.n_folds * theta)
-
-        if self.three_dim:
-            magnitude_xy = np.sqrt(dx**2 + dy**2)
-            magnitude_z  = np.abs(dz)
-            magnitude_tot = np.sqrt(dx**2 + dy**2 + dz**2) + 1e-12
-
-            projection_factor = magnitude_xy / magnitude_tot
-            current_delta = self.delta * projection_factor
-
-            epsilon = self.epsilon0 * (1.0 + current_delta * aniso_xy)
-            epsilon_prime = -self.epsilon0 * current_delta * self.n_folds * np.sin(self.n_folds * theta)
-
-            # TODO: DEBUG
-            interface_mask = (phi > 0.05) & (phi < 0.95)
-            epsilon[~interface_mask] = self.epsilon0
-            epsilon_prime[~interface_mask] = 0.0
-
-        else:
-            epsilon = self.epsilon0 * (1.0 + self.delta * aniso_xy)
-            epsilon_prime = -self.epsilon0 * self.delta * self.n_folds * np.sin(self.n_folds * theta)
-
-            # TODO: DEBUG
-            interface_mask = (phi > 0.05) & (phi < 0.95)
-            epsilon[~interface_mask] = self.epsilon0
-            epsilon_prime[~interface_mask] = 0.0
-
-        eps2 = epsilon**2
-        mixed = epsilon * epsilon_prime
-
-        term_x = (np.roll(eps2 * dx, -1, axis=0) - np.roll(eps2 * dx, 1, axis=0)) / 2.0
-        term_y = (np.roll(eps2 * dy, -1, axis=1) - np.roll(eps2 * dy, 1, axis=1)) / 2.0
-
-        total_laplacian = term_x + term_y
-
-        term_mix_1 = (np.roll(mixed * dy, -1, axis=0) - np.roll(mixed * dy, 1, axis=0)) / 2.0
-        term_mix_2 = -(np.roll(mixed * dx, -1, axis=1) - np.roll(mixed * dx, 1, axis=1)) / 2.0
-
-        if __debug__:
-            max_tx = np.max(np.abs(term_x))
-            max_ty = np.max(np.abs(term_y))
-            max_tm1 = np.max(np.abs(term_mix_1))
-            max_tm2 = np.max(np.abs(term_mix_2))
-            print(f"[DEBUG] Laplacian terms: "
-                  f"x={max_tx:.3e}, y={max_ty:.3e}, mix_x={max_tm1:.3e}, mix_y={max_tm2:.3e}")
-
-
-        total_laplacian += (term_mix_1 + term_mix_2)
-
-        if self.three_dim:
-            term_z = (np.roll(eps2 * dz, -1, axis=2) - np.roll(eps2 * dz, 1, axis=2)) / 2.0
-            total_laplacian += term_z
-
-        if __debug__:
-            cfl = self.dt * self.mobility * np.max(np.abs(total_laplacian))
-            if cfl > 0.3:
-                print(f"[DEBUG][CFL] high value: {cfl:.3f}")        
-
-        # TODO: tmp debug
-        self.cfl_monitor.update(self.dt, self.mobility, total_laplacian)
-        if self.epoch % 200 == 0:
-            plot_grad_phi_norm(phi, dx, dy)
-            self.cfl_monitor.plot()
-
-
-        double_well = phi * (1.0 - phi) * (phi - 0.5)
-        driving_force = self.supersaturation * phi * (1.0 - phi)
-
-        dphi_dt = (total_laplacian + double_well + driving_force) * self.mobility
-
-        self.lattice.phi += self.dt * dphi_dt
-        self.lattice.phi = np.clip(self.lattice.phi, 0.0, 1.0)
+        return (f"[KobayashiGrowth] dt={self.dt}, M={self.M}, eps0={self.epsilon0}, "
+                f"delta={self.delta}, n={self.n_folds}, m={self.supersaturation}, "
+                f"occupied={len(self.lattice.occupied)}")
 
     def step(self):
-        if self.verbose:
-            print(f"\t\t[KobayashiGrowth] Starting evolving step {self.epoch + 1}...")
+        lat = self.lattice
+        z = 0 # tmp
+        
+        phi = lat.phi[:, :, z]
 
-        self.update_phase_field()
+        pad = np.pad(phi, pad_width=1, mode='edge')
+        phix = 0.5 * (pad[2:, 1:-1] - pad[:-2, 1:-1])
+        phiy = 0.5 * (pad[1:-1, 2:] - pad[1:-1, :-2])
 
-        newly_solid = (self.lattice.phi >= self.lattice.interface_threshold) & (self.lattice.history == -1)
-        if np.any(newly_solid):
-            coords = np.argwhere(newly_solid)
-            
-            for x, y, z in coords:
-                self.lattice.history[x,y,z] = self.epoch
-                neighbors = self.lattice.get_neighbors(x, y, z)
-                assigned = False
+        grad2 = phix * phix + phiy * phiy
+        min_grad = 1e-10
+        interface_mask = (phi > 1e-3) & (phi < 1.0 - 1e-3)
+        mask = interface_mask & (grad2 > min_grad)
+        
+        theta = np.arctan2(phiy, phix)
+        theta[mask] = np.arctan2(phiy[mask], phix[mask])
 
-                for nx, ny, nz in neighbors:
-                    gid = self.lattice.group_id[nx, ny, nz]
-                    if gid > 0:
-                        self.lattice.group_id[x, y, z] = gid
-                        assigned = True
-                        break
-                
-                # TODO: questo blocco mi puzza
-                if not assigned:
-                    print(f"""
-                    -------------------------------------------------------------
-                    [KobayashiGrowth] WARNING: at step {self.epoch+1} a new nucleation has occoured at ({x}, {y}, {z})
-                    -------------------------------------------------------------""")
-                    self.lattice.group_counter += 1
-                    self.lattice.group_id[x, y, z] = self.lattice.group_counter
+        eps = np.full_like(phi, self.epsilon0, dtype=np.float64)
+        deps = np.zeros_like(phi, dtype=np.float64)
 
-        if __debug__:
-            mask_incoherent = (self.lattice.group_id > 0) & (self.lattice.phi < self.lattice.interface_threshold)
-            if np.any(mask_incoherent):
-                print("[DEBUG] Incoherence group_id / phi:",
-                      np.sum(mask_incoherent))
+        if self.delta != 0.0 and self.n_folds != 0.0:
+            c = np.cos(self.n_folds * theta[mask])
+            s = np.sin(self.n_folds * theta[mask])
 
-        if self.verbose:
-            print(f"\t\t[KobayashiGrowth] Finished evolving step {self.epoch + 1}!\n \
-                    \t\t_____________________________________________________________")
+            eps[mask]  =  self.epsilon0 * (1.0 + self.delta * c)
+            deps[mask] = -self.epsilon0 * self.delta * self.n_folds * s
 
+        eps = np.maximum(eps, 1e-8)
+
+        Jx = (eps * eps) * phix - (eps * deps) * phiy
+        Jy = (eps * eps) * phiy + (eps * deps) * phix
+        Jx_p = np.pad(Jx, pad_width=1, mode='edge')
+        Jy_p = np.pad(Jy, pad_width=1, mode='edge')
+        divJ = (0.5 * (Jx_p[2:, 1:-1] - Jx_p[:-2, 1:-1]) + 
+                0.5 * (Jy_p[1:-1, 2:] - Jy_p[1:-1, :-2]))
+
+        m = self.supersaturation
+        reaction = phi * (1.0 - phi) * (phi - 0.5 + m)
+        rhs = divJ + reaction
+        curvature = (pad[2:, 1:-1] + pad[:-2, 1:-1] + pad[1:-1, 2:] + pad[1:-1, :-2] 
+                     - 4.0 * pad[1:-1, 1:-1])
+        
+        eps2_max = float(np.max(eps*eps))
+        dt_max = 0.20 / (self.M * (eps2_max + 1e-12))
+        dt = min(self.dt, dt_max)
+
+        phi_new = phi + (dt * self.M) * rhs
+        phi_new = np.where(phi_new < -1e-3, -1e-3, phi_new)
+        phi_new = np.where(phi_new > 1.0 + 1e-3, 1.0 + 1e-3, phi_new)
+
+        lat.phi[:, :, z] = phi_new
+        lat.curvature[:, :, z] = curvature
+        lat.update_occupied_and_history(epoch=self.epoch)
 
 
 

@@ -10,6 +10,7 @@ class BaseLattice(ABC):
 
         self.history   = np.ones(self.shape, dtype=np.int64) * (-1)
         self.group_id  = np.zeros(self.shape, dtype=np.uint16)
+        self.occupied = set()
         self.group_counter = 0
         self.initial_seeds = []
         self.verbose = verbose

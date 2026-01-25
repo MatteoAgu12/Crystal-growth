@@ -4,7 +4,7 @@ from abc import ABC
 class BaseLattice(ABC):
     def __init__(self, nx: int, ny: int, nz: int, verbose: bool):
         if nx < 0 or ny < 0 or nz < 0:
-            raise ValueError("Lattice dimensions must be >= 0")
+            raise ValueError("KineticLattice dimensions must be >= 0")
 
         self.shape = (nx, ny, nz)
 
@@ -17,7 +17,7 @@ class BaseLattice(ABC):
 
     def __str__(self):
         return f"""
-        === Lattice Object ======================================== 
+        === KineticLattice Object ======================================== 
          * Shape:               {self.shape}
          * Nucleation seeds:    {self.initial_seeds}
          * Verbose:             {self.verbose}

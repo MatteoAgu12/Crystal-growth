@@ -6,18 +6,18 @@ from matplotlib.patches import Rectangle, Patch
 from skimage import measure 
 import numpy as np
 from scipy.ndimage import map_coordinates
-from classes.Lattice import Lattice
+from classes.KineticLattice import KineticLattice
 import classes.DLAGrowth as DLA
 import classes.EDENGrowth as EDEN
 
-def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
+def get_visible_voxels_binary_mask(lattice: KineticLattice) -> np.array:
     """
     Function that creates a binary mask based on the lattice occupation.
     This function creates a mask that when applied to the lattice, return only the occupied cells not surrounded by other occupied cell.
     The porpouse of this function is to improve the GUI computational time and cost, by avoiding to show voxels that can't be seen.
 
     Args:
-        lattice (Lattice): custom lattice object
+        lattice (KineticLattice): custom lattice object
 
     Returns:
         (np.array): binary 3D mask. The cell is True if it is going to be plotted, False elsewhere.
@@ -34,12 +34,12 @@ def get_visible_voxels_binary_mask(lattice: Lattice) -> np.array:
     visible = occ & (~neighbors_all_occupied)
     return visible
 
-def get_grain_boundaries_mask(lattice: Lattice) -> np.array:
+def get_grain_boundaries_mask(lattice: KineticLattice) -> np.array:
     """
     Creates a binary mask that identifies voxels (or pixels) at the edge between two or more cristalline domains.
 
     Args:
-        lattice (Lattice): custom lattice object.
+        lattice (KineticLattice): custom lattice object.
 
     Returns:
         np.array: binary mask.
@@ -170,7 +170,7 @@ def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Ph
 
 
 
-def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice", 
+def plot_lattice(lattice: KineticLattice, N_epochs: int, title: str = "Crystal lattice", 
                  out_dir: str = None, three_dim : bool = True,
                  color_mode: str = "epoch"):
     """
@@ -178,7 +178,7 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
     The user can inspect it (zoom, rotate -only in 3D version-, ...) at runtime.
 
     Args:
-        lattice (Lattice): lattice to be plotted.
+        lattice (KineticLattice): lattice to be plotted.
         N_epochs (int): total number of epochs in the simulation (used for normalization in 'epoch' mode).
         title (str, optional): Title of the canvas. Defaults to "Crystal lattice".
         out_dir (str, optional): directory in which save an image of the crystal. Default to None.
@@ -311,7 +311,7 @@ def plot_lattice(lattice: Lattice, N_epochs: int, title: str = "Crystal lattice"
     if out_dir is not None:
         filename = out_dir + title.replace(" ", "_") + ".png"
         plt.savefig(filename, bbox_inches='tight')
-        print(f"Lattice image saved as {filename}!")
+        print(f"KineticLattice image saved as {filename}!")
     
     plt.show()
 

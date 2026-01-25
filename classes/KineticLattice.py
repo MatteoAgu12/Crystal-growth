@@ -3,7 +3,7 @@ import itertools
 from typing import Union
 from classes.BaseLattice import BaseLattice
 
-class Lattice(BaseLattice):
+class KineticLattice(BaseLattice):
     """
     """
     def __init__(self, nx: int, ny: int, nz: int, verbose: bool = False):
@@ -38,7 +38,7 @@ class Lattice(BaseLattice):
             ValueError: if the epoch number is negative the function raises error.
         """
         if epoch < 0:
-            raise ValueError(f"ERROR: in function 'Lattice::occupy()' the epoch number must be a an integer bigger or equal to zero.")
+            raise ValueError(f"ERROR: in function 'KineticLattice::occupy()' the epoch number must be a an integer bigger or equal to zero.")
         
         if not self.is_point_inside(x, y, z):
             return

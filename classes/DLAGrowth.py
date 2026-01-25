@@ -1,10 +1,10 @@
 import numpy as np
-from classes.Lattice import Lattice
+from classes.KineticLattice import KineticLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.GrowthModel import GrowthModel
 
 class DLAGrowth(GrowthModel):
-    def __init__(self, lattice: Lattice,
+    def __init__(self, lattice: KineticLattice,
                  generation_padding: int,
                  outer_limit_padding: int,
                  external_flux: ParticleFlux = None, 

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from classes.Lattice import Lattice
+from classes.KineticLattice import KineticLattice
 from classes.BaseLattice import BaseLattice
 from classes.PhaseFieldLattice import PhaseFieldLattice
 
@@ -12,7 +12,7 @@ def dammy_lattice(capsys):
     """
     Creates a dummy KineticLattice object
     """
-    lat = Lattice(3, 4, 5)
+    lat = KineticLattice(3, 4, 5)
     capsys.readouterr()
     return lat
 
@@ -30,8 +30,8 @@ def test_init_rejects_negative_dimensions():
     """
     Checsks if the class raises an error if the size in input is negative
     """
-    with pytest.raises(ValueError, match="Lattice dimensions must be >= 0"):
-        Lattice(-1, 1, 1, verbose=False)
+    with pytest.raises(ValueError, match="KineticLattice dimensions must be >= 0"):
+        KineticLattice(-1, 1, 1, verbose=False)
 
 def test_init_sets_grid_and_inherited_arrays(dammy_lattice):
     """

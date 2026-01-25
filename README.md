@@ -20,9 +20,9 @@ The main physical phenomena in which these objects are involved are:
 * **Defects** - vacancies, dislocations, impurities and grain boundaries break perfect order; they control mechanical strength, plasticity, transport, and often where and how growth proceeds.
 * **Phase transitions** - crystals can melt, transform into other crystalline phases, or undergo order–disorder transitions when temperature, pressure, or composition change.
 
-## Lattice implementation
-### Base Lattice
-### Kinetic Lattice
+## KineticLattice implementation
+### Base KineticLattice
+### Kinetic KineticLattice
 The system is defined on a discrete cubic lattice
 
 $$\Lambda = \{(x,y,z) | x=0,\dots,N_x-1, y=0,\dots,N_y-1, z=0,\dots,N_z-1\}$$
@@ -122,18 +122,18 @@ By doing these few steps you should be ready to use the software on your machine
 ## Tutorials
 The usage of this software is very easy, and to help the user to learn the main features the following short tutorials are provided, covering all the possibilities offered by this work.
 
-### Create and use a $\texttt{Lattice}$ object
-The $\texttt{Lattice}$ class is the very core of this project.
+### Create and use a $\texttt{KineticLattice}$ object
+The $\texttt{KineticLattice}$ class is the very core of this project.
 It provides a 3D enviroment in which perform the simulations under the conditions set by the user.  
 Let's start by importing the class and creating an object of this class with fixed sizes:
 ```
-from Lattice import Lattice
+from KineticLattice import KineticLattice
 
 NX = 100
 NY = 50
 NZ = 120
 
-MY_LATTICE = Lattice(number_of_cells_x = NX, number_of_cells_y = NY, number_of_cells_z = NZ)
+MY_LATTICE = KineticLattice(number_of_cells_x = NX, number_of_cells_y = NY, number_of_cells_z = NZ)
 ```
 At this point the lattice is empty.
 To start a growth you need to set at least one nucleation seed.
@@ -210,7 +210,7 @@ To select which simulation you want to do:
 To set all the parameters of the chosen simulation (examples with arbitrary values):
 ```
 --epochs 3000                          # Number of particles to deposit on the crystal
---size 100 100 100                     # Size of the Lattice object (must be three values: sizeX, sizeY, sizeZ)
+--size 100 100 100                     # Size of the KineticLattice object (must be three values: sizeX, sizeY, sizeZ)
 --2D                                   # If present it simulates a 2D crystal, otherwise it's 3D 
 --title "My simulation"                # Title of the simulation
 --output "Results"                     # Directory where to save the results of the analysis

@@ -1,11 +1,11 @@
 import numpy as np
 from typing import Union
-from classes.Lattice import Lattice
+from classes.KineticLattice import KineticLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.GrowthModel import GrowthModel
 
 class EDENGrowthKinetic(GrowthModel):
-    def __init__(self, lattice: Lattice,
+    def __init__(self, lattice: KineticLattice,
                  external_flux: ParticleFlux = None, 
                  rng_seed:int = 69, 
                  three_dim: bool = True, 

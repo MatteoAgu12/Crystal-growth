@@ -1,6 +1,6 @@
 import Analysis as ANLS
 import GUI as GUI
-from classes.Lattice import Lattice
+from classes.KineticLattice import KineticLattice
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.DLAGrowth import DLAGrowth
@@ -56,7 +56,7 @@ class custom_input:
 
 
 def perform_EDEN_simulation(input: custom_input):
-    LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
+    LATTICE = KineticLattice(input.NX, input.NY, input.NZ, input.VERBOSE)
 
     if input.SEEDS == 1:
         LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
@@ -98,7 +98,7 @@ def perform_EDEN_simulation(input: custom_input):
        
 
 def perform_DLA_simulation(input: custom_input):
-    LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
+    LATTICE = KineticLattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     
     if input.SEEDS == 1:
         LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
@@ -220,7 +220,7 @@ def perform_KOBAYASHI_simulation(input: custom_input):
 
 
 def perform_active_surface_simulation(input: custom_input):
-    LATTICE = Lattice(input.NX, input.NY, input.NZ, input.VERBOSE)
+    LATTICE = KineticLattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     for x in range(input.NX):
         for z in range(input.NZ):
             LATTICE.set_nucleation_seed(x, 0, z)

@@ -1,14 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from classes.Lattice import Lattice
+from classes.KineticLattice import KineticLattice
 
-def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
+def compute_fractal_dimention(lattice: KineticLattice, min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
                            three_dim: bool = True) -> tuple:
     """
     Computes the fractal (Hausdorff) dimention of a single crystal using the box-counting method.
     
     Args:
-        lattice (Lattice): custom Lattice object after the growth simulation.
+        lattice (KineticLattice): custom KineticLattice object after the growth simulation.
         min_box_size (int, optional): min box size (in pixel).
         max_box_size (int, optional): max box size. Default None, in this case set to min(grid.shape)/2
         num_scales (int, optional): number of log scale to use. Default 10.
@@ -45,14 +45,14 @@ def compute_fractal_dimention(lattice: Lattice, min_box_size : int = 2, max_box_
     
     return (D, sizes, counts)
 
-def fractal_dimention_analysis(lattice: Lattice, output_dir: str, title: str,
+def fractal_dimention_analysis(lattice: KineticLattice, output_dir: str, title: str,
                                min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
                                three_dim: bool = True, verbose: bool = True):
     """
     This function produces the plot needed to compute the Hausdorff dimention and save it in .png in the specified directory.
 
     Args:
-        lattice (Lattice): custom Lattice object after the growth simulation.
+        lattice (KineticLattice): custom KineticLattice object after the growth simulation.
         output_dir (str): directory in which save the produce plot.
         min_box_size (int, optional): min box size (in pixel).
         max_box_size (int, optional): max box size. Default None, in this case set to min(grid.shape)/2
@@ -82,7 +82,7 @@ def fractal_dimention_analysis(lattice: Lattice, output_dir: str, title: str,
         
     print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
 
-def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: int, verbose: bool = True):
+def distance_from_active_surface(lattice: KineticLattice, output_dir: str, N_epochs: int, verbose: bool = True):
     history = lattice.history
     time = np.linspace(1, N_epochs, N_epochs)
     distance = np.zeros(len(time))
@@ -110,13 +110,13 @@ def distance_from_active_surface(lattice: Lattice, output_dir: str, N_epochs: in
         
     print(f"Plot of distance of the farest cell from the active surface as function of time saved as {filename}.")       
 
-def anisotropy_histogram(lattice: Lattice, out_dir: str, epoch: int = -1, bins: int = 50):
+def anisotropy_histogram(lattice: KineticLattice, out_dir: str, epoch: int = -1, bins: int = 50):
     """
     Plot histogram of a_s values for each epoch.
     Epoch index -1 plots the last recorded.
 
     Args:
-        lattice (Lattice): custom lattice object
+        lattice (KineticLattice): custom lattice object
         epoch (int, optional): epoch number. Defaults to -1.
         bins (int, optional): number of bins. Defaults to 50.
     """

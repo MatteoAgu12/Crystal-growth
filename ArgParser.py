@@ -79,7 +79,7 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if parsed_input.seeds > 20:
         print(f"""
         ************************************************************************
-         ATTENTION:
+         WARNING:
         \tThe GUI supports at most 20 different colors.
         \tWith {parsed_input.seeds} some will be repeted.
         ************************************************************************
@@ -123,11 +123,23 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
             raise ValueError(f"ERROR: all the parameters in the Kobayashi growth must be >= 0.0\n \
                                       Only excpetion for dt, which must be > 0.0")
 
+    # Delta VS N_folds
+    max_delta = 1.0 / (parsed_input.n_folds**2 - 1)
+    if (parsed_input.delta >= max_delta ):
+        print(f"""
+        ************************************************************************************
+         WARNING:
+        \tDelta should be less than (1 / (n_fold**2 - 1)) to avoid negative stifness.
+        \tThe value {parsed_input.delta} may cause sharp tips and other artifacts at the interface.
+        ************************************************************************************
+        """)
+
+
     # Integration time
     if parsed_input.dt >= 1e-2:
         print(f"""
         ************************************************************************************
-         ATTENTION:
+         WARNING:
         \tThe integration time should be kept small (~1e-4) to have high realism.
         \tThe value {parsed_input.dt} may cause numerical instability.
         ************************************************************************************

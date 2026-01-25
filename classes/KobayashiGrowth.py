@@ -26,8 +26,6 @@ class KobayashiGrowth(GrowthModel):
         self.n_folds = n_folds
         self.supersaturation = supersaturation
 
-        self._cfl = CFLMonitor(0.3)
-
         if self.three_dim:
             raise NotImplementedError("[KobayashiGrowth] three_dim=True not implemented (requested: only 2D).")
 

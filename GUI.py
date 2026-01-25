@@ -73,17 +73,14 @@ def compute_curvature_2d(phi_slice):
     Calcola la curvatura media H di una fetta 2D.
     H = div(grad(phi) / |grad(phi)|)
     """
-    # Gradienti 2D
-    gy, gx = np.gradient(phi_slice) # Attenzione all'ordine (row, col) -> (y, x)
+    gy, gx = np.gradient(phi_slice)
     
     norm = np.sqrt(gx**2 + gy**2) + 1e-8
     nx, ny = gx / norm, gy / norm
     
-    # Divergenza 2D
-    div_nx = np.gradient(nx, axis=1) # d/dx
-    div_ny = np.gradient(ny, axis=0) # d/dy
+    div_nx = np.gradient(nx, axis=1)
+    div_ny = np.gradient(ny, axis=0)
     
-    # Curvatura (negativa per convenzione convessa)
     return - (div_nx + div_ny)
 
 def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D Simulation"):
@@ -157,14 +154,14 @@ def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
     plt.show()
 
 def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Phase Field", three_dim=True):
-    if not three_dim:
-        # Mappa i vecchi nomi ai nuovi modi 2D
-        mode_map = {
-            'u': 'temperature',
+    mode_map = {
+            'u': 'u',
             'curvature': 'curvature',
             'history': 'history',
-            'phi': 'phase'
-        }
+            'phi': 'phi'
+    }
+
+    if not three_dim:
         mode = mode_map.get(color_field_name, 'phase')
         plot_2d_simulation(lattice, field_name, color_mode=mode, title=title)
     else:

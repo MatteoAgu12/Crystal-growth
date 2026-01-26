@@ -2,7 +2,6 @@ import numpy as np
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.GrowthModel import GrowthModel
 from classes.ParticleFlux import ParticleFlux
-from Diagnostic import CFLMonitor
 
 class KobayashiGrowth(GrowthModel):
     """

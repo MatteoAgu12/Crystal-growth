@@ -4,7 +4,7 @@ from classes.KineticLattice import KineticLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.GrowthModel import GrowthModel
 
-class EDENGrowthKinetic(GrowthModel):
+class EDENGrowth(GrowthModel):
     def __init__(self, lattice: KineticLattice,
                  external_flux: ParticleFlux = None, 
                  rng_seed:int = 69, 
@@ -29,7 +29,7 @@ class EDENGrowthKinetic(GrowthModel):
         """
         if reference_point is not None:
             if len(reference_point) != 3 and reference_point.ndim != 1:
-                raise ValueError("[EDENGrowthKinetic::_choose_random_border_site] FATAL ERROR: \
+                raise ValueError("[EDENGrowth::_choose_random_border_site] FATAL ERROR: \
                                   the reference point must be in the form (x,y,z)")
     
         if len(active_border) == 0: 
@@ -47,7 +47,7 @@ class EDENGrowthKinetic(GrowthModel):
         site = active_border[idx].astype(int)
         
         if self.verbose:
-            print(f"\t\t[EDENGrowthKinetic::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
+            print(f"\t\t[EDENGrowth::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
         
         return site
     

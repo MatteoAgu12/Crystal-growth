@@ -4,7 +4,7 @@ from classes.KineticLattice import KineticLattice
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.DLAGrowth import DLAGrowth
-from classes.EDENGrowth import EDENGrowthKinetic
+from classes.EDENGrowth import EDENGrowth
 from classes.KobayashiGrowth import KobayashiGrowth
 from ArgParser import parse_inputs
 import numpy as np
@@ -71,7 +71,7 @@ def perform_EDEN_simulation(input: custom_input):
                 LATTICE.set_nucleation_seed(X, Y, Z)
                 how_many_seeds += 1
         
-    model = EDENGrowthKinetic(lattice=LATTICE,
+    model = EDENGrowth(lattice=LATTICE,
                               external_flux=input.EXTERNAL_FLUX,
                               three_dim=input.THREE_DIM,
                               verbose=input.VERBOSE)

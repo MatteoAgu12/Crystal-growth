@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.patches import Rectangle, Patch
 from skimage import measure 
 import numpy as np
@@ -83,18 +84,25 @@ def compute_curvature_2d(phi_slice):
     
     return - (div_nx + div_ny)
 
+def get_field_3d(lattice, field_name: str):
+    if not hasattr(lattice, field_name):
+        raise ValueError(f"[GUI] lattice has no field '{field_name}'")
+    return getattr(lattice, field_name)
+
 def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D Simulation"):
     """
-    Plotta una sezione 2D della simulazione con diagnostica colori corretta.
     """
-    # Estraiamo la fetta centrale 2D (assumendo shape (NX, NY, 1))
-    mid_z = lattice.shape[2] // 2
+    mid_z = 1 if lattice.shape[2] == 1 else lattice.shape[2] // 2
     
     # Dati grezzi dal reticolo
     if field_name == 'phi':
         data_2d = lattice.phi[:, :, mid_z]
     elif field_name == 'u':
         data_2d = lattice.u[:, :, mid_z]
+    elif field_name == 'curvature':
+        data_2d = lattice.curvature[:, :, mid_z]
+    elif field_name == 'history':
+        data_2d = lattice.history[:, :, mid_z]
     else:
         print(f"[GUI] Error: Unknown field {field_name}")
         return
@@ -103,12 +111,12 @@ def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
     fig, ax = plt.subplots(figsize=(10, 8))
     
     # --- LOGICA COLORE ---
-    if color_mode == 'phase':
+    if color_mode == 'phi':
         # Visualizza semplicemente il campo di fase (forma)
         im = ax.imshow(data_2d.T, origin='lower', cmap='gray_r', vmin=0, vmax=1)
-        label = "Phase Field $\phi$"
+        label = r"Phase Field $\phi$"
         
-    elif color_mode == 'temperature':
+    elif color_mode == 'u':
         # Visualizza la temperatura
         im = ax.imshow(data_2d.T, origin='lower', cmap='inferno')
         label = "Temperature $u$"
@@ -132,7 +140,7 @@ def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
             vmin, vmax = -1, 1
             
         im = ax.imshow(curv_masked.T, origin='lower', cmap='coolwarm', vmin=vmin, vmax=vmax)
-        label = "Curvature $\kappa$"
+        label = r"Curvature $\kappa$"
         
     elif color_mode == 'history':
         # Storia temporale
@@ -153,7 +161,116 @@ def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
     
     plt.show()
 
-def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Phase Field", three_dim=True):
+def plot_3d_simulation(lattice, field_name='phi', color_mode='phase', title="2D Simulation",
+                       ix=None, iy=None, iz=None):
+    phi = lattice.phi
+    nx, ny, nz = phi.shape
+    stride = 1
+    phi_ds = phi[::stride, ::stride, ::stride]
+    vol = phi_ds.astype(np.float32, copy=False)
+    iso_level = float(np.nanmin(vol)) + 0.5 * (float(np.nanmax(vol)) - float(np.nanmin(vol))) if float(np.nanmax(vol)) < 0.5 else 0.5
+
+    try:
+        verts, faces, normals, values = measure.marching_cubes(vol, level=float(iso_level), spacing=(stride, stride, stride))
+    except Exception as e:
+        print(f"[GUI] marching_cubes failed: {e}")
+        return
+
+    if color_mode in ('phi', 'u', 'curvature', 'history'):
+        cfield = get_field_3d(lattice, color_mode)[::stride, ::stride, ::stride]
+    else:
+        print(f"[GUI] Unknown color_mode='{color_mode}', defaulting to 'phi'.")
+        cfield = phi_ds
+
+    coords = np.vstack([verts[:, 0], verts[:, 1], verts[:, 2]])
+    cvals = map_coordinates(cfield.astype(np.float32, copy=False),
+                            coords,
+                            order=1,
+                            mode='nearest')
+
+    if color_mode is not None:
+        if color_mode == 'phi':
+            cmap_name = 'gray_r'
+        elif color_mode == 'u':
+            cmap_name = 'inferno'
+        elif color_mode == 'curvature':
+            cmap_name = 'coolwarm'
+        elif color_mode == 'history':
+            cmap_name = 'turbo'
+        else:
+            cmap_name = 'viridis'
+    else:
+        cmap_name = 'viridis'
+
+    cmap = cm.get_cmap(cmap_name)
+
+    if color_mode == 'history':
+        valid = cvals[cvals >= 0]
+        if valid.size > 0:
+            vmin = float(np.min(valid))
+            vmax = float(np.max(valid))
+        else:
+            vmin, vmax = 0.0, 1.0
+    elif color_mode == 'phi':
+        vmin, vmax = 0.0, 1.0
+    elif color_mode == 'curvature':
+        a = np.abs(cvals)
+        vmax = float(np.percentile(a, 95)) if a.size > 0 else 1.0
+        vmin = -vmax
+    else:
+        vmin, vmax = None, None
+
+    norm = Normalize(vmin=vmin, vmax=vmax)
+
+    face_c = cvals[faces].mean(axis=1)
+    face_colors = cmap(norm(face_c))
+    edgecolors=(0.3, 0.3, 0.3, 1.0)
+
+    mesh = Poly3DCollection(verts[faces], facecolors=face_colors,
+                            edgecolors=edgecolors,
+                            linewidths=0.15)
+    mesh.set_alpha(1.0)
+
+    fig = plt.figure(figsize=(9, 7))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.add_collection3d(mesh)
+
+    ax.set_xlim(0, nx - 1)
+    ax.set_ylim(0, ny - 1)
+    ax.set_zlim(0, nz - 1)
+
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
+    try:
+        ax.set_box_aspect((nx, ny, nz))
+    except Exception:
+        pass
+
+    mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
+    mappable.set_array(face_c)
+    cbar = plt.colorbar(mappable, ax=ax, shrink=0.7, pad=0.02)
+
+    if color_mode == 'phi':
+        cbar.set_label("Phase Field $\\phi$")
+    elif color_mode == 'u':
+        cbar.set_label("Field $u$")
+    elif color_mode == 'curvature':
+        cbar.set_label("Curvature / Laplacian")
+    elif color_mode == 'history':
+        cbar.set_label("Solidification Epoch")
+    else:
+        cbar.set_label(color_mode)
+
+    plt.title(title + f" (iso={iso_level}, stride={stride})")
+    plt.tight_layout()
+    plt.show()
+
+
+
+def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Phase Field", three_dim=True,
+                          ix = None, iy = None, iz = None):
     mode_map = {
             'u': 'u',
             'curvature': 'curvature',
@@ -161,11 +278,14 @@ def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Ph
             'phi': 'phi'
     }
 
-    if not three_dim:
+    if not three_dim or (lattice.shape[2] == 1):
         mode = mode_map.get(color_field_name, 'phase')
         plot_2d_simulation(lattice, field_name, color_mode=mode, title=title)
+        return 
     else:
-        print("[GUI] 3D plotting requested but we are focusing on 2D debug.")
+        mode = mode_map.get(color_field_name, 'phase')
+        plot_3d_simulation(lattice, field_name, color_mode=mode, title=title,
+                           ix=ix, iy=iy,iz=iz)
 
 
 

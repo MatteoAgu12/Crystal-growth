@@ -34,16 +34,25 @@ class PhaseFieldLattice(BaseLattice):
                             phi_in: float = 1.0, phi_out: float = 0.0):
         """
         """
-        X, Y = np.meshgrid(np.arange(self.shape[1], dtype=np.float32),
-                           np.arange(self.shape[0], dtype=np.float32))
-        dist = np.sqrt((Y - x) ** 2 + (X - y) ** 2)
-
         r = float(radius)
         w = float(max(width, 1e-6))
-        prof = 0.5 * (1.0 - np.tanh((dist - r) / w))
 
-        phi_seed = phi_out + (phi_in - phi_out) * prof
-        self.phi[:, :, z] = np.maximum(self.phi[:, :, z], phi_seed.astype(np.float32))
+        if self.shape[2] <= 1:
+            X, Y = np.meshgrid(np.arange(self.shape[1], dtype=np.float32),
+                               np.arange(self.shape[0], dtype=np.float32))
+            dist = np.sqrt((Y - x) ** 2 + (X - y) ** 2)
+            prof = 0.5 * (1.0 - np.tanh((dist - r) / w))
+            phi_seed = phi_out + (phi_in - phi_out) * prof
+            self.phi[:, :, z] = np.maximum(self.phi[:, :, z], phi_seed.astype(np.float32))
+        else:
+            X, Y, Z = np.meshgrid(np.arange(self.shape[1], dtype=np.float32),
+                                  np.arange(self.shape[0], dtype=np.float32),
+                                  np.arange(self.shape[2], dtype=np.float32),
+                                  indexing='xy')
+            dist = np.sqrt((Y - x) ** 2 + (X - y) ** 2 + (Z - z) ** 2)
+            prof = 0.5 * (1.0 - np.tanh((dist - r) / w))
+            phi_seed = phi_out + (phi_in - phi_out) * prof
+            self.phi[:, :, :] = np.maximum(self.phi[:, :, :], phi_seed.astype(np.float32))
 
         if (x, y, z) not in self._seeds:
             self._seeds.append((x, y, z))

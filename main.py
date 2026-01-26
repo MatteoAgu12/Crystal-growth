@@ -10,7 +10,6 @@ from ArgParser import parse_inputs
 import numpy as np
 from dataclasses import dataclass
 from typing import Union
-import Diagnostic as Diagnostic
 
 @dataclass
 class custom_input:
@@ -189,15 +188,15 @@ def perform_KOBAYASHI_simulation(input: custom_input):
     # TODO: qui va cambiato
     GUI.plot_continuous_field(LATTICE,
                               color_field_name="phi",
-                              title=input.TITLE + "_phi",
+                              title=input.TITLE,
                               three_dim=input.THREE_DIM)
     GUI.plot_continuous_field(LATTICE,
                               color_field_name="history",
-                              title=input.TITLE + "_history",
+                              title=input.TITLE,
                               three_dim=input.THREE_DIM)
     GUI.plot_continuous_field(LATTICE,
                               color_field_name="curvature",
-                              title=input.TITLE + "_curvature",
+                              title=input.TITLE,
                               three_dim=input.THREE_DIM)
     # GUI.plot_lattice(LATTICE, 
     #                  input.EPOCHS, 

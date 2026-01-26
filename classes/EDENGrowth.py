@@ -53,13 +53,13 @@ class EDENGrowth(GrowthModel):
     
     def step(self):
         if self.verbose:
-            print(f"\t\t[EDENKineticGrowth] Starting epoch {self.epoch + 1}...")
+            print(f"\t\t[EDENGrowth] Starting epoch {self.epoch + 1}...")
 
         candidates = self.lattice.get_active_border()
         if candidates.size == 0:
             print(f"""
             ##############################################################
-            [EDENKineticGrowth] WARNING: at step {self.epoch} no active border has been found!
+            [EDENGrowth] WARNING: at step {self.epoch} no active border has been found!
             Skipped...
             ##############################################################""")
             return
@@ -74,8 +74,8 @@ class EDENGrowth(GrowthModel):
                 self.lattice.occupy(*new_site, epoch=self.epoch, id=gid)
     
                 if self.verbose:
-                    print(f"\t\t[EDENKineticGrowth] Attached at {new_site} (Id: {gid})")
-                    print(f"\t\t[EDENKineticGrowth] Finished epoch {self.epoch + 1}!\n \
+                    print(f"\t\t[EDENGrowth] Attached at {new_site} (Id: {gid})")
+                    print(f"\t\t[EDENGrowth] Finished epoch {self.epoch + 1}!\n \
                             _____________________________________________________________")
                 return
 

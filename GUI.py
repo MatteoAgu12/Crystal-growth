@@ -66,9 +66,6 @@ def get_grain_boundaries_mask(lattice: KineticLattice) -> np.array:
         
     return occupied & is_boundary_neighbor
 
-
-
-
 def compute_curvature_2d(phi_slice):
     """
     Calcola la curvatura media H di una fetta 2D.
@@ -162,13 +159,16 @@ def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
     plt.show()
 
 def plot_3d_simulation(lattice, field_name='phi', color_mode='phase', title="2D Simulation",
+                       iso_level: None,
                        ix=None, iy=None, iz=None):
     phi = lattice.phi
     nx, ny, nz = phi.shape
     stride = 1
     phi_ds = phi[::stride, ::stride, ::stride]
     vol = phi_ds.astype(np.float32, copy=False)
-    iso_level = float(np.nanmin(vol)) + 0.5 * (float(np.nanmax(vol)) - float(np.nanmin(vol))) if float(np.nanmax(vol)) < 0.5 else 0.5
+
+    if iso_level is None:
+        iso_level = float(np.nanmin(vol)) + 0.5 * (float(np.nanmax(vol)) - float(np.nanmin(vol))) if float(np.nanmax(vol)) < 0.5 else 0.5
 
     try:
         verts, faces, normals, values = measure.marching_cubes(vol, level=float(iso_level), spacing=(stride, stride, stride))
@@ -196,6 +196,7 @@ def plot_3d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
         elif color_mode == 'curvature':
             cmap_name = 'coolwarm'
         elif color_mode == 'history':
+            cvals = np.where(cvals >= 0, cvals, np.nan)
             cmap_name = 'turbo'
         else:
             cmap_name = 'viridis'
@@ -205,10 +206,13 @@ def plot_3d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
     cmap = cm.get_cmap(cmap_name)
 
     if color_mode == 'history':
-        valid = cvals[cvals >= 0]
-        if valid.size > 0:
-            vmin = float(np.min(valid))
-            vmax = float(np.max(valid))
+        h = lattice.history
+        global_valid = h[h >= 0]
+        if global_valid.size > 0:
+            vmin = float(global_valid.min())
+            vmax = float(global_valid.max())
+            if abs(vmax - vmin) < 1e-12:
+                vmax = vmin + 1.0
         else:
             vmin, vmax = 0.0, 1.0
     elif color_mode == 'phi':
@@ -222,9 +226,14 @@ def plot_3d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
 
     norm = Normalize(vmin=vmin, vmax=vmax)
 
-    face_c = cvals[faces].mean(axis=1)
+    face_c = np.nanmean(cvals[faces], axis=1)
     face_colors = cmap(norm(face_c))
     edgecolors=(0.3, 0.3, 0.3, 1.0)
+
+    invalid = ~np.isfinite(face_c)
+    face_c[invalid] = vmin
+    face_colors = cmap(norm(face_c))
+    face_colors[invalid, 3] = 0.0
 
     mesh = Poly3DCollection(verts[faces], facecolors=face_colors,
                             edgecolors=edgecolors,
@@ -267,8 +276,6 @@ def plot_3d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
     plt.tight_layout()
     plt.show()
 
-
-
 def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Phase Field", three_dim=True,
                           ix = None, iy = None, iz = None):
     mode_map = {
@@ -286,9 +293,6 @@ def plot_continuous_field(lattice, color_field_name, field_name='phi', title="Ph
         mode = mode_map.get(color_field_name, 'phase')
         plot_3d_simulation(lattice, field_name, color_mode=mode, title=title,
                            ix=ix, iy=iy,iz=iz)
-
-
-
 
 def plot_lattice(lattice: KineticLattice, N_epochs: int, title: str = "Crystal lattice", 
                  out_dir: str = None, three_dim : bool = True,

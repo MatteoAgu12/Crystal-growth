@@ -90,9 +90,6 @@ class DLAGrowth(GrowthModel):
 
                     gid = self.lattice.get_group_id(nx, ny, nz)
                     self.lattice.occupy(*position, epoch=self.epoch, id=gid)
-                    
-                    if self.lattice.collect_anisotropy_stats:
-                         self.lattice.record_anisotropy_stats([position], self.epoch)
 
                     if self.verbose:
                         print(f"\t\t\t[DLAGrowth] Attached at {position} (Steps: {total_steps}, Restarts: {restarts})")

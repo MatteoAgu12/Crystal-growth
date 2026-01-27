@@ -89,7 +89,7 @@ def get_field_3d(lattice, field_name: str):
 def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D Simulation"):
     """
     """
-    mid_z = 1 if lattice.shape[2] == 1 else lattice.shape[2] // 2
+    mid_z = 0 if lattice.shape[2] == 1 else lattice.shape[2] // 2
     
     # Dati grezzi dal reticolo
     if field_name == 'phi':
@@ -159,7 +159,7 @@ def plot_2d_simulation(lattice, field_name='phi', color_mode='phase', title="2D 
     plt.show()
 
 def plot_3d_simulation(lattice, field_name='phi', color_mode='phase', title="2D Simulation",
-                       iso_level: None,
+                       iso_level=None,
                        ix=None, iy=None, iz=None):
     phi = lattice.phi
     nx, ny, nz = phi.shape

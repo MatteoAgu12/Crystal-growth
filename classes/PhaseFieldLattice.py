@@ -98,7 +98,7 @@ class PhaseFieldLattice(BaseLattice):
                 best_d2 = d2
                 best_k = k
 
-        return best_k
+        return best_k+1
         
 
 

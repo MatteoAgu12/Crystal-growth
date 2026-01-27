@@ -176,16 +176,7 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                             verbose=input.VERBOSE)
 
     model.run(input.EPOCHS)
-
-    #print("\n\n" + "="*60)
-    #print("RUNNING FINAL SYSTEM DIAGNOSTICS")
-    #print("="*60)
-    #
-    #Diagnostic.check_interface_stability(LATTICE)
-    #Diagnostic.analyze_symmetry_slice(LATTICE, z_index=input.NZ//2, n_folds_expected=int(input.N_FOLDS))
-    #Diagnostic.verify_growth_law(LATTICE)
-
-    # TODO: qui va cambiato
+    
     GUI.plot_continuous_field(LATTICE,
                               color_field_name="phi",
                               title=input.TITLE,
@@ -198,23 +189,18 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                               color_field_name="curvature",
                               title=input.TITLE,
                               three_dim=input.THREE_DIM)
-    # GUI.plot_lattice(LATTICE, 
-    #                  input.EPOCHS, 
-    #                  title=input.TITLE, 
-    #                  three_dim=input.THREE_DIM, 
-    #                  out_dir=input.OUTPUT_DIR)
-    # GUI.plot_lattice(LATTICE, 
-    #                  input.EPOCHS, 
-    #                  title=input.TITLE+"_id", 
-    #                  three_dim=input.THREE_DIM, 
-    #                  out_dir=input.OUTPUT_DIR,
-    #                  color_mode="id")
-    # GUI.plot_lattice(LATTICE, 
-    #                  input.EPOCHS,
-    #                  title=input.TITLE+'_boundaries', 
-    #                  three_dim=input.THREE_DIM, 
-    #                  out_dir=input.OUTPUT_DIR, 
-    #                  color_mode="boundaries")
+    GUI.plot_lattice(LATTICE, 
+                     input.EPOCHS, 
+                     title=input.TITLE+"_id", 
+                     three_dim=input.THREE_DIM, 
+                     out_dir=input.OUTPUT_DIR,
+                     color_mode="id")
+    GUI.plot_lattice(LATTICE, 
+                     input.EPOCHS,
+                     title=input.TITLE+'_boundaries', 
+                     three_dim=input.THREE_DIM, 
+                     out_dir=input.OUTPUT_DIR, 
+                     color_mode="boundaries")
 
 
 

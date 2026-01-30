@@ -6,7 +6,7 @@ import pytest
 
 import matplotlib.pyplot as plt
 
-from GUI import (
+from utils.GUI import (
     get_visible_voxels_binary_mask,
     get_grain_boundaries_mask,
     _mid_plane_z,

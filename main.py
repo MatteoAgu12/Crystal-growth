@@ -77,18 +77,18 @@ def perform_EDEN_simulation(input: custom_input):
 
     model.run(input.EPOCHS)
     
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE, 
                      three_dim=input.THREE_DIM, 
                      out_dir=input.OUTPUT_DIR)
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE+"_id", 
                      three_dim=input.THREE_DIM, 
                      out_dir=input.OUTPUT_DIR,
                      color_mode="id")
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS,
                      title=input.TITLE+'_boundaries', 
                      three_dim=input.THREE_DIM, 
@@ -129,18 +129,18 @@ def perform_DLA_simulation(input: custom_input):
                                         three_dim=input.THREE_DIM, 
                                         verbose=input.VERBOSE)
     
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE, 
                      three_dim=input.THREE_DIM, 
                      out_dir=input.OUTPUT_DIR)
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE+"_id", 
                      three_dim=input.THREE_DIM, 
                      out_dir=input.OUTPUT_DIR,
                      color_mode="id")
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS,
                      title=input.TITLE+'_boundaries', 
                      three_dim=input.THREE_DIM, 
@@ -177,25 +177,25 @@ def perform_KOBAYASHI_simulation(input: custom_input):
 
     model.run(input.EPOCHS)
     
-    GUI.plot_continuous_field(LATTICE,
+    GUI.plot_phase_field_simulation(LATTICE,
                               color_field_name="phi",
                               title=input.TITLE,
                               three_dim=input.THREE_DIM)
-    GUI.plot_continuous_field(LATTICE,
+    GUI.plot_phase_field_simulation(LATTICE,
                               color_field_name="history",
                               title=input.TITLE,
                               three_dim=input.THREE_DIM)
-    GUI.plot_continuous_field(LATTICE,
+    GUI.plot_phase_field_simulation(LATTICE,
                               color_field_name="curvature",
                               title=input.TITLE,
                               three_dim=input.THREE_DIM)
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE+"_id", 
                      three_dim=input.THREE_DIM, 
                      out_dir=input.OUTPUT_DIR,
                      color_mode="id")
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS,
                      title=input.TITLE+'_boundaries', 
                      three_dim=input.THREE_DIM, 
@@ -224,7 +224,7 @@ def perform_active_surface_simulation(input: custom_input):
 
     model.run(input.EPOCHS)
     
-    GUI.plot_lattice(LATTICE, 
+    GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE, 
                      three_dim=True, 

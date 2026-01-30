@@ -178,17 +178,21 @@ def perform_KOBAYASHI_simulation(input: custom_input):
     model.run(input.EPOCHS)
     
     GUI.plot_phase_field_simulation(LATTICE,
-                              color_field_name="phi",
-                              title=input.TITLE,
-                              three_dim=input.THREE_DIM)
+                                    out_dir=input.OUTPUT_DIR,
+                                    color_field_name="phi",
+                                    title=input.TITLE,
+                                    three_dim=input.THREE_DIM)
     GUI.plot_phase_field_simulation(LATTICE,
-                              color_field_name="history",
-                              title=input.TITLE,
-                              three_dim=input.THREE_DIM)
+                                    out_dir=input.OUTPUT_DIR,
+                                    color_field_name="history",
+                                    title=input.TITLE,
+                                    three_dim=input.THREE_DIM)
     GUI.plot_phase_field_simulation(LATTICE,
-                              color_field_name="curvature",
-                              title=input.TITLE,
-                              three_dim=input.THREE_DIM)
+                                    out_dir=input.OUTPUT_DIR,
+                                    color_field_name="curvature",
+                                    title=input.TITLE,
+                                    three_dim=input.THREE_DIM)
+
     GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE+"_id", 

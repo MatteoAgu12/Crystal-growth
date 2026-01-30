@@ -238,12 +238,14 @@ def _default_iso_level(vol: np.ndarray) -> float:
     vmax = float(np.nanmax(vol))
     return vmin + 0.5 * (vmax - vmin) if vmax < 0.5 else 0.5
 
-def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, field_name: str, color_mode: str, title: str):
+def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
+                                   field_name: str, color_mode: str, title: str):
     """
     Function that creates a 2D plot of the phase field simulation.
 
     Args:
         lattice (PhaseFieldLattice): custom lattice object.
+        out_dir (str): output directory to save the plot. If None, the plot is not saved.
         field_name (str): name of the field to plot.
         color_mode (str): color mode ('phi', 'u', 'curvature', 'history').
         title (str): title of the plot.
@@ -291,9 +293,15 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, field_name: str, 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.contour(data_2d.T, levels=[0.5], colors='white', linewidths=1, origin='lower')
+
+    if out_dir is not None:
+        filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"
+        plt.savefig(filename, bbox_inches='tight')
+        print(f"Phase Field image saved as {filename}!")
+    
     plt.show()
 
-def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, 
+def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
                                    field_name: str, color_mode: str, title: str,
                                    iso_level: float = None):
     """
@@ -301,6 +309,7 @@ def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice,
 
     Args:
         lattice (PhaseFieldLattice): custom lattice object.
+        out_dir (str): output directory to save the plot. If None, the plot is not saved.
         field_name (str): name of the field to plot.
         color_mode (str): color mode ('phi', 'u', 'curvature', 'history').
         title (str): title of the plot.
@@ -387,6 +396,12 @@ def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice,
 
     plt.title(title + f" (iso={iso_level}, stride={stride})")
     plt.tight_layout()
+
+    if out_dir is not None:
+        filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"
+        plt.savefig(filename, bbox_inches='tight')
+        print(f"Phase Field image saved as {filename}!")
+    
     plt.show()
 
 def plot_phase_field_simulation(lattice: PhaseFieldLattice, 

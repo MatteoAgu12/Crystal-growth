@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 
-ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "KOBAYASHI", "SURFACE"]
+ALLOWED_NATIVE_SIMULATION_OPTIONS = ["EDEN", "DLA", "KOBAYASHI", "STEFAN"]
 
 def check_parsed_inputs(parsed_input: argparse.Namespace):
     """
@@ -48,10 +48,11 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if not hasattr(parsed_input, 'delta'):                parsed_input.delta = 0.0          
     if not hasattr(parsed_input, 'n_folds'):              parsed_input.n_folds = 0.0            
     if not hasattr(parsed_input, 'alpha'):                parsed_input.alpha = 0.0          
-    if not hasattr(parsed_input, 'u_equilibrium'):        parsed_input.u_equilibrium = 1.0          
-    if not hasattr(parsed_input, 'tau'):                  parsed_input.tau = 1.0            
+    if not hasattr(parsed_input, 'u_equilibrium'):        parsed_input.u_equilibrium = 1.0        
     if not hasattr(parsed_input, 'diffusivity'):          parsed_input.diffusivity = 0.0 
-    if not hasattr(parsed_input, 'mobility'):             parsed_input.mobility = 0.0 
+    if not hasattr(parsed_input, 'mobility'):             parsed_input.mobility = 0.0
+    if not hasattr(parsed_input, 'latent_coef'):          parsed_input.latent_coef = 0.0
+    if not hasattr(parsed_input, 'u_infinity'):           parsed_input.u_infinity = 0.0
     if not hasattr(parsed_input, 'supersaturation'):      parsed_input.supersaturation = 0.0            
     if not hasattr(parsed_input, 'dt'):                   parsed_input.dt = 1e-4            
 
@@ -114,14 +115,18 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         parsed_input.delta              < 0.0 or        
         parsed_input.n_folds            < 0.0 or      
         parsed_input.alpha              < 0.0 or        
-        parsed_input.u_equilibrium      < 0.0 or
-        parsed_input.tau               <= 0.0 or          
+        parsed_input.u_equilibrium      < 0.0 or  
+        parsed_input.u_equilibrium      > 1.0 or
+        parsed_input.latent_coef        < 0.0 or
+        parsed_input.u_infinity         < 0.0 or
+        parsed_input.u_infinity         > 1.0 or       
         parsed_input.diffusivity        < 0.0 or  
         parsed_input.mobility           < 0.0 or  
         parsed_input.supersaturation    < 0.0 or  
         parsed_input.dt                 < 0):
             raise ValueError(f"ERROR: all the parameters in the Kobayashi growth must be >= 0.0\n \
-                                      Only excpetion for dt, which must be > 0.0")
+                                      dt must be > 0.0\n \
+                                      u_equilibrium and u_infinity must be in [0.0, 1.0].")
 
     # Delta VS N_folds
     max_delta = 1.0 / (parsed_input.n_folds**2 - 1)
@@ -192,56 +197,6 @@ def cast_file_input_to_value(value: str):
     
     # string
     return value
-
-# TODO: rimuovere questa funzione
-def parse_inputs_from_terminal() -> argparse.Namespace:
-    """
-    Custom argument parser for the crystal structure symulation.
-    Does it with argparser library (inputs from terminal)
-
-    Returns:
-        argparse.Namespace: parsed inputs.
-    """
-    parser = argparse.ArgumentParser(
-        description="Crystal growth simulation"
-    )
-    
-    # Arguments
-    parser.add_argument("--epochs", "-e", type=int, default=1000,
-                        help="Number of epochs in the simulation, default 1000")
-    parser.add_argument("--size", "-s", type=int, nargs=3, metavar=("NX", "NY", "NZ"), default=[100, 100, 100],
-                        help="Grid dimention, in the form: X Y Z. Default 100 100 100")
-    parser.add_argument("--seeds", type=int, default=1,
-                        help="Number of initial nucleation seeds That are randomly scattered. By default 1 at the center.")
-    parser.add_argument("--2d", "--2D", dest="two_dim", action="store_true",
-                        help="Simulate a 2D crystal instead of a 3D one")
-    parser.add_argument("--title", "-t", type=str, default="Crystal lattice",
-                        help="Simulation title, default 'Crystal lattice'.")
-    parser.add_argument("--simulation", "--sim", type=str, default='EDEN',
-                        help=f"Type of built-in simulation to perform. Default 'EDEN'.\nAllowed options are {ALLOWED_NATIVE_SIMULATION_OPTIONS}.")
-    parser.add_argument("--verbose", "-v", dest="verbose", action="store_true",
-                        help="If active prints extra info during the simulation.")
-    parser.add_argument("--output", "-o", type=str, default="",
-                        help="Directory where to save the plots produced.\nIf not specified, the analysis is not performed, only the simulation.")
-    parser.add_argument("--external-flux", "--ef", type=float, nargs="+", metavar="AX AY AZ...", default=None,
-                    help="List of directions for the external diffusion flux, in group of 3: AX1 AY1 AZ1 AX2 AY2 AZ2 ... Default to None.")
-    parser.add_argument("--flux-strength", "--fs", type=float, default=0.0,
-                        help="External diffusion flux strength (0.0 is isotropic). Default is 0.0")
-    parser.add_argument("--miller", "-m", type=int, nargs=3, metavar=("h", "k", "l"), default=[0, 0, 0],
-                        help="Miller indices that define the structural anisotropy directions. Default [0,0,0] (no anisotropy)")
-    parser.add_argument("--base-stick", type=float, default=0.01,
-                        help="Residual isotropic sticking probability, muste be in [0,1]. For strong anisotropy select values close to 0.")
-    parser.add_argument("--anisotropy-coeff", type=float, default=0.05,
-                        help="Sticking coefficient that tells how easily a particle attaches to the surface due to anisotropy. Default is 0.05")
-    parser.add_argument("--anisotropy-sharpness", type=float, default=4.0,
-                        help="Tells how smooth are the faces due to anisotropy. Default is 4.0, cannot be less than 1.0")
-    parser.add_argument("--anisotropy-selection", type=float, default=1.0,
-                        help="Selection parameter, tells how efficient the anisotropy is. Goes as exp(selection * ...)")
-    parser.add_argument("--record", "-R", dest="record", action="store_true",
-                        help="If active records some diagnostic information during the simulation.")
-    
-    parsed_input = parser.parse_args()
-    return parsed_input
     
 def parse_inputs_from_file_ini(filename: str) -> argparse.Namespace:
     """

@@ -1,15 +1,18 @@
-import utils.Analysis as ANLS
-import utils.GUI as GUI
+import numpy as np
+from dataclasses import dataclass
+from typing import Union
+
 from classes.KineticLattice import KineticLattice
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.DLAGrowth import DLAGrowth
 from classes.EDENGrowth import EDENGrowth
 from classes.KobayashiGrowth import KobayashiGrowth
+from classes.StefanGrowth import StefanGrowth
+
 from utils.ArgParser import parse_inputs
-import numpy as np
-from dataclasses import dataclass
-from typing import Union
+import utils.Analysis as ANLS
+import utils.GUI as GUI
 
 @dataclass
 class custom_input:
@@ -31,7 +34,8 @@ class custom_input:
     N_FOLDS:          float
     ALPHA:            float
     U_EQ:             float
-    TAU:              float
+    U_INFTY:          float
+    LATENT_COEF:      float
     DIFFUSIVITY:      float
     MOBILITY:         float
     SUPERSATURATION:  float
@@ -207,7 +211,10 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                      color_mode="boundaries")
 
 
+def perform_STEFAN_simulation(input: custom_input):
+    pass
 
+# TODO: rimuovere
 def perform_active_surface_simulation(input: custom_input):
     LATTICE = KineticLattice(input.NX, input.NY, input.NZ, input.VERBOSE)
     for x in range(input.NX):
@@ -254,14 +261,15 @@ if __name__ == '__main__':
                                  parsed_inputs.flux_strength,
                                  parsed_inputs.verbose) if parsed_inputs.external_flux is not None else None
 
-    # Kobayashi only
+    # Phase Field only
     interface_thr   = parsed_inputs.interface_thr
     epsilon0        = parsed_inputs.epsilon0
     delta           = parsed_inputs.delta
     n_folds         = parsed_inputs.n_folds
     alpha           = parsed_inputs.alpha
     u_eq            = parsed_inputs.u_equilibrium
-    tau             = parsed_inputs.tau
+    u_infinity      = parsed_inputs.u_infinity
+    latent_coef     = parsed_inputs.latent_coef
     diffusivity     = parsed_inputs.diffusivity
     mobility        = parsed_inputs.mobility
     supersaturation = parsed_inputs.supersaturation
@@ -303,8 +311,11 @@ if __name__ == '__main__':
     elif SIMULATION == 'KOBAYASHI':
         perform_KOBAYASHI_simulation(simulation_input)
 
-    elif SIMULATION == 'SURFACE':
-        perform_active_surface_simulation(simulation_input)
+    elif SIMULATION == 'STEFAN':
+        perform_STEFAN_simulation(simulation_input)
+
+    # elif SIMULATION == 'SURFACE':
+    #     perform_active_surface_simulation(simulation_input)
 
     else:
         print(f"***************************************************************************** \

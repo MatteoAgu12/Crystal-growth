@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+from matplotlib import colormaps
+from matplotlib.colors import Colormap
 from matplotlib.colors import Normalize
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.patches import Patch
@@ -128,7 +130,7 @@ def get_field_3d(lattice: PhaseFieldLattice, field_name: str) -> np.array:
         raise ValueError(f"[GUI] lattice has no field '{field_name}'")
     return getattr(lattice, field_name)
 
-def _get_data_2d_by_name(lattice: PhaseFieldLattice, field_name: str, mid_z: int) -> np.array | None:
+def _get_data_2d_by_name(lattice: PhaseFieldLattice, field_name: str, mid_z: int) -> np.ndarray | None:
     """
     Function that retrieves the 2D data slice from the lattice based on the field name.
 
@@ -435,7 +437,7 @@ def plot_phase_field_simulation(lattice: PhaseFieldLattice,
 # -----------------------------
 # Kinetic Lattice helpers
 # -----------------------------
-def _build_id_palette(lattice: KineticLattice) -> tuple[np.ndarray, cm.Colormap, dict]:
+def _build_id_palette(lattice: KineticLattice) -> tuple[np.ndarray, Colormap, dict]:
     """
     Returns the data grid, colormap, and ID-to-color mapping for ID-based coloring.
 
@@ -443,15 +445,15 @@ def _build_id_palette(lattice: KineticLattice) -> tuple[np.ndarray, cm.Colormap,
         lattice (KineticLattice): custom lattice object.
 
     Returns:
-        tuple[np.ndarray, cm.Colormap, dict]: data grid, colormap, and ID-to-color mapping.
+        tuple[np.ndarray, Colormap, dict]: data grid, colormap, and ID-to-color mapping.
     """
     data_grid = lattice.group_id
-    cmap = plt.cm.get_cmap('tab20b')
+    cmap = colormaps['tab20b']
     unique_vals = np.unique(data_grid[lattice.grid == 1])
     id_to_color = {uid: cmap(i % cmap.N) for i, uid in enumerate(unique_vals)}
     return data_grid, cmap, id_to_color
 
-def _build_epoch_palette(lattice: KineticLattice, N_epochs: int) -> tuple[np.ndarray, cm.Colormap, Normalize]:
+def _build_epoch_palette(lattice: KineticLattice, N_epochs: int) -> tuple[np.ndarray, Colormap, Normalize]:
     """
     Returns the data grid, colormap, and normalization for epoch-based coloring.
 
@@ -460,7 +462,7 @@ def _build_epoch_palette(lattice: KineticLattice, N_epochs: int) -> tuple[np.nda
         N_epochs (int): total number of epochs in the simulation.
 
     Returns:
-        tuple[np.ndarray, cm.Colormap, Normalize]: data grid, colormap, and normalization.
+        tuple[np.ndarray, Colormap, Normalize]: data grid, colormap, and normalization.
     """
     data_grid = lattice.history
     cmap = plt.cm.viridis
@@ -487,7 +489,7 @@ def _render_voxels_boundaries(ax: plt.Axes, lattice: KineticLattice, visible_vox
     return colors
 
 def _render_voxels_surface(ax: plt.Axes, lattice: KineticLattice, visible_voxels: np.ndarray, data_grid: np.ndarray,
-                          color_mode: str, cmap: cm.Colormap, norm_or_id_to_color: Normalize | dict) -> np.ndarray:
+                          color_mode: str, cmap: Colormap, norm_or_id_to_color: Normalize | dict) -> np.ndarray:
     """
     Renders the surface of voxels in a 3D lattice visualization based on the specified color mode.
 
@@ -497,7 +499,7 @@ def _render_voxels_surface(ax: plt.Axes, lattice: KineticLattice, visible_voxels
         visible_voxels (np.ndarray): binary mask of visible voxels.
         data_grid (np.ndarray): data grid for coloring.
         color_mode (str): "id" or "epoch".
-        cmap (cm.Colormap): colormap for epoch coloring.
+        cmap (Colormap): colormap for epoch coloring.
         norm_or_id_to_color (Normalize | dict): normalization for epoch or ID-to-color mapping.
 
     Returns:
@@ -520,13 +522,13 @@ def _render_voxels_surface(ax: plt.Axes, lattice: KineticLattice, visible_voxels
 
     return colors
 
-def _plot_2d_epoch(ax: plt.Axes, lattice: KineticLattice, cmap: cm.Colormap, norm: Normalize):
+def _plot_2d_epoch(ax: plt.Axes, lattice: KineticLattice, cmap: Colormap, norm: Normalize):
     """
     Plots a 2D representation of the lattice colored by epoch.
     Args:
         ax (plt.Axes): Matplotlib axis.
         lattice (KineticLattice): custom lattice object.
-        cmap (cm.Colormap): colormap for epoch coloring.
+        cmap (Colormap): colormap for epoch coloring.
         norm (Normalize): normalization for epoch coloring.
     """
     data_2d = np.max(lattice.history, axis=2)

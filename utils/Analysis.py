@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.KineticLattice import KineticLattice
+
+from classes.KineticLattice import KineticLattice
 
 def compute_fractal_dimention(lattice: KineticLattice, min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
                            three_dim: bool = True) -> tuple:

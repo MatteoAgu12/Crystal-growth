@@ -406,13 +406,14 @@ def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     
     plt.show()
 
-def plot_phase_field_simulation(lattice: PhaseFieldLattice, 
+def plot_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
                                 color_field_name: str, field_name: str, title: str, three_dim: bool):
     """
     Wrapper function that decides whether to plot in 2D or 3D based on the lattice shape and user preference.
 
     Args:
         lattice (PhaseFieldLattice): custom lattice object.
+        out_dir (str): output directory to save the plot. If None, the plot is not saved.
         color_field_name (str): name of the field to use for coloring.
         field_name (str): name of the field to plot.
         title (str): title of the plot.
@@ -427,11 +428,11 @@ def plot_phase_field_simulation(lattice: PhaseFieldLattice,
 
     if not three_dim or (lattice.shape[2] == 1):
         mode = mode_map.get(color_field_name, 'phase')
-        plot_2d_simulation(lattice, field_name, color_mode=mode, title=title)
+        plot_2d_phase_field_simulation(lattice, out_dir, field_name, color_mode=mode, title=title)
         return
     else:
         mode = mode_map.get(color_field_name, 'phase')
-        plot_3d_simulation(lattice, field_name, color_mode=mode, title=title)
+        plot_3d_phase_field_simulation(lattice, out_dir, field_name, color_mode=mode, title=title)
 
 
 # -----------------------------

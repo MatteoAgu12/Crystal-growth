@@ -183,16 +183,19 @@ def perform_KOBAYASHI_simulation(input: custom_input):
     
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
+                                    field_name="phi",
                                     color_field_name="phi",
                                     title=input.TITLE,
                                     three_dim=input.THREE_DIM)
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
+                                    field_name="history",
                                     color_field_name="history",
                                     title=input.TITLE,
                                     three_dim=input.THREE_DIM)
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
+                                    field_name="curvature",
                                     color_field_name="curvature",
                                     title=input.TITLE,
                                     three_dim=input.THREE_DIM)
@@ -212,7 +215,92 @@ def perform_KOBAYASHI_simulation(input: custom_input):
 
 
 def perform_STEFAN_simulation(input: custom_input):
-    pass
+    LATTICE = PhaseFieldLattice(input.NX, input.NY, input.NZ, input.INTERFACE_THR, input.VERBOSE)
+    LATTICE.u[:,:,:] = input.U_INFTY
+
+    if input.SEEDS == 1:
+        LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
+        phi = LATTICE.phi[:,:,:]
+        mask = (phi > 0.1) & (phi < 0.9)
+        phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
+        LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
+
+    else:
+        how_many_seeds = 0
+        while how_many_seeds < input.SEEDS:
+            X = np.random.randint(0, input.NX)
+            Y = np.random.randint(0, input.NY)
+            Z = np.random.randint(0, input.NZ)
+
+            if not LATTICE.is_occupied(X, Y, Z):
+                LATTICE.set_nucleation_seed(X, Y, Z)
+                phi = LATTICE.phi[:,:,:]
+                mask = (phi > 0.1) & (phi < 0.9)
+                phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
+                LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
+                how_many_seeds += 1
+
+    model = StefanGrowth(LATTICE,
+                            epsilon0=input.EPSILON,
+                            delta=input.DELTA,
+                            n_folds=input.N_FOLDS,
+                            mobility=input.MOBILITY,
+                            diffusivity=input.DIFFUSIVITY,
+                            latent_coeff=input.LATENT_COEF,
+                            alpha=input.ALPHA,
+                            u_eq=input.U_EQ,
+                            u_infty=input.U_INFTY,
+                            enforce_dirichlet_u=True, # TODO: qui decidere se tenere o no
+                            dt=input.TIME_STEP,
+                            external_flux=None,
+                            three_dim=input.THREE_DIM,
+                            verbose=input.VERBOSE)
+
+    # z = input.NZ // 2
+    # print("init u[min,max] =", LATTICE.u[:, :, z].min(), LATTICE.u[:, :, z].max())
+    # print("init phi[min,max] =", LATTICE.phi[:, :, z].min(), LATTICE.phi[:, :, z].max())
+    # print("alpha =", input.ALPHA, "L =", input.LATENT_COEF, "u_infty =", input.U_INFTY)
+    # return
+
+    model.run(input.EPOCHS)
+    
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name = "phi",
+                                    color_field_name="phi",
+                                    title=input.TITLE,
+                                    three_dim=input.THREE_DIM)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name="u",
+                                    color_field_name="u",
+                                    title=input.TITLE,
+                                    three_dim=input.THREE_DIM)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name="history",
+                                    color_field_name="history",
+                                    title=input.TITLE,
+                                    three_dim=input.THREE_DIM)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name="curvature",
+                                    color_field_name="curvature",
+                                    title=input.TITLE,
+                                    three_dim=input.THREE_DIM)
+
+    # GUI.plot_kinetic_lattice(LATTICE, 
+    #                  input.EPOCHS, 
+    #                  title=input.TITLE+"_id", 
+    #                  three_dim=input.THREE_DIM, 
+    #                  out_dir=input.OUTPUT_DIR,
+    #                  color_mode="id")
+    # GUI.plot_kinetic_lattice(LATTICE, 
+    #                  input.EPOCHS,
+    #                  title=input.TITLE+'_boundaries', 
+    #                  three_dim=input.THREE_DIM, 
+    #                  out_dir=input.OUTPUT_DIR, 
+    #                  color_mode="boundaries")
 
 # TODO: rimuovere
 def perform_active_surface_simulation(input: custom_input):
@@ -291,7 +379,8 @@ if __name__ == '__main__':
                                    N_FOLDS=n_folds,
                                    ALPHA=alpha,
                                    U_EQ=u_eq,
-                                   TAU=tau,
+                                   U_INFTY=u_infinity,
+                                   LATENT_COEF=latent_coef,
                                    MOBILITY=mobility,
                                    DIFFUSIVITY=diffusivity,
                                    SUPERSATURATION=supersaturation,

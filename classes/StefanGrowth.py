@@ -20,12 +20,13 @@ class StefanGrowth(GrowthModel):
                  u_infty: float = 0.0,
                  enforce_dirichlet_u: bool = False,
                  external_flux: ParticleFlux = None,
+                 three_dim: bool = False,
                  rng_seed: int = 69,
                  verbose: bool = False):
         super().__init__(lattice=lattice,
                          external_flux=external_flux,
                          rng_seed=rng_seed,
-                         three_dim=False,
+                         three_dim=three_dim,
                          verbose=verbose)
 
         self.dt = dt
@@ -49,10 +50,16 @@ class StefanGrowth(GrowthModel):
                 f"u_infty={self.u_infty}, dirichlet_u={self.enforce_dirichlet_u}")
 
     @staticmethod
-    def _laplacian_2d(field2d: np.ndarray) -> np.ndarray:
+    def _laplacian_2d_old(field2d: np.ndarray) -> np.ndarray:
         pad = np.pad(field2d, pad_width=1, mode='edge')
         return (pad[2:, 1:-1] + pad[:-2, 1:-1] + pad[1:-1, 2:] + pad[1:-1, :-2]
                 - 4.0 * pad[1:-1, 1:-1])
+
+    def _laplacian_2d(self, field2d: np.ndarray) -> np.ndarray:
+        pad = np.pad(field2d, 1, mode='constant', constant_values=self.u_infty)
+        return (pad[2:,1:-1] + pad[:-2,1:-1] + pad[1:-1,2:] + pad[1:-1,:-2]
+                - 4.0*pad[1:-1,1:-1])
+
 
     def _apply_dirichlet_u(self, u2d: np.ndarray) -> None:
         u2d[0, :] = self.u_infty
@@ -99,8 +106,15 @@ class StefanGrowth(GrowthModel):
                 0.5 * (Jy_p[1:-1, 2:] - Jy_p[1:-1, :-2]))
 
         # Driving from the diffusive field u
-        m = self.alpha * (u - self.u_eq)
-        reaction = phi * (1.0 - phi) * (phi - 0.5 + m)
+        m = self.alpha * (self.u_eq - u)
+
+        # test: noise
+        noise_amp = 0.1
+        eta = self.rng.normal(0.0, 1.0, size=phi.shape)
+        eta *= (phi * (1.0 - phi))  # only at the interface
+        # test: noise
+
+        reaction = phi * (1.0 - phi) * (phi - 0.5 + m) + noise_amp * eta
         rhs_phi = divJ + reaction
 
         dt = self.dt
@@ -125,6 +139,12 @@ class StefanGrowth(GrowthModel):
         lat.phi[:, :, z] = phi_new.astype(np.float32)
         lat.u[:, :, z] = u_new.astype(np.float32)
         lat.curvature[:, :, z] = curvature.astype(np.float32)
+
+        # tmp
+        # if self.epoch % 100 == 0:
+        #     interface = (phi > 1e-3) & (phi < 1-1e-3)
+        #     print("m_interface_mean =", np.mean(m[interface]))
+
 
     def step(self):
         if self.verbose:

@@ -60,8 +60,7 @@ class PhaseFieldLattice(BaseLattice):
         self.update_occupied_and_history(epoch=0)
 
         if self.verbose:
-            print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z}), "
-                  f"r={radius}, w={smooth_width}")
+            print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
 
     def update_occupied_and_history(self, epoch: int):
         thr = self.interface_threshold

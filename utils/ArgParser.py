@@ -117,20 +117,18 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         parsed_input.alpha              < 0.0 or        
         parsed_input.u_equilibrium      < 0.0 or  
         parsed_input.u_equilibrium      > 1.0 or
-        parsed_input.latent_coef        < 0.0 or
-        parsed_input.u_infinity         < 0.0 or
         parsed_input.u_infinity         > 1.0 or       
         parsed_input.diffusivity        < 0.0 or  
         parsed_input.mobility           < 0.0 or  
         parsed_input.supersaturation    < 0.0 or  
         parsed_input.dt                 < 0):
-            raise ValueError(f"ERROR: all the parameters in the Kobayashi growth must be >= 0.0\n \
+            raise ValueError(f"ERROR: all the parameters in the PhaseField model (except latent_coef) must be >= 0.0\n \
                                       dt must be > 0.0\n \
                                       u_equilibrium and u_infinity must be in [0.0, 1.0].")
 
     # Delta VS N_folds
     max_delta = 1.0 / (parsed_input.n_folds**2 - 1)
-    if (parsed_input.delta >= max_delta ):
+    if (parsed_input.delta >= max_delta ) and parsed_input.simulation == "KOBAYASHI":
         print(f"""
         ************************************************************************************
          WARNING:
@@ -141,7 +139,7 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
 
 
     # Integration time
-    if parsed_input.dt >= 1e-2:
+    if parsed_input.dt >= 5e-2:
         print(f"""
         ************************************************************************************
          WARNING:
@@ -197,7 +195,7 @@ def cast_file_input_to_value(value: str):
     
     # string
     return value
-    
+
 def parse_inputs_from_file_ini(filename: str) -> argparse.Namespace:
     """
     Custom argument parser for the crystal structure symulation.
@@ -210,18 +208,29 @@ def parse_inputs_from_file_ini(filename: str) -> argparse.Namespace:
         argparse.Namespace: parsed inputs.
     """
     params = {}
-    
+
     with open(filename) as f:
-        for line in f:
-            line = line.strip()
-            
-            if not line or line.startswith("#"):
+        for raw_line in f:
+            line = raw_line.strip()
+
+            if not line or line.startswith("#") or line.startswith(";"):
                 continue
-            
+
+            for comment_char in ("#", ";"):
+                if comment_char in line:
+                    line = line.split(comment_char, 1)[0].rstrip()
+
+            if not line:
+                continue
+
+            if "=" not in line:
+                raise ValueError(f"Invalid .ini line (missing '='): {raw_line.rstrip()}")
+
             key, value = line.split("=", 1)
             params[key.strip()] = cast_file_input_to_value(value.strip())
-            
+
     return argparse.Namespace(**params)
+
 
 def parse_inputs() -> argparse.Namespace:
     """

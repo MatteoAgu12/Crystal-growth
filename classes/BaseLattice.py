@@ -6,6 +6,7 @@ class BaseLattice(ABC):
         if nx < 0 or ny < 0 or nz < 0:
             raise ValueError("KineticLattice dimensions must be >= 0")
 
+        self.dx = 0.03
         self.shape = (nx, ny, nz)
 
         self.history   = np.ones(self.shape, dtype=np.int64) * (-1)

@@ -58,7 +58,7 @@ class StefanGrowth(GrowthModel):
     def _laplacian_2d(self, field2d: np.ndarray) -> np.ndarray:
         pad = np.pad(field2d, 1, mode='constant', constant_values=self.u_infty)
         return (pad[2:,1:-1] + pad[:-2,1:-1] + pad[1:-1,2:] + pad[1:-1,:-2]
-                - 4.0*pad[1:-1,1:-1])
+                - 4.0*pad[1:-1,1:-1]) / (self.lattice.dx * self.lattice.dx)
 
 
     def _apply_dirichlet_u(self, u2d: np.ndarray) -> None:
@@ -75,8 +75,8 @@ class StefanGrowth(GrowthModel):
 
         # === phi: anisotropic flux + local driving ===
         pad_phi = np.pad(phi, pad_width=1, mode='edge')
-        phix = 0.5 * (pad_phi[2:, 1:-1] - pad_phi[:-2, 1:-1])
-        phiy = 0.5 * (pad_phi[1:-1, 2:] - pad_phi[1:-1, :-2])
+        phix = 0.5 * (pad_phi[2:, 1:-1] - pad_phi[:-2, 1:-1]) / lat.dx
+        phiy = 0.5 * (pad_phi[1:-1, 2:] - pad_phi[1:-1, :-2]) / lat.dx
 
         grad2 = phix * phix + phiy * phiy
         min_grad = 1e-10
@@ -106,7 +106,8 @@ class StefanGrowth(GrowthModel):
                 0.5 * (Jy_p[1:-1, 2:] - Jy_p[1:-1, :-2]))
 
         # Driving from the diffusive field u
-        m = self.alpha * (self.u_eq - u)
+        GAMMA = 0.1
+        m = self.alpha * np.arctan(GAMMA * (self.u_eq - u))
 
         # test: noise
         noise_amp = 0.1

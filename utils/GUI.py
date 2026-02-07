@@ -264,7 +264,9 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
         label = r"Phase Field $\phi$"
 
     elif color_mode == 'u':
-        im = ax.imshow(data_2d.T, origin='lower', cmap='inferno')
+        vmin = -1.0 
+        vmax = 1.0  
+        im = ax.imshow(data_2d.T, origin='lower', cmap='inferno', vmin=vmin, vmax=vmax)
         label = r"Diffused field $u$"
 
     elif color_mode == 'curvature':
@@ -294,7 +296,7 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     ax.set_title(f"{title} - {color_mode.capitalize()}")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
-    ax.contour(data_2d.T, levels=[0.5], colors='white', linewidths=1, origin='lower')
+    # ax.contour(data_2d.T, levels=[0.5], colors='white', linewidths=1, origin='lower')
 
     if out_dir is not None:
         filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"

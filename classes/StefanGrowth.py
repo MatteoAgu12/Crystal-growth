@@ -102,8 +102,8 @@ class StefanGrowth(GrowthModel):
 
         Jx_p = np.pad(Jx, pad_width=1, mode='edge')
         Jy_p = np.pad(Jy, pad_width=1, mode='edge')
-        divJ = (0.5 * (Jx_p[2:, 1:-1] - Jx_p[:-2, 1:-1]) +
-                0.5 * (Jy_p[1:-1, 2:] - Jy_p[1:-1, :-2]))
+        divJ = (0.5 * (Jx_p[2:, 1:-1] - Jx_p[:-2, 1:-1]) / lat.dx +
+                0.5 * (Jy_p[1:-1, 2:] - Jy_p[1:-1, :-2]) / lat.dx)
 
         # Driving from the diffusive field u
         GAMMA = 0.1

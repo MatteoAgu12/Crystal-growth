@@ -44,6 +44,13 @@ class GrowthModel(ABC):
             self.step()
             self.epoch += 1
 
+            if np.any(np.isnan(self.lattice.phi)):
+                print(f"[GrowthModel] FATAL ERROR: NaN detected in lattice.phi at epoch {self.epoch}, aborting...")
+                break
+            elif np.any(np.isnan(self.lattice.u)):
+                print(f"[GrowthModel] FATAL ERROR: NaN detected in lattice.u at epoch {self.epoch}, aborting...")
+                break
+
             if not self.verbose and (i + 1) >= next_update:
                 percent = int(100 * (i + 1) / n_steps)
                 print(f"=== Simulation completed at {percent}% ===")

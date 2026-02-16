@@ -36,6 +36,7 @@ class custom_input:
     U_EQ:             float
     U_INFTY:          float
     LATENT_COEF:      float
+    GAMMA:            float    
     DIFFUSIVITY:      float
     MOBILITY:         float
     SUPERSATURATION:  float
@@ -254,6 +255,7 @@ def perform_STEFAN_simulation(input: custom_input):
                             diffusivity=input.DIFFUSIVITY,
                             latent_coeff=input.LATENT_COEF,
                             alpha=input.ALPHA,
+                            gamma=input.GAMMA,
                             u_eq=input.U_EQ,
                             u_infty=input.U_INFTY,
                             enforce_dirichlet_u=True, # TODO: qui decidere se tenere o no
@@ -364,6 +366,7 @@ if __name__ == '__main__':
     u_eq            = parsed_inputs.u_equilibrium
     u_infinity      = parsed_inputs.u_infinity
     latent_coef     = parsed_inputs.latent_coef
+    gamma           = parsed_inputs.gamma
     diffusivity     = parsed_inputs.diffusivity
     mobility        = parsed_inputs.mobility
     supersaturation = parsed_inputs.supersaturation
@@ -387,6 +390,7 @@ if __name__ == '__main__':
                                    U_EQ=u_eq,
                                    U_INFTY=u_infinity,
                                    LATENT_COEF=latent_coef,
+                                   GAMMA=gamma,
                                    MOBILITY=mobility,
                                    DIFFUSIVITY=diffusivity,
                                    SUPERSATURATION=supersaturation,

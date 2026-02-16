@@ -52,6 +52,7 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if not hasattr(parsed_input, 'diffusivity'):          parsed_input.diffusivity = 0.0 
     if not hasattr(parsed_input, 'mobility'):             parsed_input.mobility = 0.0
     if not hasattr(parsed_input, 'latent_coef'):          parsed_input.latent_coef = 0.0
+    if not hasattr(parsed_input, 'gamma'):                parsed_input.gamma = 10.0
     if not hasattr(parsed_input, 'u_infinity'):           parsed_input.u_infinity = 0.0
     if not hasattr(parsed_input, 'supersaturation'):      parsed_input.supersaturation = 0.0            
     if not hasattr(parsed_input, 'dt'):                   parsed_input.dt = 1e-4            
@@ -121,6 +122,8 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         parsed_input.diffusivity        < 0.0 or  
         parsed_input.mobility           < 0.0 or  
         parsed_input.supersaturation    < 0.0 or  
+        parsed_input.latent_coef        < 0.0 or
+        parsed_input.gamma              < 0.0 or
         parsed_input.dt                 < 0):
             raise ValueError(f"ERROR: all the parameters in the PhaseField model (except latent_coef) must be >= 0.0\n \
                                       dt must be > 0.0\n \

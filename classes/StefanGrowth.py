@@ -5,8 +5,6 @@ from classes.ParticleFlux import ParticleFlux
 
 class StefanGrowth(GrowthModel):
     """
-    Simulazione avanzata di crescita dendritica (Stefan/Kobayashi).
-    Corretta per stabilità numerica (dx=0.03) e velocità.
     """
     def __init__(self,
                  lattice: PhaseFieldLattice,
@@ -19,6 +17,7 @@ class StefanGrowth(GrowthModel):
                  alpha: float = 0.9,
                  u_eq: float = 1.0,
                  latent_coeff: float = 1.6,
+                 gamma: float = 10.0,
                  u_infty: float = 0.0,
                  enforce_dirichlet_u: bool = True,
                  external_flux: ParticleFlux = None,
@@ -32,12 +31,8 @@ class StefanGrowth(GrowthModel):
                          three_dim=three_dim,
                          verbose=verbose)
         
-        self.lattice = lattice
-        
-        # --- PARAMETRI CRITICI ---
-        # FORZATURA DX: BaseLattice usa 0.01, ma Kobayashi richiede ~0.03 
-        # con questi parametri di epsilon, altrimenti instabilità numerica.
-        self.dx = 0.03  
+        self.lattice = lattice        
+        self.dx = lattice.dx
         
         self.dt = dt
         self.diffusivity = diffusivity
@@ -47,9 +42,8 @@ class StefanGrowth(GrowthModel):
         self.alpha = alpha
         self.u_eq = u_eq
         self.K = latent_coeff
-        self.gamma = 10.0
-        
-        # Tau inverso della mobilità
+        self.gamma = gamma
+        self.u_infty = u_infty
         self.tau = 0.0003 if mobility == 0 else (1.0 / mobility) 
         
         self.phi = self.lattice.phi
@@ -58,13 +52,7 @@ class StefanGrowth(GrowthModel):
     def _step_2D(self):
         phi = self.phi
         u = self.u
-
-        # --- Ottimizzazione Calcolo Gradienti ---
-        # Invece di np.roll ripetuti (lenti), usiamo slicing view per la parte centrale
-        # Nota: Questo ignora i bordi estremi (condizione di Dirichlet implicita o Neumann zero)
-        # che è più veloce e stabile per simulazioni non periodiche.
         
-        # Pre-allocazione variabili di supporto (views)
         p_c = phi[1:-1, 1:-1]
         p_u = phi[2:, 1:-1]
         p_d = phi[:-2, 1:-1]
@@ -80,40 +68,23 @@ class StefanGrowth(GrowthModel):
         dx2 = self.dx**2
         inv_2dx = 1.0 / (2 * self.dx)
 
-        # Gradienti spaziali
         dx_phi = (p_r - p_l) * inv_2dx
         dy_phi = (p_u - p_d) * inv_2dx
 
-        # Laplaciani
         lap_phi = (p_r + p_l + p_u + p_d - 4.0 * p_c) / dx2
         lap_u   = (u_r + u_l + u_u + u_d - 4.0 * u_c) / dx2
 
-        # --- Anisotropia ---
-        # Aggiunto epsilon piccolo per stabilità atan2
-        theta = np.arctan2(dy_phi, dx_phi + 1e-12)
-        
+        theta = np.arctan2(dy_phi, dx_phi + 1e-12)        
         angle_term = np.cos(self.n_folds * theta)
         epsilon = self.epsilon0 * (1.0 + self.delta * angle_term)
         
-        # --- Evoluzione Phi ---
-        # Termine gradiente: epsilon^2 * lap_phi
         term_grad = (epsilon**2) * lap_phi
-        
-        # Termine driving force m(T)
         m = (self.alpha / np.pi) * np.arctan(self.gamma * (self.u_eq - u_c))
-        
-        # Reazione
         term_reaction = p_c * (1.0 - p_c) * (p_c - 0.5 + m)
-
-        # dphi/dt
         dphi_dt = (term_grad + term_reaction) / self.tau
         
-        # --- Evoluzione Temperatura ---
-        # dT/dt = D * lap_T + K * dphi/dt
         du_dt = (self.diffusivity * lap_u) + (self.K * dphi_dt)
-
-        # --- Aggiornamento (sola parte interna) ---
-        # Noise termico per rompere la simmetria
+        
         noise = 0.0
         if self.epoch % 10 == 0:
              noise = np.random.normal(0, 0.001, p_c.shape) * p_c * (1.0 - p_c)
@@ -121,12 +92,7 @@ class StefanGrowth(GrowthModel):
         phi[1:-1, 1:-1] += (dphi_dt * self.dt) + noise
         u[1:-1, 1:-1]   += du_dt * self.dt
 
-        # --- Boundary & Clamping ---
-        # Mantiene i bordi fissi a 0 (supercooled liquid)
-        # Clamping essenziale per evitare l'esplosione numerica (scacchiera)
         np.clip(phi, 0.0, 1.0, out=phi)
-        
-        # Salvataggio curvatura (opzionale per GUI)
         self.lattice.curvature[1:-1, 1:-1] = lap_phi
 
     def step(self):

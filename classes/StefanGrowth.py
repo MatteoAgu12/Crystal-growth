@@ -95,12 +95,66 @@ class StefanGrowth(GrowthModel):
         np.clip(phi, 0.0, 1.0, out=phi)
         self.lattice.curvature[1:-1, 1:-1] = lap_phi
 
+    def _step_3D(self):
+        phi = self.phi
+        u = self.u
+
+        p_c = phi[1:-1, 1:-1, 1:-1]        
+        p_x_up, p_x_dn = phi[2:, 1:-1, 1:-1], phi[:-2, 1:-1, 1:-1]
+        p_y_up, p_y_dn = phi[1:-1, 2:, 1:-1], phi[1:-1, :-2, 1:-1]
+        p_z_up, p_z_dn = phi[1:-1, 1:-1, 2:], phi[1:-1, 1:-1, :-2]
+
+        u_c = u[1:-1, 1:-1, 1:-1]
+        u_x_up, u_x_dn = u[2:, 1:-1, 1:-1], u[:-2, 1:-1, 1:-1]
+        u_y_up, u_y_dn = u[1:-1, 2:, 1:-1], u[1:-1, :-2, 1:-1]
+        u_z_up, u_z_dn = u[1:-1, 1:-1, 2:], u[1:-1, 1:-1, :-2]
+
+        inv_dx = 1.0 / self.dx
+        inv_dx2 = 1.0 / (self.dx**2)
+
+        phix = (p_x_up - p_x_dn) * (0.5 * inv_dx)
+        phiy = (p_y_up - p_y_dn) * (0.5 * inv_dx)
+        phiz = (p_z_up - p_z_dn) * (0.5 * inv_dx)
+
+        lap_phi = (p_x_up + p_x_dn + p_y_up + p_y_dn + p_z_up + p_z_dn - 6.0 * p_c) * inv_dx2
+        lap_u   = (u_x_up + u_x_dn + u_y_up + u_y_dn + u_z_up + u_z_dn - 6.0 * u_c) * inv_dx2
+
+        mag_xy2 = phix**2 + phiy**2
+        mag_tot2 = mag_xy2 + phiz**2 + 1e-12
+        
+        w = np.sqrt(mag_xy2 / mag_tot2)
+        
+        theta = np.arctan2(phiy, phix + 1e-12)
+        angle_term = np.cos(self.n_folds * theta)
+        
+        epsilon = self.epsilon0 * (1.0 + self.delta * w * angle_term)
+
+        m = (self.alpha / np.pi) * np.arctan(self.gamma * (self.u_eq - u_c))
+        
+        term_grad = (epsilon**2) * lap_phi
+        term_reaction = p_c * (1.0 - p_c) * (p_c - 0.5 + m)
+
+        dphi_dt = (term_grad + term_reaction) / self.tau
+        du_dt = (self.diffusivity * lap_u) + (self.K * dphi_dt)
+
+        noise = 0.0
+        if self.epoch % 10 == 0:
+             noise = np.random.normal(0, 0.001, p_c.shape) * p_c * (1.0 - p_c)
+
+        phi[1:-1, 1:-1, 1:-1] += (dphi_dt * self.dt) + noise
+        u[1:-1, 1:-1, 1:-1]   += du_dt * self.dt
+
+        np.clip(phi, 0.0, 1.0, out=phi)
+        
+        if self.lattice.curvature.shape == phi.shape:
+             self.lattice.curvature[1:-1, 1:-1, 1:-1] = lap_phi
+
     def step(self):
         if self.verbose:
             print(f"\t\t[StefanGrowth] Starting epoch {self.epoch + 1}...")
 
         if self.three_dim:
-            pass 
+            self._step_3D()
         else:
             self._step_2D()
         

@@ -225,9 +225,6 @@ def perform_STEFAN_simulation(input: custom_input):
         LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2),
                                     radius=RADIUS)
         phi = LATTICE.phi[:,:,:]
-        # mask = (phi > 0.1) & (phi < 0.9)
-        # phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
-        # LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
 
     else:
         how_many_seeds = 0
@@ -239,13 +236,7 @@ def perform_STEFAN_simulation(input: custom_input):
             if not LATTICE.is_occupied(X, Y, Z):
                 LATTICE.set_nucleation_seed(X, Y, Z)
                 phi = LATTICE.phi[:,:,:]
-                # mask = (phi > 0.1) & (phi < 0.9)
-                # phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
-                # LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
                 how_many_seeds += 1
-
-    # mask_solid = LATTICE.phi > input.INTERFACE_THR
-    # LATTICE.u[mask_solid] = input.U_EQ
 
     model = StefanGrowth(LATTICE,
                             epsilon0=input.EPSILON,
@@ -263,12 +254,6 @@ def perform_STEFAN_simulation(input: custom_input):
                             external_flux=None,
                             three_dim=input.THREE_DIM,
                             verbose=input.VERBOSE)
-
-    # z = input.NZ // 2
-    # print("init u[min,max] =", LATTICE.u[:, :, z].min(), LATTICE.u[:, :, z].max())
-    # print("init phi[min,max] =", LATTICE.phi[:, :, z].min(), LATTICE.phi[:, :, z].max())
-    # print("alpha =", input.ALPHA, "L =", input.LATENT_COEF, "u_infty =", input.U_INFTY)
-    # return
 
     model.run(input.EPOCHS)
     

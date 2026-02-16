@@ -86,7 +86,7 @@ def test_compute_curvature_2d_constant_field_is_zeroish():
     assert np.allclose(curv, 0.0, atol=1e-6)
 
 def test_get_field_3d_returns_attr_or_raises():
-    phi = np.zeros((4, 4, 1), dtype=np.float32)
+    phi = np.zeros((4, 4, 1), dtype=np.float64)
     lat = PhaseFieldStub(phi=phi)
 
     got = get_field_3d(lat, "phi")
@@ -96,7 +96,7 @@ def test_get_field_3d_returns_attr_or_raises():
         get_field_3d(lat, "does_not_exist")
 
 def test_get_data_2d_by_name_known_and_unknown(capsys):
-    phi = np.zeros((4, 4, 3), dtype=np.float32)
+    phi = np.zeros((4, 4, 3), dtype=np.float64)
     phi[1, 2, 1] = 7.0
     lat = PhaseFieldStub(phi=phi)
 
@@ -116,7 +116,7 @@ def test_cmap_name_for_mode_minimal():
     assert _cmap_name_for_mode("history") == "turbo"
 
 def test_norm_for_3d_mode_history_phi_curvature():
-    phi = np.zeros((4, 4, 2), dtype=np.float32)
+    phi = np.zeros((4, 4, 2), dtype=np.float64)
     hist = np.ones((4, 4, 2), dtype=np.int64) * (-1)
     hist[0, 0, 0] = 5
     hist[1, 1, 1] = 10
@@ -135,10 +135,10 @@ def test_norm_for_3d_mode_history_phi_curvature():
     assert np.isclose(abs(n3.vmin), abs(n3.vmax), rtol=1e-6)
 
 def test_default_iso_level():
-    vol = np.array([[[0.0, 0.2], [0.1, 0.4]]], dtype=np.float32)
+    vol = np.array([[[0.0, 0.2], [0.1, 0.4]]], dtype=np.float64)
     assert np.isclose(_default_iso_level(vol), 0.2)
 
-    vol2 = np.array([[[0.0, 0.8]]], dtype=np.float32)
+    vol2 = np.array([[[0.0, 0.8]]], dtype=np.float64)
     assert np.isclose(_default_iso_level(vol2), 0.5)
 
 def test_build_palettes_minimal():

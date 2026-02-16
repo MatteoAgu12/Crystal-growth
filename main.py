@@ -217,13 +217,16 @@ def perform_KOBAYASHI_simulation(input: custom_input):
 def perform_STEFAN_simulation(input: custom_input):
     LATTICE = PhaseFieldLattice(input.NX, input.NY, input.NZ, input.INTERFACE_THR, input.VERBOSE)
     LATTICE.u[:,:,:] = input.U_INFTY
+    phi = LATTICE.phi[:,:,:]
 
     if input.SEEDS == 1:
-        LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
+        RADIUS = 5.0
+        LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2),
+                                    radius=RADIUS)
         phi = LATTICE.phi[:,:,:]
-        mask = (phi > 0.1) & (phi < 0.9)
-        phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
-        LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
+        # mask = (phi > 0.1) & (phi < 0.9)
+        # phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
+        # LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
 
     else:
         how_many_seeds = 0
@@ -235,10 +238,13 @@ def perform_STEFAN_simulation(input: custom_input):
             if not LATTICE.is_occupied(X, Y, Z):
                 LATTICE.set_nucleation_seed(X, Y, Z)
                 phi = LATTICE.phi[:,:,:]
-                mask = (phi > 0.1) & (phi < 0.9)
-                phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
-                LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
+                # mask = (phi > 0.1) & (phi < 0.9)
+                # phi[mask] += 0.02 * np.random.default_rng(0).normal(size=phi.shape)[mask]
+                # LATTICE.phi[:,:,:] = np.clip(phi, 0.0, 1.0)
                 how_many_seeds += 1
+
+    # mask_solid = LATTICE.phi > input.INTERFACE_THR
+    # LATTICE.u[mask_solid] = input.U_EQ
 
     model = StefanGrowth(LATTICE,
                             epsilon0=input.EPSILON,
@@ -289,18 +295,18 @@ def perform_STEFAN_simulation(input: custom_input):
                                     title=input.TITLE,
                                     three_dim=input.THREE_DIM)
 
-    # GUI.plot_kinetic_lattice(LATTICE, 
-    #                  input.EPOCHS, 
-    #                  title=input.TITLE+"_id", 
-    #                  three_dim=input.THREE_DIM, 
-    #                  out_dir=input.OUTPUT_DIR,
-    #                  color_mode="id")
-    # GUI.plot_kinetic_lattice(LATTICE, 
-    #                  input.EPOCHS,
-    #                  title=input.TITLE+'_boundaries', 
-    #                  three_dim=input.THREE_DIM, 
-    #                  out_dir=input.OUTPUT_DIR, 
-    #                  color_mode="boundaries")
+    GUI.plot_kinetic_lattice(LATTICE, 
+                     input.EPOCHS, 
+                     title=input.TITLE+"_id", 
+                     three_dim=input.THREE_DIM, 
+                     out_dir=input.OUTPUT_DIR,
+                     color_mode="id")
+    GUI.plot_kinetic_lattice(LATTICE, 
+                     input.EPOCHS,
+                     title=input.TITLE+'_boundaries', 
+                     three_dim=input.THREE_DIM, 
+                     out_dir=input.OUTPUT_DIR, 
+                     color_mode="boundaries")
 
 # TODO: rimuovere
 def perform_active_surface_simulation(input: custom_input):

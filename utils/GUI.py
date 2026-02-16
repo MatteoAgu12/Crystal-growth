@@ -264,7 +264,9 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
         label = r"Phase Field $\phi$"
 
     elif color_mode == 'u':
-        im = ax.imshow(data_2d.T, origin='lower', cmap='inferno')
+        vmin = -1.0 
+        vmax = 1.0  
+        im = ax.imshow(data_2d.T, origin='lower', cmap='inferno', vmin=vmin, vmax=vmax)
         label = r"Diffused field $u$"
 
     elif color_mode == 'curvature':
@@ -294,7 +296,7 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     ax.set_title(f"{title} - {color_mode.capitalize()}")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
-    ax.contour(data_2d.T, levels=[0.5], colors='white', linewidths=1, origin='lower')
+    # ax.contour(data_2d.T, levels=[0.5], colors='white', linewidths=1, origin='lower')
 
     if out_dir is not None:
         filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"
@@ -322,7 +324,7 @@ def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     stride = 1
 
     phi_ds = phi[::stride, ::stride, ::stride]
-    vol = phi_ds.astype(np.float32, copy=False)
+    vol = phi_ds.astype(np.float64, copy=False)
 
     if iso_level is None:
         iso_level = _default_iso_level(vol)
@@ -343,7 +345,7 @@ def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
 
     coords = np.vstack([verts[:, 0], verts[:, 1], verts[:, 2]])
     cvals = map_coordinates(
-        cfield.astype(np.float32, copy=False),
+        cfield.astype(np.float64, copy=False),
         coords,
         order=1,
         mode='nearest'
@@ -482,7 +484,7 @@ def _render_voxels_boundaries(ax: plt.Axes, lattice: KineticLattice, visible_vox
     boundary_mask = get_grain_boundaries_mask(lattice)
     plot_mask = visible_voxels | boundary_mask
 
-    colors = np.zeros(lattice.shape + (4,), dtype=np.float32)
+    colors = np.zeros(lattice.shape + (4,), dtype=np.float64)
     colors[visible_voxels] = (0.9, 0.9, 0.9, 0.1)
     colors[boundary_mask] = (0.0, 0.0, 0.0, 1.0)
 
@@ -506,7 +508,7 @@ def _render_voxels_surface(ax: plt.Axes, lattice: KineticLattice, visible_voxels
     Returns:
         np.ndarray: RGBA colors for the voxels.
     """
-    colors = np.zeros(lattice.shape + (4,), dtype=np.float32)
+    colors = np.zeros(lattice.shape + (4,), dtype=np.float64)
 
     if np.any(visible_voxels):
         surface_values = data_grid[visible_voxels]

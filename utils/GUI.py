@@ -130,13 +130,18 @@ def _get_data_2d_by_name(lattice: PhaseFieldLattice, field_name: str, mid_z: int
         return lattice.u[:, :, mid_z]
     if field_name == 'history':
         return lattice.history[:, :, mid_z]
-    # print(f"[GUI] Error: Unknown field {field_name}")
     logger.warning(f"[GUI] Error: Unknown field {field_name}")
     return None
 
 def _cmap_name_for_mode(color_mode: str | None) -> str:
     """
     Returns the colormap name for the given color mode.
+
+    Args:
+        color_mode (str | None): color mode.
+
+    Returns:
+        str: colormap name.
     """
     if color_mode is not None:
         if color_mode == 'phi':
@@ -257,7 +262,6 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     if out_dir is not None:
         filename = out_dir + '/' + title.replace(" ", "_") + '_' + color_mode + ".png"
         plt.savefig(filename, bbox_inches='tight')
-        # print(f"Phase Field image saved as {filename}!")
         logger.info("Phase Field image saved as %s!", filename)
     
     plt.show()
@@ -291,14 +295,12 @@ def _plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
             vol, level=float(iso_level), spacing=(stride, stride, stride)
         )
     except Exception as e:
-        # print(f"[GUI] marching_cubes failed: {e}")
         logger.warning("[GUI] marching_cubes failed: %s", e)
         return
 
     if color_mode in ('phi', 'u', 'history'):
         cfield = get_field_3d(lattice, color_mode)[::stride, ::stride, ::stride]
     else:
-        # print(f"[GUI] Unknown color_mode='{color_mode}', Retrn...")
         logger.warning("[GUI] Unknown color_mode='%s', Return...", color_mode)
         return
 
@@ -363,7 +365,6 @@ def _plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     if out_dir is not None:
         filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"
         plt.savefig(filename, bbox_inches='tight')
-        # print(f"Phase Field image saved as {filename}!")
         logger.info("Phase Field image saved as %s!", filename)
     
     plt.show()
@@ -438,6 +439,9 @@ def _render_voxels_boundaries(ax: plt.Axes, lattice: KineticLattice, visible_vox
         ax (plt.Axes): Matplotlib 3D axis.
         lattice (KineticLattice): custom lattice object.
         visible_voxels (np.ndarray): binary mask of visible voxels.
+
+    Returns:
+        np.ndarray: RGBA colors for the voxels.
     """
     boundary_mask = get_grain_boundaries_mask(lattice)
     plot_mask = visible_voxels | boundary_mask
@@ -573,7 +577,6 @@ def plot_kinetic_lattice(lattice: KineticLattice, N_epochs: int, title: str,
         pass
 
     else:
-        # print(f"Crystal not plot: you choose color_mode = {color_mode}. The only accepted are [epoch, id, boundaries].")
         logger.warning("Crystal not plot: you choose color_mode = %s. The only accepted are [epoch, id, boundaries].", color_mode)
         return
 
@@ -654,7 +657,6 @@ def plot_kinetic_lattice(lattice: KineticLattice, N_epochs: int, title: str,
     if out_dir is not None:
         filename = out_dir + '/' + title.replace(" ", "_") + ".png"
         plt.savefig(filename, bbox_inches='tight')
-        # print(f"KineticLattice image saved as {filename}!")
         logger.info("KineticLattice image saved as %s!", filename)
 
     plt.show()

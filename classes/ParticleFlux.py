@@ -6,15 +6,24 @@ logger = logging.getLogger("growthsim")
 
 class ParticleFlux:
     """
+    This class represents an external particle flux that can be applied during crystal growth simulations.
+    It defines the flux directions and strength, and provides methods to compute anisotropy weights based on the selected flux.
+    The particle flux can be used to influence the growth process by favoring certain directions of growth based on the defined flux directions and strength.
     """
     def __init__(self, flux_directions: Union[np.ndarray, list] = None, 
                  strength: float = 0.0, 
                  verbose: bool = False):
         """
+        Args:
+            flux_directions (np.ndarray or list, optional): iterable of vectors of length 3 representing the directions of the flux. Defaults to None (no flux).
+            strength (float, optional): must be >= 0. If 0, anisotropy is disabled. Defaults to 0.0.
+            verbose (bool, optional): if True, the particle flux will print debug information during initialization and when setting the external flux. Defaults to False.
         """
         self.fluxDirections = flux_directions
         self.fluxStrength   = strength
         self.verbose        = verbose
+
+        logger.debug("%s", self)
     
     def __str__(self):
         info = f"""
@@ -42,9 +51,6 @@ class ParticleFlux:
         if dirs.ndim != 2 or dirs.shape[1] != 3:
             self.fluxDirections = None
             self.fluxStrength = 0.0
-            # print("==========================================================================\n \
-            #       [ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!\n \
-            #       ==========================================================================")
             logger.warning("===========================================================================")
             logger.warning("[ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!")
             logger.warning("===========================================================================")
@@ -53,9 +59,6 @@ class ParticleFlux:
         if strength == 0.0:
             self.fluxDirections = None
             self.fluxStrength = 0.0
-            # print("==========================================================================\n \
-            #       [ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!\n \
-            #       ==========================================================================")
             logger.warning("===========================================================================")
             logger.warning("[ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!")
             logger.warning("===========================================================================")
@@ -66,9 +69,6 @@ class ParticleFlux:
         if not np.any(mask):
             self.fluxDirections = None
             self.fluxStrength = 0.0
-            # print("==========================================================================\n \
-            #       [ParticleFlux] WARNING: no valid directions, no flux selected!\n \
-            #       ==========================================================================")
             logger.warning("===========================================================================")
             logger.warning("[ParticleFlux] WARNING: no valid directions, no flux selected!")
             logger.warning("===========================================================================")
@@ -90,7 +90,10 @@ class ParticleFlux:
     def compute_external_flux_weights(self, direction: np.ndarray) -> float:
         """
         Return the anisotropy weight for external flux for the selected direction, based on the flux selected.
-        
+
+        Args:
+            direction (np.ndarray): vector of length 3 representing the direction for which to compute the weight.
+
         Returns:
             (float): the weight if the flux is activated, 1.0 otherwise
         """

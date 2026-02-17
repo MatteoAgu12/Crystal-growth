@@ -8,6 +8,10 @@ logger = logging.getLogger("growthsim")
 
 class StefanGrowth(GrowthModel):
     """
+    This class represents a specific implementation of the GrowthModel for phase-field crystal growth simulations based on the Stefan model.
+    It defines the growth process based on the evolution of a phase field (phi) that represents the crystal structure, and a concentration field (u) that represents the supersaturation of the system.
+    The growth model interacts with a PhaseFieldLattice to manage the phase field, concentration field, and occupation status of cells.
+    The Stefan growth model is characterized by the evolution of the phase field according to a partial differential equation that includes contributions from the gradient of the phase field, anisotropy, and a reaction term that depends on the supersaturation, with a coupling between the phase field and concentration field that accounts for latent heat effects during phase transformation.
     """
     def __init__(self,
                  lattice: PhaseFieldLattice,
@@ -27,7 +31,26 @@ class StefanGrowth(GrowthModel):
                  three_dim: bool = False,
                  rng_seed: int = 42,
                  verbose: bool = False):
-        
+        """
+        Args:
+            lattice (PhaseFieldLattice): the lattice structure on which the growth model will operate
+            dt (float, optional): time step for the evolution of the phase field. Defaults to 0.0001.
+            mobility (float, optional): mobility parameter for the evolution of the phase field. Defaults to 1.0.
+            diffusivity (float, optional): diffusivity parameter for the evolution of the concentration field. Defaults to 0.5.
+            epsilon0 (float, optional): base value for the anisotropy of the system. Defaults to 0.01.
+            delta (float, optional): strength of the anisotropy. Defaults to 0.04.
+            n_folds (float, optional): number of folds for the anisotropy. Defaults to 6.0.
+            alpha (float, optional): coupling parameter for the reaction term in the phase field evolution. Defaults to 0.9.
+            u_eq (float, optional): equilibrium concentration for the reaction term in the phase field evolution. Defaults to 1.0.
+            latent_coeff (float, optional): coefficient for the coupling between the phase field and concentration field that accounts for latent heat effects. Defaults to 1.6.
+            gamma (float, optional): parameter for the arctan function in the reaction term of the phase field evolution. Defaults to 10.0.
+            u_infty (float, optional): far-field concentration for the concentration field. Defaults to 0.0.
+            enforce_dirichlet_u (bool, optional): if True, enforce Dirichlet boundary conditions for the concentration field (u) at the boundaries of the lattice. Defaults to True.
+            external_flux (ParticleFlux, optional): exernal particle flux to be applied during growth steps. Defaults to None.
+            three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to False.
+            rng_seed (int, optional): random seed for reproducibility. Defaults to 42. 
+            verbose (bool, optional): if True, the growth model will print debug information during growth steps. Defaults to False.
+        """
         super().__init__(lattice=lattice,
                          external_flux=external_flux,
                          rng_seed=rng_seed,
@@ -52,7 +75,37 @@ class StefanGrowth(GrowthModel):
         self.phi = self.lattice.phi
         self.u   = self.lattice.u
 
+        logger.debug("%s", self)
+
+    def __str__(self):
+        return f"""
+        StefanGrowth
+        -------------------------------------------------------------
+        epoch={self.epoch}
+        dt={self.dt}
+        diffusivity={self.diffusivity}
+        epsilon0={self.epsilon0}
+        delta={self.delta}
+        n_folds={self.n_folds}
+        alpha={self.alpha}
+        u_eq={self.u_eq}
+        latent_coeff={self.K}
+        gamma={self.gamma}
+        u_infty={self.u_infty}
+        enforce_dirichlet_u={self.enforce_dirichlet_u}
+
+        external_flux={self.external_flux is not None}
+        three_dim={self.three_dim}
+        verbose={self.verbose}
+        -------------------------------------------------------------
+        """
+
     def _step_2D(self):
+        """
+        Function that performs a single growth step (one epoch) of the Stefan growth model in 2D.
+        This involves updating the phase field (phi) according to the evolution equation that includes contributions from the gradient of the phase field, anisotropy, and a reaction term that depends on the supersaturation, with a coupling between the phase field and concentration field that accounts for latent heat effects during phase transformation.
+        The function computes the necessary spatial derivatives and updates the phase field and concentration field accordingly, while ensuring numerical stability by adjusting the time step based on the maximum value of the anisotropy.
+        """
         phi = self.phi
         u = self.u
         
@@ -101,8 +154,11 @@ class StefanGrowth(GrowthModel):
         pass
 
     def step(self):
-        # if self.verbose:
-        #     print(f"\t\t[StefanGrowth] Starting epoch {self.epoch + 1}...")
+        """
+        Function that performs a single growth step (one epoch) of the Stefan growth model. 
+        This involves updating the phase field (phi) according to the evolution equation that includes contributions from the gradient of the phase field, anisotropy, and a reaction term that depends on the supersaturation, with a coupling between the phase field and concentration field that accounts for latent heat effects during phase transformation.
+        The function computes the necessary spatial derivatives and updates the phase field and concentration field accordingly, while ensuring numerical stability by adjusting the time step based on the maximum value of the anisotropy.
+        """
         logger.debug(f"[StefanGrowth] Starting epoch {self.epoch + 1}...")
 
         if self.three_dim:
@@ -112,6 +168,4 @@ class StefanGrowth(GrowthModel):
         
         self.lattice.update_occupied_and_history(epoch=self.epoch)
 
-        # if self.verbose:
-        #     print(f"\t\t[StefanGrowth] Finished epoch {self.epoch + 1}!")
         logger.debug(f"[StefanGrowth] Finished epoch {self.epoch + 1}!")

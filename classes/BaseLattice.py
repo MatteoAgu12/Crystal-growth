@@ -2,7 +2,23 @@ import numpy as np
 from abc import ABC
 
 class BaseLattice(ABC):
+    """
+    This class represents the base lattice structure for crystal simulations. 
+    It defines the basic properties and methods that any specific lattice implementation should have. 
+    The lattice is represented as a 3D grid, where each cell can be occupied or unoccupied.
+    It keeps track of the history of occupation and group IDs for nucleation processes.
+    """
     def __init__(self, nx: int, ny: int, nz: int, verbose: bool):
+        """
+        Args:
+            nx (int): number of cells in the lattice along the x direction
+            ny (int): number of cells in the lattice along the y direction
+            nz (int): number of cells in the lattice along the z direction
+            verbose (bool): if True, the lattice will print debug information during initialization and occupation of cells.
+
+        Raises:
+            ValueError: if the size of the lattice is negative, the function raises error.
+        """
         if nx < 0 or ny < 0 or nz < 0:
             raise ValueError("KineticLattice dimensions must be >= 0")
 
@@ -22,9 +38,8 @@ class BaseLattice(ABC):
          * Shape:               {self.shape}
          * Nucleation seeds:    {self.initial_seeds}
          * Verbose:             {self.verbose}
-        ============================================================
+        ==================================================================
          """
-
     
     def is_point_inside(self, x: int, y: int, z: int) -> bool:
         """
@@ -54,9 +69,9 @@ class BaseLattice(ABC):
             (np.ndarray): array containing the coordinates of the six cell neighbors
         """
         directions = [
-            (1, 0, 0), (-1, 0, 0),  # x-axis
-            (0, 1, 0), (0, -1, 0),  # y-axis
-            (0, 0, 1), (0, 0, -1),  # z-axis
+            (1, 0, 0), (-1, 0, 0),
+            (0, 1, 0), (0, -1, 0),
+            (0, 0, 1), (0, 0, -1),
         ]
         neighbors = []
         for dx, dy, dz in directions:

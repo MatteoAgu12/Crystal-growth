@@ -8,6 +8,10 @@ logger = logging.getLogger("growthsim")
 
 class KobayashiGrowth(GrowthModel):
     """
+    This class represents a specific implementation of the GrowthModel for phase-field crystal growth simulations based on the Kobayashi model.
+    It defines the growth process based on the evolution of a phase field (phi) that represents the crystal structure, and a concentration field (u) that represents the supersaturation of the system.
+    The growth model interacts with a PhaseFieldLattice to manage the phase field, concentration field, and occupation status of cells.
+    The Kobayashi growth model is characterized by the evolution of the phase field according to a partial differential equation that includes contributions from the gradient of the phase field, anisotropy, and a reaction term that depends on the supersaturation.
     """
     def __init__(self, lattice: PhaseFieldLattice,
                  dt: float = 0.01,
@@ -19,6 +23,19 @@ class KobayashiGrowth(GrowthModel):
                  external_flux: ParticleFlux = None,
                  three_dim: bool = True,
                  verbose: bool = False):
+        """
+        Args:
+            lattice (PhaseFieldLattice): the lattice structure on which the growth model will operate
+            dt (float, optional): time step for the evolution of the phase field. Defaults to 0.01.
+            mobility (float, optional): mobility parameter for the evolution of the phase field. Defaults to 1.0.
+            epsilon0 (float, optional): base value for the anisotropy of the system. Defaults to 1.0.
+            delta (float, optional): strength of the anisotropy. Defaults to 0.0.
+            n_folds (float, optional): number of folds for the anisotropy. Defaults to 0.0.
+            supersaturation (float, optional): supersaturation parameter for the reaction term in the phase field evolution. Defaults to 0.0.
+            external_flux (ParticleFlux, optional): exernal particle flux to be applied during growth steps. Defaults to None.
+            three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to True.
+            verbose (bool, optional): if True, the growth model will print debug information during growth steps. Defaults to False.
+        """
         super().__init__(lattice, three_dim=three_dim, verbose=verbose)
 
         self.dt = dt
@@ -28,15 +45,32 @@ class KobayashiGrowth(GrowthModel):
         self.n_folds = n_folds
         self.supersaturation = supersaturation
 
-        # print(self.__str__())
         logger.debug("%s", self)
 
     def __str__(self):
-        return (f"[KobayashiGrowth] dt={self.dt}, M={self.M}, eps0={self.epsilon0}, "
-                f"delta={self.delta}, n={self.n_folds}, m={self.supersaturation}, "
-                f"occupied={len(self.lattice.occupied)}")
+        return f"""
+        KobayashiGrowth
+        -------------------------------------------------------------
+        epoch={self.epoch}
+        dt={self.dt}
+        mobility={self.M}
+        epsilon0={self.epsilon0}
+        delta={self.delta}
+        n_folds={self.n_folds}
+        supersaturation={self.supersaturation}
+
+        external_flux={self.external_flux is not None}
+        three_dim={self.three_dim}
+        verbose={self.verbose}
+        -------------------------------------------------------------
+        """
 
     def _step_2D(self):
+        """
+        Function that performs a single growth step (one epoch) of the Kobayashi growth model in 2D.
+        This involves updating the phase field (phi) according to the evolution equation that includes contributions from the gradient of the phase field, anisotropy, and a reaction term that depends on the supersaturation.
+        The function computes the necessary spatial derivatives and updates the phase field accordingly, while ensuring numerical stability by adjusting the time step based on the maximum value of the anisotropy.
+        """
         lat = self.lattice
         z = 0 if lat.shape[-1] == 1 else (lat.shape[-1] // 2)
         
@@ -92,8 +126,11 @@ class KobayashiGrowth(GrowthModel):
         pass
 
     def step(self):
-        # if self.verbose:
-        #     print(f"\t\t[KobayashiGrowth] Starting epoch {self.epoch + 1}...")
+        """
+        Function that performs a single growth step (one epoch) of the Kobayashi growth model. 
+        This involves updating the phase field (phi) according to the evolution equation that includes contributions from the gradient of the phase field, anisotropy, and a reaction term that depends on the supersaturation.
+        The function computes the necessary spatial derivatives and updates the phase field accordingly, while ensuring numerical stability by adjusting the time step based on the maximum value of the anisotropy.
+        """
         logger.debug("[KobayashiGrowth] Starting epoch %d...", self.epoch + 1)
 
         if self.three_dim:
@@ -103,9 +140,6 @@ class KobayashiGrowth(GrowthModel):
 
         self.lattice.update_occupied_and_history(epoch=self.epoch)
 
-        # if self.verbose:
-        #     print(f"\t\t[KobayashiGrowth] Finished epoch {self.epoch + 1}!\n \
-        #             _____________________________________________________________")
         logger.debug("[KobayashiGrowth] Finished epoch %d!", self.epoch + 1)
         logger.debug("_____________________________________________________________")
 

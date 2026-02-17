@@ -81,20 +81,13 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if parsed_input.seeds <= 0:
         raise ValueError(f"ERROR: 'seeds' must be an integer > 0. Got {parsed_input.seeds}")
     if parsed_input.seeds > 20:
-        # print(f"""
-        # ************************************************************************
-        #  WARNING:
-        # \tThe GUI supports at most 20 different colors.
-        # \tWith {parsed_input.seeds} some will be repeted.
-        # ************************************************************************
-        # """)
         logger.warning("""
-        # ************************************************************************
-        #  WARNING:
-        # \tThe GUI supports at most 20 different colors.
-        # \tWith %d some will be repeted.
-        # ************************************************************************
-        # """, parsed_input.seeds)
+        ************************************************************************
+         WARNING:
+        \tThe GUI supports at most 20 different colors.
+        \tWith %d some will be repeted.
+        ************************************************************************
+        """, parsed_input.seeds)
 
     # External Flux Logic
     if parsed_input.external_flux is not None:
@@ -136,38 +129,24 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     # Delta VS N_folds
     max_delta = 1.0 / (parsed_input.n_folds**2 - 1)
     if (parsed_input.delta >= max_delta ) and parsed_input.simulation == "KOBAYASHI":
-        # print(f"""
-        # ************************************************************************************
-        #  WARNING:
-        # \tDelta should be less than (1 / (n_fold**2 - 1)) to avoid negative stifness.
-        # \tThe value {parsed_input.delta} may cause sharp tips and other artifacts at the interface.
-        # ************************************************************************************
-        # """)
         logger.warning("""
-        # ************************************************************************************
-        #  WARNING:
-        # \tDelta should be less than (1 / (n_fold**2 - 1)) to avoid negative stifness.
-        # \tThe value %f may cause sharp tips and other artifacts at the interface.
-        # ************************************************************************************
-        # """, parsed_input.delta)
+        ************************************************************************************
+         WARNING:
+        \tDelta should be less than (1 / (n_fold**2 - 1)) to avoid negative stifness.
+        \tThe value %f may cause sharp tips and other artifacts at the interface.
+        ************************************************************************************
+        """, parsed_input.delta)
 
 
     # Integration time
     if parsed_input.dt >= 5e-2:
-        # print(f"""
-        # ************************************************************************************
-        #  WARNING:
-        # \tThe integration time should be kept small (~1e-4) to have high realism.
-        # \tThe value {parsed_input.dt} may cause numerical instability.
-        # ************************************************************************************
-        # """)
         logger.warning("""
-        # ************************************************************************************
-        #  WARNING:
-        # \tThe integration time should be kept small (~1e-4) to have high realism.
-        # \tThe value %f may cause numerical instability.
-        # ************************************************************************************
-        # """, parsed_input.dt)
+        ************************************************************************************
+         WARNING:
+        \tThe integration time should be kept small (~1e-4) to have high realism.
+        \tThe value %f may cause numerical instability.
+        ************************************************************************************
+        """, parsed_input.dt)
 
 def cast_file_input_to_value(value: str):
     """

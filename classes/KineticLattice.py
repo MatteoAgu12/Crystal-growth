@@ -8,6 +8,10 @@ logger = logging.getLogger("growthsim")
 
 class KineticLattice(BaseLattice):
     """
+    This class represents a specific implementation of the BaseLattice for kinetic crystal growth simulations.
+    It defines the grid structure and methods for occupying cells, checking occupation status, and managing nucleation seeds.
+    The lattice is represented as a 3D grid, where each cell can be occupied or unoccupied. 
+    It also keeps track of the history of occupation and group IDs for nucleation processes.
     """
     def __init__(self, nx: int, ny: int, nz: int, verbose: bool = False):
         """
@@ -15,13 +19,13 @@ class KineticLattice(BaseLattice):
             nx (int): number of cells in the lattice along the x direction
             ny (int): number of cells in the lattice along the y direction
             nz (int): number of cells in the lattice along the z direction
+            verbose (bool, optional): if True, the lattice will print debug information during initialization and occupation of cells. Defaults to False.
         """
         super().__init__(nx, ny, nz, verbose)
         if nx < 0 or ny < 0 or nz < 0:
             raise ValueError('ERROR: the size of the lattice must be an integer bigger or equal to zero!')
 
         self.grid    = np.zeros(self.shape, dtype=np.uint8)
-        # print(self.__str__())
         logger.debug("%s", self)
 
     def __str__(self):
@@ -37,6 +41,7 @@ class KineticLattice(BaseLattice):
             y (int): y coordinate of the point to occupy
             z (int): z coordinate of the point to occupy
             epoch (int): current epoch in the simulation
+            id (int): group id to assign to the occupied cell
             
         Raises:
             ValueError: if the epoch number is negative the function raises error.
@@ -155,7 +160,6 @@ class KineticLattice(BaseLattice):
         mins = occupied_coords.min(axis=0) - padding
         maxs = occupied_coords.max(axis=0) + 1 + padding
         
-        # I never want to exit from my lattice grid
         mins = np.clip(mins, 0, np.array(self.shape) - 1)
         maxs = np.clip(maxs, 0, np.array(self.shape) - 1)
         

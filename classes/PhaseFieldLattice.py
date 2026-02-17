@@ -6,10 +6,22 @@ logger = logging.getLogger("growthsim")
 
 class PhaseFieldLattice(BaseLattice):
     """
+    This class represents a specific implementation of the BaseLattice for phase-field crystal growth simulations.
+    It defines the grid structure and methods for managing the phase field (phi) and concentration field (u) in addition to the occupation status of cells.
+    The lattice is represented as a 3D grid, where each cell can be occupied or unoccupied. 
+    It also keeps track of the history of occupation and group IDs for nucleation processes.
     """
     def __init__(self, nx: int, ny: int, nz: int, 
                  interface_threshold: float = 0.5, 
                  verbose: bool = False):
+        """
+        Args:
+            nx (int): number of cells in the lattice along the x direction
+            ny (int): number of cells in the lattice along the y direction
+            nz (int): number of cells in the lattice along the z direction
+            interface_threshold (float, optional): threshold value for determining occupied cells based on the phase field. Defaults to 0.5.
+            verbose (bool, optional): if True, the lattice will print debug information during initialization and occupation of cells. Defaults to False.
+        """
         if interface_threshold <= 0.0:
             raise ValueError(f"ERROR: Interface threshold must be a positive float: {interface_threshold} is not a good option.")
 
@@ -22,55 +34,50 @@ class PhaseFieldLattice(BaseLattice):
         self.interface_threshold = interface_threshold
         self._seeds = []
 
-        # print(self.__str__())
         logger.debug("%s", self)
 
     def __str__(self):
-        return (f"[PhaseFieldLattice] size={self.shape}, "
-                f"thr={self.interface_threshold}, occupied={len(self.occupied)}")
+        return f"""
+        === PhaseFieldLattice Object ======================================== 
+         * Shape:               {self.shape}
+         * Nucleation seeds:    {self.initial_seeds}
+         * Interface threshold: {self.interface_threshold}
+         * Verbose:             {self.verbose}
+        =====================================================================
+        """
 
-    def is_occupied(self, x: int, y: int, z: int):
+    def is_occupied(self, x: int, y: int, z: int) -> bool:
+        """
+        Check if the cell at coordinates (x,y,z) is occupied based on the phase field value and the interface threshold.
+
+        Args:
+            x (int): x coordinate of the point to check
+            y (int): y coordinate of the point to check
+            z (int): z coordinate of the point to check
+
+        Returns:
+            bool: returns True if the cell is occupied (phi >= interface_threshold), False otherwise
+        """
         return bool(self.grid[x, y, z] == 1)
-
-    def set_nucleation_seed_old(self, x: int, y: int, z: int,
-                            radius: float = 4, width: float = 1.5,
-                            phi_in: float = 1.0, phi_out: float = 0.0):
-        """
-        """
-        r = float(radius)
-        w = float(max(width, 1e-6))
-
-        if self.shape[2] <= 1:
-            X, Y = np.meshgrid(np.arange(self.shape[1], dtype=np.float64),
-                               np.arange(self.shape[0], dtype=np.float64))
-            dist = np.sqrt((Y - x) ** 2 + (X - y) ** 2)
-            prof = 0.5 * (1.0 - np.tanh((dist - r) / w))
-            phi_seed = phi_out + (phi_in - phi_out) * prof
-            self.phi[:, :, z] = np.maximum(self.phi[:, :, z], phi_seed.astype(np.float64))
-        else:
-            X, Y, Z = np.meshgrid(np.arange(self.shape[1], dtype=np.float64),
-                                  np.arange(self.shape[0], dtype=np.float64),
-                                  np.arange(self.shape[2], dtype=np.float64),
-                                  indexing='xy')
-            dist = np.sqrt((Y - x) ** 2 + (X - y) ** 2 + (Z - z) ** 2)
-            prof = 0.5 * (1.0 - np.tanh((dist - r) / w))
-            phi_seed = phi_out + (phi_in - phi_out) * prof
-            self.phi[:, :, :] = np.maximum(self.phi[:, :, :], phi_seed.astype(np.float64))
-
-        if (x, y, z) not in self._seeds:
-            self._seeds.append((x, y, z))
-
-        self.update_occupied_and_history(epoch=0)
-
-        # if self.verbose:
-        #     print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
-        logger.debug(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
 
     def set_nucleation_seed(self, x: int, y: int, z: int,
                             radius: float = 5.0, width: float = 1.5,
                             phi_in: float = 1.0, phi_out: float = 0.0,
                             u_inf: float = 0.0, u_eq: float = 1.0):
         """
+        Function to set a nucleation seed at coordinates (x,y,z) by initializing the phase field (phi) in a spherical region around the seed point.
+        The phase field is set to phi_in inside the seed region and transitions to phi_out outside the seed region based on a hyperbolic tangent profile.
+
+        Args:
+            x (int): x coordinate of the seed point
+            y (int): y coordinate of the seed point
+            z (int): z coordinate of the seed point
+            radius (float, optional): radius of the seed region. Defaults to 4.
+            width (float, optional): width of the transition region between phi_in and phi_out. Defaults to 1.5.
+            phi_in (float, optional): phase field value inside the seed region. Defaults to 1.0.
+            phi_out (float, optional): phase field value outside the seed region. Defaults to 0.0.
+            u_inf (float, optional): concentration field value far from the seed. Defaults to 0.0.
+            u_eq (float, optional): concentration field value at equilibrium. Defaults to 1.
         """
         r = float(radius)
         w = float(max(width, 1e-6))
@@ -90,12 +97,16 @@ class PhaseFieldLattice(BaseLattice):
             self._seeds.append((x, y, z))
 
         self.update_occupied_and_history(epoch=0)
-
-        # if self.verbose:
-        #     print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
         logger.debug(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
 
     def update_occupied_and_history(self, epoch: int):
+        """
+        Update the occupation status of cells based on the current phase field values and the interface threshold.
+        It also updates the history of occupation for newly occupied cells and assigns group IDs based on the nearest nucleation seed.
+        
+        Args:
+            epoch (int): current epoch in the simulation
+        """
         thr = self.interface_threshold
         new_grid = (self.phi >= thr).astype(np.uint8)
 
@@ -117,7 +128,18 @@ class PhaseFieldLattice(BaseLattice):
 
         self.grid[:] = new_grid
 
-    def _nearest_seed_id(self, x: int, y: int, z: int):
+    def _nearest_seed_id(self, x: int, y: int, z: int) -> int:
+        """
+        Find the nearest nucleation seed to the cell at coordinates (x,y,z) and return its group ID.
+
+        Args:
+            x (int): x coordinate of the cell
+            y (int): y coordinate of the cell
+            z (int): z coordinate of the cell
+
+        Returns:
+            int: group ID of the nearest nucleation seed (1-based index)
+        """
         best_k = 0.0
         best_d2 = None
         for k, (sx, sy, sz) in enumerate(self._seeds):

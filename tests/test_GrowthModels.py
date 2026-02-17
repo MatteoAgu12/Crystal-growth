@@ -181,7 +181,6 @@ def test_dla_generate_random_point_on_box_is_on_surface_and_within_bounds(capsys
     assert p.shape == (3,)
     for d in range(3):
         assert box[d][0] <= int(p[d]) <= box[d][1]
-    # almeno una coordinata deve stare su una faccia (min o max)
     assert sum(int(p[d]) in (box[d][0], box[d][1]) for d in range(3)) >= 1
 
 def test_dla_step_calls_boxes_and_walk(monkeypatch, capsys):
@@ -210,7 +209,6 @@ def test_dla_step_calls_boxes_and_walk(monkeypatch, capsys):
     assert called["gen_box"] == [(0, 1), (0, 1), (0, 1)]
     assert np.array_equal(called["start"], np.array([0, 0, 0]))
     assert called["outer_box"] == [(0, 2), (0, 2), (0, 2)]
-    # verifica che abbia chiesto entrambe le box al lattice con i padding giusti
     assert lat.calls == [1, 2]
 
 def test_kobayashi_step_updates_phi_and_calls_update(capsys):

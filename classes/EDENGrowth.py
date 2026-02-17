@@ -8,11 +8,25 @@ import logging
 logger = logging.getLogger("growthsim")
 
 class EDENGrowth(GrowthModel):
+    """
+    This class represents a specific implementation of the GrowthModel for Eden crystal growth simulations.
+    It defines the growth process based on the random selection of sites from the active border of the existing crystal structure, where new particles are added to the crystal.
+    The growth model interacts with a KineticLattice to manage the occupation of cells and can incorporate an external particle flux to influence the growth process.
+    The Eden growth model is characterized by the addition of new particles to the crystal structure at sites that are adjacent to already occupied sites, with the selection of these sites being random and potentially biased by an external flux.
+    """
     def __init__(self, lattice: KineticLattice,
                  external_flux: ParticleFlux = None, 
                  rng_seed:int = 69, 
                  three_dim: bool = True, 
                  verbose: bool = False):
+        """
+        Args:
+            lattice (KineticLattice): the lattice structure on which the growth model will operate
+            external_flux (ParticleFlux, optional): exernal particle flux to be applied during growth steps. Defaults to None.
+            rng_seed (int, optional): random seed for reproducibility. Defaults to 69.
+            three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to True.
+            verbose (bool, optional): if True, the growth model will print debug information during growth
+        """                 
         super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
         
     def __str__(self):
@@ -48,25 +62,20 @@ class EDENGrowth(GrowthModel):
         weights /= np.sum(weights)
         idx = self.rng.choice(len(active_border), p=weights)
         site = active_border[idx].astype(int)
-        
-        # if self.verbose:
-        #     print(f"\t\t[EDENGrowth::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
         logger.debug(f"[EDENGrowth::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
         
         return site
     
     def step(self):
-        # if self.verbose:
-        #     print(f"\t\t[EDENGrowth] Starting epoch {self.epoch + 1}...")
+        """
+        Function that performs a single growth step (one epoch) of the Eden growth model. 
+        This involves randomly selecting a site from the active border of the existing crystal structure and adding a new particle to the crystal at that site, with the selection potentially biased by an external flux.
+        If no active border is found, the function will simply return without modifying the lattice.
+        """
         logger.debug(f"[EDENGrowth] Starting epoch {self.epoch + 1}...")
 
         candidates = self.lattice.get_active_border()
         if candidates.size == 0:
-            #print(f"""
-            ###############################################################
-            #[EDENGrowth] WARNING: at step {self.epoch} no active border has been found!
-            #Skipped...
-            ###############################################################""")
             logger.warning("[EDENGrowth] WARNING: at step %d no active border has been found!", self.epoch)
             return
         
@@ -79,10 +88,6 @@ class EDENGrowth(GrowthModel):
                 gid = self.lattice.get_group_id(nx, ny, nz)
                 self.lattice.occupy(*new_site, epoch=self.epoch, id=gid)
     
-                # if self.verbose:
-                #     print(f"\t\t[EDENGrowth] Attached at {new_site} (Id: {gid})")
-                #     print(f"\t\t[EDENGrowth] Finished epoch {self.epoch + 1}!\n \
-                #             _____________________________________________________________")
                 logger.debug("[EDENGrowth] Attached at %s (Id: %d)", new_site, gid)
                 logger.debug("[EDENGrowth] Finished epoch %d!", self.epoch + 1)
                 logger.debug("_____________________________________________________________")

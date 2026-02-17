@@ -11,10 +11,15 @@ def setup_logging(verbose: bool = False, log_file: str | None = None) -> logging
      - verbose=False -> INFO
      - verbose=True  -> DEBUG
      - log_file -> writes on file
+
+    Args:
+        verbose (bool, optional): If True, sets logging level to DEBUG. Defaults to False
+
+    Returns:
+        logging.Logger: Configured logger instance for the application.
     """
     level = logging.DEBUG if verbose else logging.INFO
 
-    # reset handler (utile se rilanci da notebook/IDE)
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(level)

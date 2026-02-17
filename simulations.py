@@ -30,7 +30,7 @@ class custom_input:
     OUTPUT_DIR:       str
     EXTERNAL_FLUX:    ParticleFlux
 
-    # KOBA only
+    # PhaseFieldLattice only
     INTERFACE_THR:    float
     EPSILON:          float
     DELTA:            float
@@ -96,6 +96,18 @@ class custom_input:
             """
 
 def _init_kinetic_lattice(input: custom_input) -> KineticLattice:
+    """
+    Initializes the kinetic lattice for DLA and EDEN simulations.
+    If SEEDS == 1, a single seed is placed at the center of the lattice.
+    If SEEDS > 1, seeds are randomly distributed across the lattice, ensuring not to place multiple seeds on the same site.
+    The lattice is initialized with the specified dimensions and verbosity settings.
+
+    Args:
+        input (custom_input): The custom input dataclass containing all the parameters for the simulation.
+
+    Returns:
+        KineticLattice: The initialized kinetic lattice.
+    """
     LATTICE = KineticLattice(input.NX, input.NY, input.NZ, input.VERBOSE)
 
     if input.SEEDS == 1:
@@ -114,6 +126,18 @@ def _init_kinetic_lattice(input: custom_input) -> KineticLattice:
     return LATTICE
 
 def _init_phase_field_lattice(input: custom_input) -> PhaseFieldLattice:
+    """
+    Initializes the phase field lattice for KOBAYASHI and STEFAN simulations.
+    If SEEDS == 1, a single seed is placed at the center of the lattice.
+    If SEEDS > 1, seeds are randomly distributed across the lattice, ensuring not to place multiple seeds on the same site.
+    The lattice is initialized with the specified dimensions and verbosity settings.
+
+    Args:
+        input (custom_input): The custom input dataclass containing all the parameters for the simulation.
+
+    Returns:
+        KineticLattice: The initialized kinetic lattice.
+    """
     LATTICE = PhaseFieldLattice(input.NX, input.NY, 1, input.INTERFACE_THR, input.VERBOSE)
     LATTICE.u[:,:,:] = input.U_INFTY
     phi = LATTICE.phi[:,:,:]
@@ -135,6 +159,15 @@ def _init_phase_field_lattice(input: custom_input) -> PhaseFieldLattice:
 
 
 def perform_EDEN_simulation(input: custom_input):
+    """
+    Runs the EDEN growth simulation using the provided input parameters. 
+    It initializes the kinetic lattice, creates an instance of the EDENGrowth model, 
+    and executes the growth process for the specified number of epochs. 
+    After the simulation, it generates visualizations of the kinetic lattice.
+
+    Args:
+        input (custom_input): The custom input dataclass containing all the parameters for the simulation.
+    """
     LATTICE = _init_kinetic_lattice(input)
 
     model = EDENGrowth(lattice=LATTICE,
@@ -166,6 +199,15 @@ def perform_EDEN_simulation(input: custom_input):
        
 
 def perform_DLA_simulation(input: custom_input):
+    """
+    Runs the DLA growth simulation using the provided input parameters. 
+    It initializes the kinetic lattice, creates an instance of the DLAGrowth model, 
+    and executes the growth process for the specified number of epochs. 
+    After the simulation, it generates visualizations of the kinetic lattice.
+
+    Args:
+        input (custom_input): The custom input dataclass containing all the parameters for the simulation.
+    """
     LATTICE = _init_kinetic_lattice(input)
     
     model = DLAGrowth(lattice=LATTICE,
@@ -207,6 +249,15 @@ def perform_DLA_simulation(input: custom_input):
         
 
 def perform_KOBAYASHI_simulation(input: custom_input):
+    """
+    Runs the Kobayashi growth simulation using the provided input parameters. 
+    It initializes the kinetic lattice, creates an instance of the KobayashiGrowth model, 
+    and executes the growth process for the specified number of epochs. 
+    After the simulation, it generates visualizations of the kinetic lattice.
+
+    Args:
+        input (custom_input): The custom input dataclass containing all the parameters for the simulation.
+    """
     if input.THREE_DIM:
         logger.warning(f"""
         **************************************************************************************
@@ -259,6 +310,15 @@ def perform_KOBAYASHI_simulation(input: custom_input):
 
 
 def perform_STEFAN_simulation(input: custom_input):
+    """
+    Runs the Stefan growth simulation using the provided input parameters. 
+    It initializes the kinetic lattice, creates an instance of the StefanGrowth model, 
+    and executes the growth process for the specified number of epochs. 
+    After the simulation, it generates visualizations of the kinetic lattice.
+
+    Args:
+        input (custom_input): The custom input dataclass containing all the parameters for the simulation.
+    """
     if input.THREE_DIM:
         logger.warning(f"""
         **************************************************************************************
@@ -321,30 +381,4 @@ def perform_STEFAN_simulation(input: custom_input):
                          out_dir=input.OUTPUT_DIR, 
                          color_mode="boundaries")
 
-# TODO: rimuovere
-def perform_active_surface_simulation(input: custom_input):
-    LATTICE = KineticLattice(input.NX, input.NY, input.NZ, input.VERBOSE)
-    for x in range(input.NX):
-        for z in range(input.NZ):
-            LATTICE.set_nucleation_seed(x, 0, z)
-
-    # Default anisotropy: we aer simulating particles coming from +y direction
-    flux = ParticleFlux(np.ndarray([0, 1, 0]), 
-                        input.EXTERNAL_FLUX.fluxStrength if input.EXTERNAL_FLUX.fluxStrength > 0.0 else 5.0, 
-                        input.verbose)
-    
-    model = DLAGrowth(LATTICE,
-                      generation_padding=1,
-                      outer_limit_padding=3,
-                      external_flux=flux,
-                      three_dim=input.THREE_DIM,
-                      verbose=input.VERBOSE)
-
-    model.run(input.EPOCHS)
-    
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS, 
-                     title=input.TITLE, 
-                     three_dim=True, 
-                     out_dir=input.OUTPUT_DIR)
-    
+   

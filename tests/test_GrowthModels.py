@@ -103,7 +103,6 @@ class PhaseFieldLatticeStub(LatticeStubBase):
     def __init__(self, nx=8, ny=8):
         super().__init__()
         self.phi = np.zeros((nx, ny, 1), dtype=np.float64)
-        self.curvature = np.zeros((nx, ny, 1), dtype=np.float64)
         self.update_calls = []
 
     def update_occupied_and_history(self, epoch: int):

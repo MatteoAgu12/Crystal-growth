@@ -16,6 +16,7 @@ import utils.GUI as GUI
 
 @dataclass
 class custom_input:
+    SIMULATION:       str
     NX:               int
     NY:               int
     NZ:               int
@@ -41,13 +42,30 @@ class custom_input:
     MOBILITY:         float
     SUPERSATURATION:  float
     TIME_STEP:        float
-    # TODO: continue....
     
     def __str__(self):
-        # TODO: aggiorna il print
+        if self.SIMULATION in ['EDEN', 'DLA']:
+            return f"""
+            ===============================
+            {self.SIMULATION} Simulation Settings:
+            ===============================
+            GLOBAL PARAMETERS:
+            Size:             ({self.NX}, {self.NY}, {self.NZ})
+            Seeds:            {self.SEEDS}
+            Epochs:           {self.EPOCHS}
+            Dimensions:       {3 if self.THREE_DIM else 2}
+            Title:            {self.TITLE}
+            Output Dir:       {self.OUTPUT_DIR}
+            Flux Direction:   {self.EXTERNAL_FLUX}
+            Verbose:          {self.VERBOSE}
+            --------------------------------
+            """
+        
         return f"""
-        Simulation Settings:
-        --------------------
+        ===============================
+        {self.SIMULATION} Simulation Settings:
+        ===============================
+        GLOBAL PARAMETERS:
         Size:             ({self.NX}, {self.NY}, {self.NZ})
         Seeds:            {self.SEEDS}
         Epochs:           {self.EPOCHS}
@@ -56,6 +74,23 @@ class custom_input:
         Output Dir:       {self.OUTPUT_DIR}
         Flux Direction:   {self.EXTERNAL_FLUX}
         Verbose:          {self.VERBOSE}
+        --------------------------------
+
+        Phase Field Parameters:
+        Interface Thr:    {self.INTERFACE_THR}
+        Epsilon:          {self.EPSILON}
+        Delta:            {self.DELTA}
+        N Folds:          {self.N_FOLDS}
+        Alpha:            {self.ALPHA}
+        U_eq:             {self.U_EQ}
+        U_infty:          {self.U_INFTY}
+        Latent Coef:      {self.LATENT_COEF}
+        Gamma:            {self.GAMMA}
+        Diffusivity:      {self.DIFFUSIVITY}
+        Mobility:         {self.MOBILITY}
+        Supersaturation:  {self.SUPERSATURATION}
+        Time Step:        {self.TIME_STEP}
+        --------------------------------
         """
 
 
@@ -87,18 +122,20 @@ def perform_EDEN_simulation(input: custom_input):
                      title=input.TITLE, 
                      three_dim=input.THREE_DIM, 
                      out_dir=input.OUTPUT_DIR)
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS, 
-                     title=input.TITLE+"_id", 
-                     three_dim=input.THREE_DIM, 
-                     out_dir=input.OUTPUT_DIR,
-                     color_mode="id")
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS,
-                     title=input.TITLE+'_boundaries', 
-                     three_dim=input.THREE_DIM, 
-                     out_dir=input.OUTPUT_DIR, 
-                     color_mode="boundaries")
+
+    if input.SEEDS != 1:
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS, 
+                         title=input.TITLE+"_id", 
+                         three_dim=input.THREE_DIM, 
+                         out_dir=input.OUTPUT_DIR,
+                         color_mode="id")
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS,
+                         title=input.TITLE+'_boundaries', 
+                         three_dim=input.THREE_DIM, 
+                         out_dir=input.OUTPUT_DIR, 
+                         color_mode="boundaries")
        
 
 def perform_DLA_simulation(input: custom_input):
@@ -139,18 +176,20 @@ def perform_DLA_simulation(input: custom_input):
                      title=input.TITLE, 
                      three_dim=input.THREE_DIM, 
                      out_dir=input.OUTPUT_DIR)
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS, 
-                     title=input.TITLE+"_id", 
-                     three_dim=input.THREE_DIM, 
-                     out_dir=input.OUTPUT_DIR,
-                     color_mode="id")
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS,
-                     title=input.TITLE+'_boundaries', 
-                     three_dim=input.THREE_DIM, 
-                     out_dir=input.OUTPUT_DIR, 
-                     color_mode="boundaries")
+
+    if input.SEEDS != 1:
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS, 
+                         title=input.TITLE+"_id", 
+                         three_dim=input.THREE_DIM, 
+                         out_dir=input.OUTPUT_DIR,
+                         color_mode="id")
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS,
+                         title=input.TITLE+'_boundaries', 
+                         three_dim=input.THREE_DIM, 
+                         out_dir=input.OUTPUT_DIR, 
+                         color_mode="boundaries")
         
 
 def perform_KOBAYASHI_simulation(input: custom_input):
@@ -201,25 +240,19 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                                     color_field_name="history",
                                     title=input.TITLE,
                                     three_dim=False)
-    GUI.plot_phase_field_simulation(LATTICE,
-                                    out_dir=input.OUTPUT_DIR,
-                                    field_name="curvature",
-                                    color_field_name="curvature",
-                                    title=input.TITLE,
-                                    three_dim=False)
-
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS, 
-                     title=input.TITLE+"_id", 
-                     three_dim=False, 
-                     out_dir=input.OUTPUT_DIR,
-                     color_mode="id")
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS,
-                     title=input.TITLE+'_boundaries', 
-                     three_dim=False, 
-                     out_dir=input.OUTPUT_DIR, 
-                     color_mode="boundaries")
+    if input.SEEDS != 1:
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS, 
+                         title=input.TITLE+"_id", 
+                         three_dim=False, 
+                         out_dir=input.OUTPUT_DIR,
+                         color_mode="id")
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS,
+                         title=input.TITLE+'_boundaries', 
+                         three_dim=False, 
+                         out_dir=input.OUTPUT_DIR, 
+                         color_mode="boundaries")
 
 
 def perform_STEFAN_simulation(input: custom_input):
@@ -289,25 +322,19 @@ def perform_STEFAN_simulation(input: custom_input):
                                     color_field_name="history",
                                     title=input.TITLE,
                                     three_dim=False)
-    GUI.plot_phase_field_simulation(LATTICE,
-                                    out_dir=input.OUTPUT_DIR,
-                                    field_name="curvature",
-                                    color_field_name="curvature",
-                                    title=input.TITLE,
-                                    three_dim=False)
-
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS, 
-                     title=input.TITLE+"_id", 
-                     three_dim=False, 
-                     out_dir=input.OUTPUT_DIR,
-                     color_mode="id")
-    GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS,
-                     title=input.TITLE+'_boundaries', 
-                     three_dim=False, 
-                     out_dir=input.OUTPUT_DIR, 
-                     color_mode="boundaries")
+    if input.SEEDS != 1:
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS, 
+                         title=input.TITLE+"_id", 
+                         three_dim=False, 
+                         out_dir=input.OUTPUT_DIR,
+                         color_mode="id")
+        GUI.plot_kinetic_lattice(LATTICE, 
+                         input.EPOCHS,
+                         title=input.TITLE+'_boundaries', 
+                         three_dim=False, 
+                         out_dir=input.OUTPUT_DIR, 
+                         color_mode="boundaries")
 
 # TODO: rimuovere
 def perform_active_surface_simulation(input: custom_input):
@@ -374,26 +401,27 @@ if __name__ == '__main__':
     # ================================================================
     # Creating the input objects
     # ================================================================
-    simulation_input = custom_input(NX=nx, NY=ny, NZ=nz,
-                                   SEEDS=seeds,
-                                   EPOCHS=epochs, 
-                                   THREE_DIM=is_3D, 
-                                   VERBOSE=verbose,
-                                   TITLE=title, OUTPUT_DIR=out_dir,
-                                   EXTERNAL_FLUX=external_flux,
-                                   INTERFACE_THR=interface_thr,
-                                   EPSILON=epsilon0,
-                                   DELTA=delta,
-                                   N_FOLDS=n_folds,
-                                   ALPHA=alpha,
-                                   U_EQ=u_eq,
-                                   U_INFTY=u_infinity,
-                                   LATENT_COEF=latent_coef,
-                                   GAMMA=gamma,
-                                   MOBILITY=mobility,
-                                   DIFFUSIVITY=diffusivity,
-                                   SUPERSATURATION=supersaturation,
-                                   TIME_STEP=time_step)
+    simulation_input = custom_input(SIMULATION=SIMULATION
+                                    NX=nx, NY=ny, NZ=nz,
+                                    SEEDS=seeds,
+                                    EPOCHS=epochs, 
+                                    THREE_DIM=is_3D, 
+                                    VERBOSE=verbose,
+                                    TITLE=title, OUTPUT_DIR=out_dir,
+                                    EXTERNAL_FLUX=external_flux,
+                                    INTERFACE_THR=interface_thr,
+                                    EPSILON=epsilon0,
+                                    DELTA=delta,
+                                    N_FOLDS=n_folds,
+                                    ALPHA=alpha,
+                                    U_EQ=u_eq,
+                                    U_INFTY=u_infinity,
+                                    LATENT_COEF=latent_coef,
+                                    GAMMA=gamma,
+                                    MOBILITY=mobility,
+                                    DIFFUSIVITY=diffusivity,
+                                    SUPERSATURATION=supersaturation,
+                                    TIME_STEP=time_step)
     
     print(simulation_input)
 
@@ -411,9 +439,6 @@ if __name__ == '__main__':
 
     elif SIMULATION == 'STEFAN':
         perform_STEFAN_simulation(simulation_input)
-
-    # elif SIMULATION == 'SURFACE':
-    #     perform_active_surface_simulation(simulation_input)
 
     else:
         print(f"***************************************************************************** \

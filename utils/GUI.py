@@ -94,27 +94,6 @@ def _mid_plane_z(lattice: BaseLattice) -> int:
 # -----------------------------
 # Field / normalization helpers
 # -----------------------------
-def compute_curvature_2d(phi_slice: np.array) -> np.array:
-    """
-    Compute the mean curvature H of a 2D slice.
-    H = div(grad(phi) / |grad(phi)|)
-
-    Args:
-        phi_slice (np.array): custom lattice object.
-
-    Returns:
-        np.array: curvature.
-    """
-    gy, gx = np.gradient(phi_slice)
-
-    norm = np.sqrt(gx ** 2 + gy ** 2) + 1e-8
-    nx, ny = gx / norm, gy / norm
-
-    div_nx = np.gradient(nx, axis=1)
-    div_ny = np.gradient(ny, axis=0)
-
-    return -(div_nx + div_ny)
-
 def get_field_3d(lattice: PhaseFieldLattice, field_name: str) -> np.array:
     """
     Function that determines which continuous field to analyse.
@@ -146,8 +125,6 @@ def _get_data_2d_by_name(lattice: PhaseFieldLattice, field_name: str, mid_z: int
         return lattice.phi[:, :, mid_z]
     if field_name == 'u':
         return lattice.u[:, :, mid_z]
-    if field_name == 'curvature':
-        return lattice.curvature[:, :, mid_z]
     if field_name == 'history':
         return lattice.history[:, :, mid_z]
     print(f"[GUI] Error: Unknown field {field_name}")
@@ -162,8 +139,6 @@ def _cmap_name_for_mode(color_mode: str | None) -> str:
             return 'gray_r'
         if color_mode == 'u':
             return 'inferno'
-        if color_mode == 'curvature':
-            return 'coolwarm'
         if color_mode == 'history':
             return 'turbo'
         return 'viridis'
@@ -193,10 +168,6 @@ def _norm_for_3d_mode(lattice: PhaseFieldLattice, color_mode: str, cvals: np.nda
             vmin, vmax = 0.0, 1.0
     elif color_mode == 'phi':
         vmin, vmax = 0.0, 1.0
-    elif color_mode == 'curvature':
-        a = np.abs(cvals)
-        vmax = float(np.percentile(a, 95)) if a.size > 0 else 1.0
-        vmin = -vmax
     else:
         vmin, vmax = None, None
 
@@ -216,8 +187,6 @@ def _label_for_color_mode_3d(color_mode: str) -> str:
         return "Phase Field $\\phi$"
     if color_mode == 'u':
         return "Field $u$"
-    if color_mode == 'curvature':
-        return "Curvature / Laplacian"
     if color_mode == 'history':
         return "Solidification Epoch"
     return str(color_mode)
@@ -249,7 +218,7 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
         lattice (PhaseFieldLattice): custom lattice object.
         out_dir (str): output directory to save the plot. If None, the plot is not saved.
         field_name (str): name of the field to plot.
-        color_mode (str): color mode ('phi', 'u', 'curvature', 'history').
+        color_mode (str): color mode ('phi', 'u', 'history').
         title (str): title of the plot.
     """
     mid_z = _mid_plane_z(lattice)
@@ -269,22 +238,6 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
         im = ax.imshow(data_2d.T, origin='lower', cmap='inferno', vmin=vmin, vmax=vmax)
         label = r"Diffused field $u$"
 
-    elif color_mode == 'curvature':
-        curv = compute_curvature_2d(data_2d)
-        mask = (data_2d > 0.1) & (data_2d < 0.9)
-        curv_masked = np.full_like(curv, np.nan)
-        curv_masked[mask] = curv[mask]
-
-        valid_vals = curv[mask]
-        if len(valid_vals) > 0:
-            vmax = np.percentile(np.abs(valid_vals), 95)
-            vmin = -vmax
-        else:
-            vmin, vmax = -1, 1
-
-        im = ax.imshow(curv_masked.T, origin='lower', cmap='coolwarm', vmin=vmin, vmax=vmax)
-        label = r"Curvature $\kappa$"
-
     elif color_mode == 'history':
         hist = lattice.history[:, :, mid_z].astype(float)
         hist_masked = np.ma.masked_where(hist < 0, hist)
@@ -296,7 +249,6 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     ax.set_title(f"{title} - {color_mode.capitalize()}")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
-    # ax.contour(data_2d.T, levels=[0.5], colors='white', linewidths=1, origin='lower')
 
     if out_dir is not None:
         filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"
@@ -305,7 +257,7 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     
     plt.show()
 
-def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
+def _plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
                                    field_name: str, color_mode: str, title: str,
                                    iso_level: float = None):
     """
@@ -315,7 +267,7 @@ def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
         lattice (PhaseFieldLattice): custom lattice object.
         out_dir (str): output directory to save the plot. If None, the plot is not saved.
         field_name (str): name of the field to plot.
-        color_mode (str): color mode ('phi', 'u', 'curvature', 'history').
+        color_mode (str): color mode ('phi', 'u', 'history').
         title (str): title of the plot.
         iso_level (float, optional): iso-level for the marching cubes algorithm. Defaults to None
     """
@@ -337,7 +289,7 @@ def plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
         print(f"[GUI] marching_cubes failed: {e}")
         return
 
-    if color_mode in ('phi', 'u', 'curvature', 'history'):
+    if color_mode in ('phi', 'u', 'history'):
         cfield = get_field_3d(lattice, color_mode)[::stride, ::stride, ::stride]
     else:
         print(f"[GUI] Unknown color_mode='{color_mode}', Retrn...")
@@ -423,7 +375,6 @@ def plot_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     """
     mode_map = {
         'u': 'u',
-        'curvature': 'curvature',
         'history': 'history',
         'phi': 'phi'
     }
@@ -433,8 +384,7 @@ def plot_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
         plot_2d_phase_field_simulation(lattice, out_dir, field_name, color_mode=mode, title=title)
         return
     else:
-        mode = mode_map.get(color_field_name, 'phase')
-        plot_3d_phase_field_simulation(lattice, out_dir, field_name, color_mode=mode, title=title)
+        return
 
 
 # -----------------------------

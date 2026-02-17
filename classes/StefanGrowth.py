@@ -93,7 +93,6 @@ class StefanGrowth(GrowthModel):
         u[1:-1, 1:-1]   += du_dt * self.dt
 
         np.clip(phi, 0.0, 1.0, out=phi)
-        self.lattice.curvature[1:-1, 1:-1] = lap_phi
 
     def _step_3D(self):
         pass

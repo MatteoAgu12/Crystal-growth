@@ -72,8 +72,6 @@ class KobayashiGrowth(GrowthModel):
         m = self.supersaturation
         reaction = phi * (1.0 - phi) * (phi - 0.5 + m)
         rhs = divJ + reaction
-        curvature = (pad[2:, 1:-1] + pad[:-2, 1:-1] + pad[1:-1, 2:] + pad[1:-1, :-2] 
-                     - 4.0 * pad[1:-1, 1:-1])
         
         eps2_max = float(np.max(eps*eps))
         dt_max = 0.20 / (self.M * (eps2_max + 1e-12))
@@ -84,12 +82,11 @@ class KobayashiGrowth(GrowthModel):
         phi_new = np.where(phi_new > 1.0 + 1e-3, 1.0 + 1e-3, phi_new)
 
         lat.phi[:, :, z] = phi_new
-        lat.curvature[:, :, z] = curvature
         lat.update_occupied_and_history(epoch=self.epoch)
 
     def _step_3D(self):
         pass
-        
+
     def step(self):
         if self.verbose:
             print(f"\t\t[KobayashiGrowth] Starting epoch {self.epoch + 1}...")

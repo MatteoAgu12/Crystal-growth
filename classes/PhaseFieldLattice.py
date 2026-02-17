@@ -15,7 +15,6 @@ class PhaseFieldLattice(BaseLattice):
         self.phi       = np.zeros((nx, ny, nz), dtype=np.float64)
         self.u         = np.zeros((nx, ny, nz), dtype=np.float64)
         self.grid      = np.zeros((nx, ny, nz), dtype=np.uint8)
-        self.curvature = np.zeros((nx, ny, nz), dtype=np.float64)
 
         self.interface_threshold = interface_threshold
         self._seeds = []

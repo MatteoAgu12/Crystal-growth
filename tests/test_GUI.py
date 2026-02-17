@@ -37,7 +37,6 @@ class PhaseFieldStub:
     def __init__(self, phi, u=None, curvature=None, history=None):
         self.phi = phi
         self.u = u if u is not None else np.zeros_like(phi)
-        self.curvature = curvature if curvature is not None else np.zeros_like(phi)
         self.history = history if history is not None else (np.ones_like(phi, dtype=np.int64) * (-1))
         self.shape = phi.shape
 
@@ -129,10 +128,6 @@ def test_norm_for_3d_mode_history_phi_curvature():
     n2 = _norm_for_3d_mode(lat, "phi", cvals=np.array([0.2, 0.7]))
     assert n2.vmin == 0.0
     assert n2.vmax == 1.0
-
-    n3 = _norm_for_3d_mode(lat, "curvature", cvals=np.array([-2.0, 1.0, 0.0]))
-    assert n3.vmin <= 0.0 <= n3.vmax
-    assert np.isclose(abs(n3.vmin), abs(n3.vmax), rtol=1e-6)
 
 def test_default_iso_level():
     vol = np.array([[[0.0, 0.2], [0.1, 0.4]]], dtype=np.float64)

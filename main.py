@@ -154,7 +154,14 @@ def perform_DLA_simulation(input: custom_input):
         
 
 def perform_KOBAYASHI_simulation(input: custom_input):
-    LATTICE = PhaseFieldLattice(input.NX, input.NY, input.NZ, input.INTERFACE_THR, input.VERBOSE)
+    if input.THREE_DIM:
+        print(f"************************************************************************************** \
+                [MAIN LOOP] WARNING: 3D simulation is not implemented for Kobayashi and Stefan model! \
+                TERMINATING THE PROGRAM... \
+                **************************************************************************************")
+        return
+
+    LATTICE = PhaseFieldLattice(input.NX, input.NY, 1, input.INTERFACE_THR, input.VERBOSE)
 
     if input.SEEDS == 1:
         LATTICE.set_nucleation_seed(int(input.NX / 2), int(input.NY / 2), int(input.NZ / 2))
@@ -177,7 +184,7 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                             supersaturation=input.SUPERSATURATION,
                             dt=input.TIME_STEP,
                             external_flux=None,
-                            three_dim=input.THREE_DIM,
+                            three_dim=False,
                             verbose=input.VERBOSE)
 
     model.run(input.EPOCHS)
@@ -187,36 +194,43 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                                     field_name="phi",
                                     color_field_name="phi",
                                     title=input.TITLE,
-                                    three_dim=input.THREE_DIM)
+                                    three_dim=False)
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
                                     field_name="history",
                                     color_field_name="history",
                                     title=input.TITLE,
-                                    three_dim=input.THREE_DIM)
+                                    three_dim=False)
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
                                     field_name="curvature",
                                     color_field_name="curvature",
                                     title=input.TITLE,
-                                    three_dim=input.THREE_DIM)
+                                    three_dim=False)
 
     GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE+"_id", 
-                     three_dim=input.THREE_DIM, 
+                     three_dim=False, 
                      out_dir=input.OUTPUT_DIR,
                      color_mode="id")
     GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS,
                      title=input.TITLE+'_boundaries', 
-                     three_dim=input.THREE_DIM, 
+                     three_dim=False, 
                      out_dir=input.OUTPUT_DIR, 
                      color_mode="boundaries")
 
 
 def perform_STEFAN_simulation(input: custom_input):
-    LATTICE = PhaseFieldLattice(input.NX, input.NY, input.NZ, input.INTERFACE_THR, input.VERBOSE)
+    if input.THREE_DIM:
+        print(f"************************************************************************************** \
+                [MAIN LOOP] WARNING: 3D simulation is not implemented for Kobayashi and Stefan model! \
+                TERMINATING THE PROGRAM... \
+                **************************************************************************************")
+        return
+
+    LATTICE = PhaseFieldLattice(input.NX, input.NY, 1, input.INTERFACE_THR, input.VERBOSE)
     LATTICE.u[:,:,:] = input.U_INFTY
     phi = LATTICE.phi[:,:,:]
 
@@ -249,10 +263,10 @@ def perform_STEFAN_simulation(input: custom_input):
                             gamma=input.GAMMA,
                             u_eq=input.U_EQ,
                             u_infty=input.U_INFTY,
-                            enforce_dirichlet_u=True, # TODO: qui decidere se tenere o no
+                            enforce_dirichlet_u=True,
                             dt=input.TIME_STEP,
                             external_flux=None,
-                            three_dim=input.THREE_DIM,
+                            three_dim=False,
                             verbose=input.VERBOSE)
 
     model.run(input.EPOCHS)
@@ -262,36 +276,36 @@ def perform_STEFAN_simulation(input: custom_input):
                                     field_name = "phi",
                                     color_field_name="phi",
                                     title=input.TITLE,
-                                    three_dim=input.THREE_DIM)
+                                    three_dim=False)
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
                                     field_name="u",
                                     color_field_name="u",
                                     title=input.TITLE,
-                                    three_dim=input.THREE_DIM)
+                                    three_dim=False)
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
                                     field_name="history",
                                     color_field_name="history",
                                     title=input.TITLE,
-                                    three_dim=input.THREE_DIM)
+                                    three_dim=False)
     GUI.plot_phase_field_simulation(LATTICE,
                                     out_dir=input.OUTPUT_DIR,
                                     field_name="curvature",
                                     color_field_name="curvature",
                                     title=input.TITLE,
-                                    three_dim=input.THREE_DIM)
+                                    three_dim=False)
 
     GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
                      title=input.TITLE+"_id", 
-                     three_dim=input.THREE_DIM, 
+                     three_dim=False, 
                      out_dir=input.OUTPUT_DIR,
                      color_mode="id")
     GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS,
                      title=input.TITLE+'_boundaries', 
-                     three_dim=input.THREE_DIM, 
+                     three_dim=False, 
                      out_dir=input.OUTPUT_DIR, 
                      color_mode="boundaries")
 

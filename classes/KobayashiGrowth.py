@@ -88,83 +88,8 @@ class KobayashiGrowth(GrowthModel):
         lat.update_occupied_and_history(epoch=self.epoch)
 
     def _step_3D(self):
-        lat = self.lattice
-        phi = lat.phi
-
-        pad = np.pad(phi, pad_width=1, mode='edge')
-
-        phix = 0.5 * (pad[2:, 1:-1, 1:-1] - pad[:-2, 1:-1, 1:-1])
-        phiy = 0.5 * (pad[1:-1, 2:, 1:-1] - pad[1:-1, :-2, 1:-1])
-        phiz = 0.5 * (pad[1:-1, 1:-1, 2:] - pad[1:-1, 1:-1, :-2])
-
-        grad2 = phix*phix + phiy*phiy + phiz*phiz
-        mag_xy2 = phix*phix + phiy*phiy
-
-        min_grad = 1e-10
-        min_xy   = 1e-10
-        interface_mask = (phi > 1e-3) & (phi < 1.0 - 1e-3)
-
-        mask = interface_mask & (grad2 > min_grad) & (mag_xy2 > min_xy)
-
-        theta = np.zeros_like(phi, dtype=np.float64)
-        theta[mask] = np.arctan2(phiy[mask], phix[mask])
-
-        eps = np.full_like(phi, self.epsilon0, dtype=np.float64)
-        deps = np.zeros_like(phi, dtype=np.float64)
-
-        if self.delta != 0.0 and self.n_folds != 0.0:
-            mag_xy = np.sqrt(mag_xy2, dtype=np.float64)
-            mag_tot = np.sqrt(grad2, dtype=np.float64) + 1e-12
-
-            w = mag_xy / mag_tot
-            w2 = w * w
-
-            c = np.cos(self.n_folds * theta[mask])
-            s = np.sin(self.n_folds * theta[mask])
-
-            delta_eff = self.delta * w2[mask]
-
-            eps[mask]  =  self.epsilon0 * (1.0 + delta_eff * c)
-            deps[mask] = -self.epsilon0 * delta_eff * self.n_folds * s
-
-        eps = np.maximum(eps, 1e-8)
-        eps2 = eps * eps
-        mixed = eps * deps
-
-        Jx = eps2 * phix - mixed * phiy
-        Jy = eps2 * phiy + mixed * phix
-        Jz = eps2 * phiz
-
-        Jx_p = np.pad(Jx, pad_width=1, mode='edge')
-        Jy_p = np.pad(Jy, pad_width=1, mode='edge')
-        Jz_p = np.pad(Jz, pad_width=1, mode='edge')
-
-        divJ = (0.5 * (Jx_p[2:, 1:-1, 1:-1] - Jx_p[:-2, 1:-1, 1:-1]) +
-                0.5 * (Jy_p[1:-1, 2:, 1:-1] - Jy_p[1:-1, :-2, 1:-1]) +
-                0.5 * (Jz_p[1:-1, 1:-1, 2:] - Jz_p[1:-1, 1:-1, :-2]))
-
-        m = self.supersaturation
-        reaction = phi * (1.0 - phi) * (phi - 0.5 + m)
-        rhs = divJ + reaction
-
-        curvature = (pad[2:, 1:-1, 1:-1] + pad[:-2, 1:-1, 1:-1] +
-                     pad[1:-1, 2:, 1:-1] + pad[1:-1, :-2, 1:-1] +
-                     pad[1:-1, 1:-1, 2:] + pad[1:-1, 1:-1, :-2] -
-                     6.0 * pad[1:-1, 1:-1, 1:-1])
-
-        eps2_max = float(np.max(eps2))
-        dt_max = 0.13 / (self.M * (eps2_max + 1e-12))
-        dt = min(self.dt, dt_max)
-
-        phi_new = phi + (dt * self.M) * rhs
-        phi_new = np.where(phi_new < -1e-3, -1e-3, phi_new)
-        phi_new = np.where(phi_new > 1.0 + 1e-3, 1.0 + 1e-3, phi_new)
-
-        lat.phi[:, :, :] = phi_new
-        lat.curvature[:, :, :] = curvature
-
-        lat.update_occupied_and_history(epoch=self.epoch)
-
+        pass
+        
     def step(self):
         if self.verbose:
             print(f"\t\t[KobayashiGrowth] Starting epoch {self.epoch + 1}...")

@@ -1,6 +1,9 @@
 import numpy as np
 from typing import Union
 
+import logging
+logger = logging.getLogger("growthsim")
+
 class ParticleFlux:
     """
     """
@@ -28,7 +31,7 @@ class ParticleFlux:
         Initialize the external diffusive flux.
 
         Args:
-            directions (np.array or list): iterable of vectors of length 3.
+            directions (np.ndarray or list): iterable of vectors of length 3.
             strength (float): must be >= 0. If 0, anisotropy is disabled.
         """
         dirs = np.array(directions, dtype=float)
@@ -39,17 +42,23 @@ class ParticleFlux:
         if dirs.ndim != 2 or dirs.shape[1] != 3:
             self.fluxDirections = None
             self.fluxStrength = 0.0
-            print("==========================================================================\n \
-                  [ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!\n \
-                  ==========================================================================")
+            # print("==========================================================================\n \
+            #       [ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!\n \
+            #       ==========================================================================")
+            logger.warning("===========================================================================")
+            logger.warning("[ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!")
+            logger.warning("===========================================================================")
             return
 
         if strength == 0.0:
             self.fluxDirections = None
             self.fluxStrength = 0.0
-            print("==========================================================================\n \
-                  [ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!\n \
-                  ==========================================================================")
+            # print("==========================================================================\n \
+            #       [ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!\n \
+            #       ==========================================================================")
+            logger.warning("===========================================================================")
+            logger.warning("[ParticleFlux] WARNING: wrong inputs in ParticleFlux, no flux selected!")
+            logger.warning("===========================================================================")
             return
 
         norms = np.linalg.norm(dirs, axis=1)
@@ -57,9 +66,12 @@ class ParticleFlux:
         if not np.any(mask):
             self.fluxDirections = None
             self.fluxStrength = 0.0
-            print("==========================================================================\n \
-                  [ParticleFlux] WARNING: no valid directions, no flux selected!\n \
-                  ==========================================================================")
+            # print("==========================================================================\n \
+            #       [ParticleFlux] WARNING: no valid directions, no flux selected!\n \
+            #       ==========================================================================")
+            logger.warning("===========================================================================")
+            logger.warning("[ParticleFlux] WARNING: no valid directions, no flux selected!")
+            logger.warning("===========================================================================")
             return
 
         dirs = dirs[mask]
@@ -75,7 +87,7 @@ class ParticleFlux:
         self.fluxDirections = None
         self.fluxStrength = 0.0
 
-    def compute_external_flux_weights(self, direction: np.array) -> float:
+    def compute_external_flux_weights(self, direction: np.ndarray) -> float:
         """
         Return the anisotropy weight for external flux for the selected direction, based on the flux selected.
         

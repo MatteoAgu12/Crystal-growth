@@ -12,7 +12,9 @@ from classes.StefanGrowth import StefanGrowth
 
 import utils.Analysis as ANLS
 import utils.GUI as GUI
-from utils.paths import ensure_output_dir
+
+import logging 
+logger = logging.getLogger("growthsim")
 
 @dataclass
 class custom_input:
@@ -176,7 +178,7 @@ def perform_DLA_simulation(input: custom_input):
     model.run(input.EPOCHS)
 
     if input.SEEDS == 1:
-        ANLS.fractal_dimention_analysis(LATTICE, 
+        ANLS.fractal_dimension_analysis(LATTICE, 
                                         input.OUTPUT_DIR, 
                                         title=input.TITLE, 
                                         num_scales=25, 
@@ -206,10 +208,12 @@ def perform_DLA_simulation(input: custom_input):
 
 def perform_KOBAYASHI_simulation(input: custom_input):
     if input.THREE_DIM:
-        print(f"************************************************************************************** \
-                [MAIN LOOP] WARNING: 3D simulation is not implemented for Kobayashi and Stefan model! \
-                TERMINATING THE PROGRAM... \
-                **************************************************************************************")
+        logger.warning(f"""
+        **************************************************************************************
+        [MAIN LOOP] WARNING: 3D simulation is not implemented for Kobayashi and Stefan model!
+        TERMINATING THE PROGRAM...
+        **************************************************************************************
+        """)
         return
 
     LATTICE = _init_phase_field_lattice(input)
@@ -256,10 +260,12 @@ def perform_KOBAYASHI_simulation(input: custom_input):
 
 def perform_STEFAN_simulation(input: custom_input):
     if input.THREE_DIM:
-        print(f"************************************************************************************** \
-                [MAIN LOOP] WARNING: 3D simulation is not implemented for Kobayashi and Stefan model! \
-                TERMINATING THE PROGRAM... \
-                **************************************************************************************")
+        logger.warning(f"""
+        **************************************************************************************
+        [MAIN LOOP] WARNING: 3D simulation is not implemented for Kobayashi and Stefan model!
+        TERMINATING THE PROGRAM...
+        **************************************************************************************
+        """)
         return
     
     LATTICE = _init_phase_field_lattice(input)
@@ -323,7 +329,7 @@ def perform_active_surface_simulation(input: custom_input):
             LATTICE.set_nucleation_seed(x, 0, z)
 
     # Default anisotropy: we aer simulating particles coming from +y direction
-    flux = ParticleFlux(np.array([0, 1, 0]), 
+    flux = ParticleFlux(np.ndarray([0, 1, 0]), 
                         input.EXTERNAL_FLUX.fluxStrength if input.EXTERNAL_FLUX.fluxStrength > 0.0 else 5.0, 
                         input.verbose)
     

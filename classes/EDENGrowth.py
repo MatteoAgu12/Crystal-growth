@@ -4,6 +4,9 @@ from classes.KineticLattice import KineticLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.GrowthModel import GrowthModel
 
+import logging
+logger = logging.getLogger("growthsim")
+
 class EDENGrowth(GrowthModel):
     def __init__(self, lattice: KineticLattice,
                  external_flux: ParticleFlux = None, 
@@ -15,17 +18,17 @@ class EDENGrowth(GrowthModel):
     def __str__(self):
         return super().__str__()
     
-    def _choose_random_border_site(self, active_border: np.array, reference_point: np.array = None) -> Union[np.array, None]:
+    def _choose_random_border_site(self, active_border: np.ndarray, reference_point: np.ndarray = None) -> Union[np.ndarray, None]:
         """
         This function randomly selects a site from the active border.
         If a lattice with anisotropy and/or an external flux is provided, selection is biased accordingly.
 
         Args:
-            active_border (np.array): active border of the crystal, obtained via Lattoce.get_active_border().
-            reference_point (np.array, optional): point with respect to compute the anisotropy weights, default to None.
+            active_border (np.ndarray): active border of the crystal, obtained via Lattoce.get_active_border().
+            reference_point (np.ndarray, optional): point with respect to compute the anisotropy weights, default to None.
 
         Returns:
-            (np.array): coordinates of the randomly selected site of the active border.
+            (np.ndarray): coordinates of the randomly selected site of the active border.
         """
         if reference_point is not None:
             if len(reference_point) != 3 and reference_point.ndim != 1:
@@ -46,22 +49,25 @@ class EDENGrowth(GrowthModel):
         idx = self.rng.choice(len(active_border), p=weights)
         site = active_border[idx].astype(int)
         
-        if self.verbose:
-            print(f"\t\t[EDENGrowth::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
+        # if self.verbose:
+        #     print(f"\t\t[EDENGrowth::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
+        logger.debug(f"[EDENGrowth::_choose_random_border_site]: new particle in ({site[0], site[1], site[2]})")
         
         return site
     
     def step(self):
-        if self.verbose:
-            print(f"\t\t[EDENGrowth] Starting epoch {self.epoch + 1}...")
+        # if self.verbose:
+        #     print(f"\t\t[EDENGrowth] Starting epoch {self.epoch + 1}...")
+        logger.debug(f"[EDENGrowth] Starting epoch {self.epoch + 1}...")
 
         candidates = self.lattice.get_active_border()
         if candidates.size == 0:
-            print(f"""
-            ##############################################################
-            [EDENGrowth] WARNING: at step {self.epoch} no active border has been found!
-            Skipped...
-            ##############################################################""")
+            #print(f"""
+            ###############################################################
+            #[EDENGrowth] WARNING: at step {self.epoch} no active border has been found!
+            #Skipped...
+            ###############################################################""")
+            logger.warning("[EDENGrowth] WARNING: at step %d no active border has been found!", self.epoch)
             return
         
         (xmin, xmax), (ymin, ymax), (zmin, zmax) = self.lattice.get_crystal_bounding_box()
@@ -73,10 +79,13 @@ class EDENGrowth(GrowthModel):
                 gid = self.lattice.get_group_id(nx, ny, nz)
                 self.lattice.occupy(*new_site, epoch=self.epoch, id=gid)
     
-                if self.verbose:
-                    print(f"\t\t[EDENGrowth] Attached at {new_site} (Id: {gid})")
-                    print(f"\t\t[EDENGrowth] Finished epoch {self.epoch + 1}!\n \
-                            _____________________________________________________________")
+                # if self.verbose:
+                #     print(f"\t\t[EDENGrowth] Attached at {new_site} (Id: {gid})")
+                #     print(f"\t\t[EDENGrowth] Finished epoch {self.epoch + 1}!\n \
+                #             _____________________________________________________________")
+                logger.debug("[EDENGrowth] Attached at %s (Id: %d)", new_site, gid)
+                logger.debug("[EDENGrowth] Finished epoch %d!", self.epoch + 1)
+                logger.debug("_____________________________________________________________")
                 return
 
 

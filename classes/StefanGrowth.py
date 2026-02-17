@@ -3,6 +3,9 @@ from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.GrowthModel import GrowthModel
 from classes.ParticleFlux import ParticleFlux
 
+import logging
+logger = logging.getLogger("growthsim")
+
 class StefanGrowth(GrowthModel):
     """
     """
@@ -98,8 +101,9 @@ class StefanGrowth(GrowthModel):
         pass
 
     def step(self):
-        if self.verbose:
-            print(f"\t\t[StefanGrowth] Starting epoch {self.epoch + 1}...")
+        # if self.verbose:
+        #     print(f"\t\t[StefanGrowth] Starting epoch {self.epoch + 1}...")
+        logger.debug(f"[StefanGrowth] Starting epoch {self.epoch + 1}...")
 
         if self.three_dim:
             self._step_3D()
@@ -108,5 +112,6 @@ class StefanGrowth(GrowthModel):
         
         self.lattice.update_occupied_and_history(epoch=self.epoch)
 
-        if self.verbose:
-            print(f"\t\t[StefanGrowth] Finished epoch {self.epoch + 1}!")
+        # if self.verbose:
+        #     print(f"\t\t[StefanGrowth] Finished epoch {self.epoch + 1}!")
+        logger.debug(f"[StefanGrowth] Finished epoch {self.epoch + 1}!")

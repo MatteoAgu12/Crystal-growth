@@ -3,6 +3,9 @@ from classes.KineticLattice import KineticLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.GrowthModel import GrowthModel
 
+import logging
+logger = logging.getLogger("growthsim")
+
 class DLAGrowth(GrowthModel):
     def __init__(self, lattice: KineticLattice,
                  generation_padding: int,
@@ -22,7 +25,7 @@ class DLAGrowth(GrowthModel):
         self.steps = []
         self.restarts = []
 
-        print(self.__str__())
+        logger.debug("%s", self)
     
     def __str__(self):
         return f"""
@@ -35,7 +38,7 @@ class DLAGrowth(GrowthModel):
         -------------------------------------------------------------
         """
 
-    def _generate_random_point_on_box(self, bounding_box: list) -> np.array:
+    def _generate_random_point_on_box(self, bounding_box: list) -> np.ndarray:
         """
         Generates a random point on the surface of the bounding box.
         """
@@ -55,7 +58,7 @@ class DLAGrowth(GrowthModel):
 
         return point
     
-    def _particle_random_walk(self, initial_coordinate: np.array, outer_allowed_bounding_box: list,
+    def _particle_random_walk(self, initial_coordinate: np.ndarray, outer_allowed_bounding_box: list,
                               max_steps: int = 5000):
         """
         Performs the random walk for a single particle.
@@ -91,13 +94,15 @@ class DLAGrowth(GrowthModel):
                     gid = self.lattice.get_group_id(nx, ny, nz)
                     self.lattice.occupy(*position, epoch=self.epoch, id=gid)
 
-                    if self.verbose:
-                        print(f"\t\t\t[DLAGrowth] Attached at {position} (Steps: {total_steps}, Restarts: {restarts})")
+                    # if self.verbose:
+                    #     print(f"\t\t\t[DLAGrowth] Attached at {position} (Steps: {total_steps}, Restarts: {restarts})")
+                    logger.debug(f"[DLAGrowth] Attached at {position} (Steps: {total_steps}, Restarts: {restarts})")
                     return
 
     def step(self):
-        if self.verbose:
-            print(f"\t\t[DLAGrowth] Starting epoch {self.epoch + 1}...")
+        # if self.verbose:
+        #     print(f"\t\t[DLAGrowth] Starting epoch {self.epoch + 1}...")
+        logger.debug(f"[DLAGrowth] Starting epoch {self.epoch + 1}...")
 
         generation_box = self.lattice.get_crystal_bounding_box(padding=self.generation_padding)
         outer_box = self.lattice.get_crystal_bounding_box(padding=self.outer_limit_padding)
@@ -106,6 +111,8 @@ class DLAGrowth(GrowthModel):
         start = self._generate_random_point_on_box(generation_box)
         self._particle_random_walk(start, outer_box)
 
-        if self.verbose:
-            print(f"\t\t[DLAGrowth] Finished epoch {self.epoch + 1}!\n \
-                    \t\t_____________________________________________________________")
+        # if self.verbose:
+        #     print(f"\t\t[DLAGrowth] Finished epoch {self.epoch + 1}!\n \
+        #             \t\t_____________________________________________________________")
+        logger.debug("\t\t[DLAGrowth] Finished epoch %d! \
+                      \t\t_____________________________________________________________", self.epoch + 1)

@@ -3,6 +3,9 @@ import itertools
 from typing import Union
 from classes.BaseLattice import BaseLattice
 
+import logging
+logger = logging.getLogger("growthsim")
+
 class KineticLattice(BaseLattice):
     """
     """
@@ -18,7 +21,8 @@ class KineticLattice(BaseLattice):
             raise ValueError('ERROR: the size of the lattice must be an integer bigger or equal to zero!')
 
         self.grid    = np.zeros(self.shape, dtype=np.uint8)
-        print(self.__str__())
+        # print(self.__str__())
+        logger.debug("%s", self)
 
     def __str__(self):
         return super().__str__()
@@ -107,12 +111,12 @@ class KineticLattice(BaseLattice):
             self.occupy(x, y, z, epoch=0, id=self.group_counter)
             self.initial_seeds.append((x, y, z))
     
-    def get_nucleation_seeds(self) -> np.array:
+    def get_nucleation_seeds(self) -> np.ndarray:
         """
         This function returns the initial nucleation seeds.
 
         Returns:
-            np.array: array containing all the initial nucleation seeds.
+            np.ndarray: array containing all the initial nucleation seeds.
         """
         return np.array(self.initial_seeds)
     
@@ -122,7 +126,7 @@ class KineticLattice(BaseLattice):
         The active border is the set of all empty cells having at least one occupied cell as neighbor.
 
         Returns:
-            (np.array): array containing the points that form the active border
+            (np.ndarray): array containing the points that form the active border
         """
         active_set = set()
                 

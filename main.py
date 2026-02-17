@@ -1,4 +1,6 @@
 from utils.ArgParser import parse_inputs
+from utils.logger import setup_logging
+from utils.paths import ensure_output_dir
 import simulations as SIM 
 
 if __name__ == '__main__':
@@ -59,7 +61,9 @@ if __name__ == '__main__':
                                         SUPERSATURATION=supersaturation,
                                         TIME_STEP=time_step)
     
-    print(simulation_input)
+    logger = setup_logging(verbose=simulation_input.VERBOSE, log_file=f"{simulation_input.OUTPUT_DIR}/run.log")
+    logger.info("Starting simulation: %s", simulation_input.SIMULATION)
+    logger.debug("Config:\n%s", simulation_input)
 
     # ================================================================
     # Run the desired simulation
@@ -77,7 +81,9 @@ if __name__ == '__main__':
         SIM.perform_STEFAN_simulation(simulation_input)
 
     else:
-        print(f"***************************************************************************** \
-                [MAIN LOOP] ERROR: simulation mode {SIMULATION} is not a valid option! \
-                TERMINATING THE PROGRAM... \
-                *****************************************************************************")
+        logger.error("""
+        *****************************************************************************
+        [MAIN LOOP] ERROR: simulation mode %s is not a valid option!
+        TERMINATING THE PROGRAM...
+        *****************************************************************************
+        """, SIMULATION)

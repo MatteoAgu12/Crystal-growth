@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 
 from classes.KineticLattice import KineticLattice
 
+import logging
+logger = logging.getLogger("growthsim")
+
 def compute_fractal_dimention(lattice: KineticLattice, min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
                            three_dim: bool = True) -> tuple:
     """
@@ -46,7 +49,7 @@ def compute_fractal_dimention(lattice: KineticLattice, min_box_size : int = 2, m
     
     return (D, sizes, counts)
 
-def fractal_dimention_analysis(lattice: KineticLattice, output_dir: str, title: str,
+def fractal_dimension_analysis(lattice: KineticLattice, output_dir: str, title: str,
                                min_box_size : int = 2, max_box_size: int = None, num_scales: int = 10, 
                                three_dim: bool = True, verbose: bool = True):
     """
@@ -65,8 +68,10 @@ def fractal_dimention_analysis(lattice: KineticLattice, output_dir: str, title: 
     D, sizes, counts = compute_fractal_dimention(lattice, min_box_size=min_box_size, max_box_size=max_box_size, num_scales=num_scales, 
                                                  three_dim=three_dim)
     
-    print("\nAnalysis of the Hausdorff (fractal) dimention completed!")
-    print(f"Computed fractal dimention: {D:.4f}")
+    # print("\nAnalysis of the Hausdorff (fractal) dimention completed!")
+    # print(f"Computed fractal dimention: {D:.4f}")
+    logger.info("Analysis of the Hausdorff (fractal) dimention completed!")
+    logger.info("Computed fractal dimention: %.4f", D)
 
     plt.figure()
     plt.title("Hausdorff dimention of the generated crystal")
@@ -81,7 +86,8 @@ def fractal_dimention_analysis(lattice: KineticLattice, output_dir: str, title: 
     filename = output_dir + title + "Hausdorff_dimention.png"
     plt.savefig(filename)
         
-    print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
+    # print(f"\nImage of Hausdorff estimation analysis saved as {filename}.")
+    logger.info("Image of Hausdorff estimation analysis saved as %s.", filename)
 
 def distance_from_active_surface(lattice: KineticLattice, output_dir: str, N_epochs: int, verbose: bool = True):
     history = lattice.history
@@ -97,7 +103,8 @@ def distance_from_active_surface(lattice: KineticLattice, output_dir: str, N_epo
                 
         distance[epoch] = max_distance
             
-    print("\nAnalysis of the distance of the farest cell from the active surface as function of time completed!")
+    # print("\nAnalysis of the distance of the farest cell from the active surface as function of time completed!")
+    logger.info("Analysis of the distance of the farest cell from the active surface as function of time completed!")
 
     plt.figure()
     plt.title("Farest occupied cell VS time")
@@ -109,7 +116,8 @@ def distance_from_active_surface(lattice: KineticLattice, output_dir: str, N_epo
     filename = output_dir + "Active_surface_distance.png"
     plt.savefig(filename)
         
-    print(f"Plot of distance of the farest cell from the active surface as function of time saved as {filename}.")       
+    # print(f"Plot of distance of the farest cell from the active surface as function of time saved as {filename}.")       
+    logger.info("Plot of distance of the farest cell from the active surface as function of time saved as %s.", filename)
 
 def anisotropy_histogram(lattice: KineticLattice, out_dir: str, epoch: int = -1, bins: int = 50):
     """
@@ -123,7 +131,8 @@ def anisotropy_histogram(lattice: KineticLattice, out_dir: str, epoch: int = -1,
     """
     stats = lattice.anisotropy_stats
     if not stats["a_s"]:
-        print("WARNING: no anisotropy statistics recorded!")
+        #print("WARNING: no anisotropy statistics recorded!")
+        logger.warning("WARNING: no anisotropy statistics recorded!")
         return
     
     values = np.array(stats["a_s"][epoch]).flatten()
@@ -136,5 +145,6 @@ def anisotropy_histogram(lattice: KineticLattice, out_dir: str, epoch: int = -1,
     filename = out_dir + "Anisotropy_diagnostic_histo.png"
     plt.savefig(filename)
         
-    print(f"Diagnostic histogram of the anisotropy saved as {filename}.")  
+    # print(f"Diagnostic histogram of the anisotropy saved as {filename}.")  
+    logger.info("Diagnostic histogram of the anisotropy saved as %s.", filename)
         

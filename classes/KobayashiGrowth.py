@@ -3,6 +3,9 @@ from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.GrowthModel import GrowthModel
 from classes.ParticleFlux import ParticleFlux
 
+import logging
+logger = logging.getLogger("growthsim")
+
 class KobayashiGrowth(GrowthModel):
     """
     """
@@ -25,7 +28,8 @@ class KobayashiGrowth(GrowthModel):
         self.n_folds = n_folds
         self.supersaturation = supersaturation
 
-        print(self.__str__())
+        # print(self.__str__())
+        logger.debug("%s", self)
 
     def __str__(self):
         return (f"[KobayashiGrowth] dt={self.dt}, M={self.M}, eps0={self.epsilon0}, "
@@ -88,8 +92,9 @@ class KobayashiGrowth(GrowthModel):
         pass
 
     def step(self):
-        if self.verbose:
-            print(f"\t\t[KobayashiGrowth] Starting epoch {self.epoch + 1}...")
+        # if self.verbose:
+        #     print(f"\t\t[KobayashiGrowth] Starting epoch {self.epoch + 1}...")
+        logger.debug("[KobayashiGrowth] Starting epoch %d...", self.epoch + 1)
 
         if self.three_dim:
             self._step_3D()
@@ -98,8 +103,10 @@ class KobayashiGrowth(GrowthModel):
 
         self.lattice.update_occupied_and_history(epoch=self.epoch)
 
-        if self.verbose:
-            print(f"\t\t[KobayashiGrowth] Finished epoch {self.epoch + 1}!\n \
-                    _____________________________________________________________")
+        # if self.verbose:
+        #     print(f"\t\t[KobayashiGrowth] Finished epoch {self.epoch + 1}!\n \
+        #             _____________________________________________________________")
+        logger.debug("[KobayashiGrowth] Finished epoch %d!", self.epoch + 1)
+        logger.debug("_____________________________________________________________")
 
 

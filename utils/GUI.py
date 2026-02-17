@@ -14,10 +14,13 @@ from classes.BaseLattice import BaseLattice
 from classes.KineticLattice import KineticLattice
 from classes.PhaseFieldLattice import PhaseFieldLattice
 
+import logging
+logger = logging.getLogger("growthsim")
+
 # -----------------------------
 # Masks / lattice helpers
 # -----------------------------
-def get_visible_voxels_binary_mask(lattice: KineticLattice) -> np.array:
+def get_visible_voxels_binary_mask(lattice: KineticLattice) -> np.ndarray:
     """
     Function that creates a binary mask based on the lattice occupation.
     This function creates a mask that when applied to the lattice shows only the occupied cells not
@@ -30,7 +33,7 @@ def get_visible_voxels_binary_mask(lattice: KineticLattice) -> np.array:
         lattice (KineticLattice): custom lattice object
 
     Returns:
-        np.array: binary 3D mask. The cell is True if it is going to be plotted, False elsewhere.
+        np.ndarray: binary 3D mask. The cell is True if it is going to be plotted, False elsewhere.
     """
     occ = lattice.grid.astype(bool)
     p = np.pad(occ, ((1, 1), (1, 1), (1, 1)), mode='constant', constant_values=False)
@@ -46,7 +49,7 @@ def get_visible_voxels_binary_mask(lattice: KineticLattice) -> np.array:
     visible = occ & (~neighbors_all_occupied)
     return visible
 
-def get_grain_boundaries_mask(lattice: BaseLattice) -> np.array:
+def get_grain_boundaries_mask(lattice: BaseLattice) -> np.ndarray:
     """
     Creates a binary mask that identifies voxels (or pixels) at the edge between two or more cristalline domains.
 
@@ -54,7 +57,7 @@ def get_grain_boundaries_mask(lattice: BaseLattice) -> np.array:
         lattice (BaseLattice): custom lattice object.
 
     Returns:
-        np.array: binary mask.
+        np.ndarray: binary mask.
     """
     ids = lattice.group_id
     occupied = ids > 0
@@ -86,7 +89,7 @@ def _mid_plane_z(lattice: BaseLattice) -> int:
         lattice (BaseLattice): custom lattice object.
 
     Returns:
-        np.array: coordinate of the z hieght to inspect.
+        np.ndarray: coordinate of the z hieght to inspect.
     """
     return 0 if lattice.shape[2] == 1 else lattice.shape[2] // 2
 
@@ -94,7 +97,7 @@ def _mid_plane_z(lattice: BaseLattice) -> int:
 # -----------------------------
 # Field / normalization helpers
 # -----------------------------
-def get_field_3d(lattice: PhaseFieldLattice, field_name: str) -> np.array:
+def get_field_3d(lattice: PhaseFieldLattice, field_name: str) -> np.ndarray:
     """
     Function that determines which continuous field to analyse.
 
@@ -103,7 +106,7 @@ def get_field_3d(lattice: PhaseFieldLattice, field_name: str) -> np.array:
         field_name (str): name of the field
 
     Returns:
-        np.array: array of the requested field.
+        np.ndarray: array of the requested field.
     """
     if not hasattr(lattice, field_name):
         raise ValueError(f"[GUI] lattice has no field '{field_name}'")
@@ -119,7 +122,7 @@ def _get_data_2d_by_name(lattice: PhaseFieldLattice, field_name: str, mid_z: int
         mid_z (int): z index of the mid-plane.
 
     Returns:
-        np.array | None: 2D array of the requested field, or None if unknown
+        np.ndarray | None: 2D array of the requested field, or None if unknown
     """
     if field_name == 'phi':
         return lattice.phi[:, :, mid_z]
@@ -127,7 +130,8 @@ def _get_data_2d_by_name(lattice: PhaseFieldLattice, field_name: str, mid_z: int
         return lattice.u[:, :, mid_z]
     if field_name == 'history':
         return lattice.history[:, :, mid_z]
-    print(f"[GUI] Error: Unknown field {field_name}")
+    # print(f"[GUI] Error: Unknown field {field_name}")
+    logger.warning(f"[GUI] Error: Unknown field {field_name}")
     return None
 
 def _cmap_name_for_mode(color_mode: str | None) -> str:
@@ -253,7 +257,8 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     if out_dir is not None:
         filename = out_dir + '/' + title.replace(" ", "_") + '_' + color_mode + ".png"
         plt.savefig(filename, bbox_inches='tight')
-        print(f"Phase Field image saved as {filename}!")
+        # print(f"Phase Field image saved as {filename}!")
+        logger.info("Phase Field image saved as %s!", filename)
     
     plt.show()
 
@@ -286,13 +291,15 @@ def _plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
             vol, level=float(iso_level), spacing=(stride, stride, stride)
         )
     except Exception as e:
-        print(f"[GUI] marching_cubes failed: {e}")
+        # print(f"[GUI] marching_cubes failed: {e}")
+        logger.warning("[GUI] marching_cubes failed: %s", e)
         return
 
     if color_mode in ('phi', 'u', 'history'):
         cfield = get_field_3d(lattice, color_mode)[::stride, ::stride, ::stride]
     else:
-        print(f"[GUI] Unknown color_mode='{color_mode}', Retrn...")
+        # print(f"[GUI] Unknown color_mode='{color_mode}', Retrn...")
+        logger.warning("[GUI] Unknown color_mode='%s', Return...", color_mode)
         return
 
     coords = np.vstack([verts[:, 0], verts[:, 1], verts[:, 2]])
@@ -356,7 +363,8 @@ def _plot_3d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     if out_dir is not None:
         filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"
         plt.savefig(filename, bbox_inches='tight')
-        print(f"Phase Field image saved as {filename}!")
+        # print(f"Phase Field image saved as {filename}!")
+        logger.info("Phase Field image saved as %s!", filename)
     
     plt.show()
 
@@ -565,7 +573,8 @@ def plot_kinetic_lattice(lattice: KineticLattice, N_epochs: int, title: str,
         pass
 
     else:
-        print(f"Crystal not plot: you choose color_mode = {color_mode}. The only accepted are [epoch, id, boundaries].")
+        # print(f"Crystal not plot: you choose color_mode = {color_mode}. The only accepted are [epoch, id, boundaries].")
+        logger.warning("Crystal not plot: you choose color_mode = %s. The only accepted are [epoch, id, boundaries].", color_mode)
         return
 
     if three_dim:
@@ -645,6 +654,7 @@ def plot_kinetic_lattice(lattice: KineticLattice, N_epochs: int, title: str,
     if out_dir is not None:
         filename = out_dir + '/' + title.replace(" ", "_") + ".png"
         plt.savefig(filename, bbox_inches='tight')
-        print(f"KineticLattice image saved as {filename}!")
+        # print(f"KineticLattice image saved as {filename}!")
+        logger.info("KineticLattice image saved as %s!", filename)
 
     plt.show()

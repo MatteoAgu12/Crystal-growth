@@ -1,6 +1,9 @@
 import numpy as np 
 from classes.BaseLattice import BaseLattice
 
+import logging
+logger = logging.getLogger("growthsim")
+
 class PhaseFieldLattice(BaseLattice):
     """
     """
@@ -19,7 +22,8 @@ class PhaseFieldLattice(BaseLattice):
         self.interface_threshold = interface_threshold
         self._seeds = []
 
-        print(self.__str__())
+        # print(self.__str__())
+        logger.debug("%s", self)
 
     def __str__(self):
         return (f"[PhaseFieldLattice] size={self.shape}, "
@@ -58,8 +62,9 @@ class PhaseFieldLattice(BaseLattice):
 
         self.update_occupied_and_history(epoch=0)
 
-        if self.verbose:
-            print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
+        # if self.verbose:
+        #     print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
+        logger.debug(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
 
     def set_nucleation_seed(self, x: int, y: int, z: int,
                             radius: float = 5.0, width: float = 1.5,
@@ -86,8 +91,9 @@ class PhaseFieldLattice(BaseLattice):
 
         self.update_occupied_and_history(epoch=0)
 
-        if self.verbose:
-            print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
+        # if self.verbose:
+        #     print(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
+        logger.debug(f"[PhaseFieldLattice::set_nucleation_seed] seed at ({x},{y},{z})")
 
     def update_occupied_and_history(self, epoch: int):
         thr = self.interface_threshold

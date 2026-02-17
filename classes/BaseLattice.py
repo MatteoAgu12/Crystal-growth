@@ -41,7 +41,7 @@ class BaseLattice(ABC):
         nx, ny, nz = self.shape
         return (0 <= x < nx) and (0 <= y < ny) and (0 <= z < nz)
         
-    def get_neighbors(self, x: int, y: int, z: int) -> np.array:
+    def get_neighbors(self, x: int, y: int, z: int) -> np.ndarray:
         """
         Function that returns the coordinates of the six cells around the selected one (only adjecent cells, not diagonally).
         
@@ -51,7 +51,7 @@ class BaseLattice(ABC):
             z (int): z coordinate of the point to check the neighbors
             
         Returns:
-            (np.array): array containing the coordinates of the six cell neighbors
+            (np.ndarray): array containing the coordinates of the six cell neighbors
         """
         directions = [
             (1, 0, 0), (-1, 0, 0),  # x-axis

@@ -13,6 +13,7 @@ from classes.StefanGrowth import StefanGrowth
 from utils.ArgParser import parse_inputs
 import utils.Analysis as ANLS
 import utils.GUI as GUI
+from utils.paths import ensure_output_dir
 
 @dataclass
 class custom_input:
@@ -60,38 +61,38 @@ class custom_input:
             Verbose:          {self.VERBOSE}
             --------------------------------
             """
-        
-        return f"""
-        ===============================
-        {self.SIMULATION} Simulation Settings:
-        ===============================
-        GLOBAL PARAMETERS:
-        Size:             ({self.NX}, {self.NY}, {self.NZ})
-        Seeds:            {self.SEEDS}
-        Epochs:           {self.EPOCHS}
-        Dimensions:       {3 if self.THREE_DIM else 2}
-        Title:            {self.TITLE}
-        Output Dir:       {self.OUTPUT_DIR}
-        Flux Direction:   {self.EXTERNAL_FLUX}
-        Verbose:          {self.VERBOSE}
-        --------------------------------
+        else:
+            return f"""
+            ===============================
+            {self.SIMULATION} Simulation Settings:
+            ===============================
+            GLOBAL PARAMETERS:
+            Size:             ({self.NX}, {self.NY}, {self.NZ})
+            Seeds:            {self.SEEDS}
+            Epochs:           {self.EPOCHS}
+            Dimensions:       {3 if self.THREE_DIM else 2}
+            Title:            {self.TITLE}
+            Output Dir:       {self.OUTPUT_DIR}
+            Flux Direction:   {self.EXTERNAL_FLUX}
+            Verbose:          {self.VERBOSE}
+            --------------------------------
 
-        Phase Field Parameters:
-        Interface Thr:    {self.INTERFACE_THR}
-        Epsilon:          {self.EPSILON}
-        Delta:            {self.DELTA}
-        N Folds:          {self.N_FOLDS}
-        Alpha:            {self.ALPHA}
-        U_eq:             {self.U_EQ}
-        U_infty:          {self.U_INFTY}
-        Latent Coef:      {self.LATENT_COEF}
-        Gamma:            {self.GAMMA}
-        Diffusivity:      {self.DIFFUSIVITY}
-        Mobility:         {self.MOBILITY}
-        Supersaturation:  {self.SUPERSATURATION}
-        Time Step:        {self.TIME_STEP}
-        --------------------------------
-        """
+            Phase Field Parameters:
+            Interface Thr:    {self.INTERFACE_THR}
+            Epsilon:          {self.EPSILON}
+            Delta:            {self.DELTA}
+            N Folds:          {self.N_FOLDS}
+            Alpha:            {self.ALPHA}
+            U_eq:             {self.U_EQ}
+            U_infty:          {self.U_INFTY}
+            Latent Coef:      {self.LATENT_COEF}
+            Gamma:            {self.GAMMA}
+            Diffusivity:      {self.DIFFUSIVITY}
+            Mobility:         {self.MOBILITY}
+            Supersaturation:  {self.SUPERSATURATION}
+            Time Step:        {self.TIME_STEP}
+            --------------------------------
+            """
 
 
 def perform_EDEN_simulation(input: custom_input):
@@ -378,7 +379,7 @@ if __name__ == '__main__':
     is_3D         = not parsed_inputs.two_dim
     title         = parsed_inputs.title
     verbose       = parsed_inputs.verbose
-    out_dir       = None if parsed_inputs.output == "" else parsed_inputs.output
+    out_dir       = ensure_output_dir(parsed_inputs.output, SIMULATION)
     external_flux = ParticleFlux(parsed_inputs.external_flux,
                                  parsed_inputs.flux_strength,
                                  parsed_inputs.verbose) if parsed_inputs.external_flux is not None else None
@@ -401,7 +402,7 @@ if __name__ == '__main__':
     # ================================================================
     # Creating the input objects
     # ================================================================
-    simulation_input = custom_input(SIMULATION=SIMULATION
+    simulation_input = custom_input(SIMULATION=SIMULATION,
                                     NX=nx, NY=ny, NZ=nz,
                                     SEEDS=seeds,
                                     EPOCHS=epochs, 

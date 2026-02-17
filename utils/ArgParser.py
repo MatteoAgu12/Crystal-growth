@@ -24,18 +24,17 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     | The following parameters are essentials and cannot be omitted:           |
     |    * epochs                                                              |      
     |    * size                                                                |   
-    |    * simulation                                                          |      
-    |    * output                                                              |
+    |    * simulation                                                          |
     |                                                                          |  
     |==========================================================================|
     """
 
     if (not hasattr(parsed_input, 'epochs') 
         or not hasattr(parsed_input, 'size') 
-        or not hasattr(parsed_input, 'simulation') 
-        or not hasattr(parsed_input, 'output')):    
+        or not hasattr(parsed_input, 'simulation')): 
             raise ValueError(f"{failure_message}")
 
+    if not hasattr(parsed_input, 'output'):               parsed_input.output = None
     if not hasattr(parsed_input, 'two_dim'):              parsed_input.two_dim = False
     if not hasattr(parsed_input, "seeds"):                parsed_input.seeds = 1
     if not hasattr(parsed_input, 'title'):                parsed_input.title = "Crystal lattice"
@@ -86,11 +85,6 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
         \tWith {parsed_input.seeds} some will be repeted.
         ************************************************************************
         """)
-
-    # Output Directory
-    if parsed_input.output != "":
-        if not os.path.isdir(parsed_input.output):
-            raise ValueError(f"ERROR: The output directory '{parsed_input.output}' does not exist.")
 
     # External Flux Logic
     if parsed_input.external_flux is not None:
@@ -249,7 +243,38 @@ def parse_inputs() -> argparse.Namespace:
     if len(sys.argv) == 2 and sys.argv[1].endswith(".ini"):
         parsed_input = parse_inputs_from_file_ini(sys.argv[1])
     else:
-        raise ValueError(f"FATAL ERROR: input {[sys.argv[1:]]} was not a correct file .ini")
+        raise ValueError(f"""
+    *************************************************************************
+    * ERROR: No valid input file provided.                                  *
+    * Please provide a .ini configuration file as a command line argument,  *
+    * e.g.: python main.py config.ini                                       *
+    *                                                                       *
+    * Example of a valid config.ini file:                                   *
+    * --------------------------------                                      *
+    *   # Simulation settings                                               *
+    *   simulation = KOBAYASHI                                              *
+    *   size = 100 100 100                                                  *
+    *   seeds = 5                                                           *
+    *   epochs = 1000                                                       *
+    *   output = ./output/                                                  *
+    *   verbose = True                                                      *
+    *                                                                       *
+    *   # Kobayashi model parameters                                        *
+    *   interface_thr = 0.5                                                 *
+    *   epsilon0 = 1.0                                                      *
+    *   delta = 0.2                                                         *
+    *   n_folds = 4                                                         *
+    *   alpha = 0.9                                                         *
+    *   u_equilibrium = 0.5                                                 *
+    *   u_infinity = 0.0                                                    *
+    *   diffusivity = 1.0                                                   *
+    *   mobility = 1.0                                                      *
+    *   supersaturation = 0.2                                               *
+    *   latent_coef = 1.0                                                   *
+    *   gamma = 10.0                                                        *
+    *   dt = 1e-4                                                           *
+    *************************************************************************
+        """)
     
     # Checks the inputs
     check_parsed_inputs(parsed_input)

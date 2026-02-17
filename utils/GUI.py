@@ -251,7 +251,7 @@ def plot_2d_phase_field_simulation(lattice: PhaseFieldLattice, out_dir: str,
     ax.set_ylabel("Y")
 
     if out_dir is not None:
-        filename = out_dir + title.replace(" ", "_") + '_' + color_mode + ".png"
+        filename = out_dir + '/' + title.replace(" ", "_") + '_' + color_mode + ".png"
         plt.savefig(filename, bbox_inches='tight')
         print(f"Phase Field image saved as {filename}!")
     
@@ -643,7 +643,7 @@ def plot_kinetic_lattice(lattice: KineticLattice, N_epochs: int, title: str,
     plt.tight_layout()
 
     if out_dir is not None:
-        filename = out_dir + title.replace(" ", "_") + ".png"
+        filename = out_dir + '/' + title.replace(" ", "_") + ".png"
         plt.savefig(filename, bbox_inches='tight')
         print(f"KineticLattice image saved as {filename}!")
 

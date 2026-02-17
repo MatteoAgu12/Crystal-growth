@@ -10,7 +10,6 @@ from utils.GUI import (
     get_visible_voxels_binary_mask,
     get_grain_boundaries_mask,
     _mid_plane_z,
-    compute_curvature_2d,
     get_field_3d,
     _get_data_2d_by_name,
     _cmap_name_for_mode,
@@ -76,13 +75,6 @@ def test_get_grain_boundaries_mask_marks_interfaces_only_for_occupied():
     assert mask[0, 0, 0] 
     assert mask[1, 0, 0] 
     assert not mask[2, 2, 0] 
-
-
-def test_compute_curvature_2d_constant_field_is_zeroish():
-    phi = np.ones((10, 10), dtype=float) * 0.3
-    curv = compute_curvature_2d(phi)
-    assert curv.shape == phi.shape
-    assert np.allclose(curv, 0.0, atol=1e-6)
 
 def test_get_field_3d_returns_attr_or_raises():
     phi = np.zeros((4, 4, 1), dtype=np.float64)

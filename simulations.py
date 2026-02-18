@@ -54,6 +54,15 @@ def create_gif(frame_files: list[str], outdir: str, title: str):
 
     logger.info(f"[GIF generation] GIF successfully saved as {gif_path}")
 
+    logger.info("[GIF generation] Cleaning the temporary frames...")
+    for i, filename in enumerate(frame_files):
+        if i == len(frame_files)-1:
+            pass
+        try:
+            os.remove(filename)
+        except OSError as e:
+            logger.warning(f"[GIF generation] cannot remove file {filename}: {e}")
+    logger.info("[GIF generation] Cache freed!")
 # TODO: end tmp
 
 @dataclass

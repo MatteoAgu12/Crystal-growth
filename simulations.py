@@ -1,7 +1,11 @@
+import os
 import numpy as np
 from dataclasses import dataclass
 from typing import Union
+import matplotlib.pyplot as plt
+import imageio.v2 as imageio
 
+from classes.BaseLattice import BaseLattice
 from classes.KineticLattice import KineticLattice
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.ParticleFlux import ParticleFlux
@@ -15,6 +19,42 @@ import utils.GUI as GUI
 
 import logging 
 logger = logging.getLogger("growthsim")
+
+# TODO: tmp, forse da spostare
+def save_frame_phase_field(lattice: BaseLattice, epoch: int, frame_dir: str, frame_list: list) -> str:
+    z = 0 if lattice.shape[2] == 1 else lattice.shape[2] // 2
+
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+    axs[0].imshow(lattice.phi[:,:,z].T, origin='lower', cmap='gray_r', vmin=0, vmax=1)
+    axs[0].set_title(r"Crystal field ($\phi$)")
+
+    axs[1].imshow(lattice.u[:,:,z].T, origin='lower', cmap='inferno', vmin=0, vmax=1)
+    axs[1].set_title(r"Diffused field ($u$)")
+
+    hist = lattice.history[:,:,z].astype(float)
+    hist_masked = np.ma.masked_where(hist < 0, hist)
+    axs[2].imshow(hist_masked.T, origin='lower', cmap='turbo')
+    axs[2].set_title(r"Occupation history")
+
+    filepath = os.path.join(frame_dir, f"frame_{epoch:05d}.png")
+    plt.savefig(filepath, bbox_inches='tight')
+    plt.close(fig)
+
+    frame_list.append(filepath)
+
+def create_gif(frame_files: list[str], outdir: str, title: str):
+    logger.info("[GIF generation] generating the GIF...")
+    gif_path = os.path.join(outdir, f"{title}_growth.gif")
+
+    with imageio.get_writer(gif_path, mode='I', duration=0.1) as writer:
+        for filename in frame_files:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+
+    logger.info(f"[GIF generation] GIF successfully saved as {gif_path}")
+
+# TODO: end tmp
 
 @dataclass
 class custom_input:
@@ -280,20 +320,25 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                             three_dim=False,
                             verbose=input.VERBOSE)
 
-    model.run(input.EPOCHS)
+    save_freq = 50 # TODO: input
+    frame_list = []
+    model.run(input.EPOCHS, callback=save_frame_phase_field, 
+              save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)
+    if frame_list:
+        create_gif(frame_list, input.OUTPUT_DIR, input.TITLE)
     
-    GUI.plot_phase_field_simulation(LATTICE,
-                                    out_dir=input.OUTPUT_DIR,
-                                    field_name="phi",
-                                    color_field_name="phi",
-                                    title=input.TITLE,
-                                    three_dim=False)
-    GUI.plot_phase_field_simulation(LATTICE,
-                                    out_dir=input.OUTPUT_DIR,
-                                    field_name="history",
-                                    color_field_name="history",
-                                    title=input.TITLE,
-                                    three_dim=False)
+    # GUI.plot_phase_field_simulation(LATTICE,
+    #                                 out_dir=input.OUTPUT_DIR,
+    #                                 field_name="phi",
+    #                                 color_field_name="phi",
+    #                                 title=input.TITLE,
+    #                                 three_dim=False)
+    # GUI.plot_phase_field_simulation(LATTICE,
+    #                                 out_dir=input.OUTPUT_DIR,
+    #                                 field_name="history",
+    #                                 color_field_name="history",
+    #                                 title=input.TITLE,
+    #                                 three_dim=False)
     if input.SEEDS != 1:
         GUI.plot_kinetic_lattice(LATTICE, 
                          input.EPOCHS, 
@@ -347,26 +392,32 @@ def perform_STEFAN_simulation(input: custom_input):
                             three_dim=False,
                             verbose=input.VERBOSE)
 
-    model.run(input.EPOCHS)
+    save_freq = 50 # TODO: input
+    frame_list = []
+    model.run(input.EPOCHS, callback=save_frame_phase_field, 
+              save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)
+    if frame_list:
+        create_gif(frame_list, input.OUTPUT_DIR, input.TITLE)
+
     
-    GUI.plot_phase_field_simulation(LATTICE,
-                                    out_dir=input.OUTPUT_DIR,
-                                    field_name = "phi",
-                                    color_field_name="phi",
-                                    title=input.TITLE,
-                                    three_dim=False)
-    GUI.plot_phase_field_simulation(LATTICE,
-                                    out_dir=input.OUTPUT_DIR,
-                                    field_name="u",
-                                    color_field_name="u",
-                                    title=input.TITLE,
-                                    three_dim=False)
-    GUI.plot_phase_field_simulation(LATTICE,
-                                    out_dir=input.OUTPUT_DIR,
-                                    field_name="history",
-                                    color_field_name="history",
-                                    title=input.TITLE,
-                                    three_dim=False)
+    # GUI.plot_phase_field_simulation(LATTICE,
+    #                                 out_dir=input.OUTPUT_DIR,
+    #                                 field_name = "phi",
+    #                                 color_field_name="phi",
+    #                                 title=input.TITLE,
+    #                                 three_dim=False)
+    # GUI.plot_phase_field_simulation(LATTICE,
+    #                                 out_dir=input.OUTPUT_DIR,
+    #                                 field_name="u",
+    #                                 color_field_name="u",
+    #                                 title=input.TITLE,
+    #                                 three_dim=False)
+    # GUI.plot_phase_field_simulation(LATTICE,
+    #                                 out_dir=input.OUTPUT_DIR,
+    #                                 field_name="history",
+    #                                 color_field_name="history",
+    #                                 title=input.TITLE,
+    #                                 three_dim=False)
     if input.SEEDS != 1:
         GUI.plot_kinetic_lattice(LATTICE, 
                          input.EPOCHS, 

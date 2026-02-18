@@ -52,12 +52,15 @@ class GrowthModel(ABC):
         """
         pass
     
-    def run(self, n_steps: int):
+    def run(self, n_steps: int, 
+            callback = None, save_freq: int = 10, 
+            frame_dir: str = None, frame_list: list = []):
         """
         Run the growth model for a specified number of steps (epochs).
 
         Args:
             n_steps (int): Number of growth steps (epochs) to perform.
+            # TODO: aggiorna
         """
         with tqdm(total=n_steps, desc="Running GrowthModel", unit="epoch", disable=self.verbose) as pbar:
             for i in range(n_steps):
@@ -71,5 +74,8 @@ class GrowthModel(ABC):
                     elif np.any(np.isnan(self.lattice.u)):
                         logger.fatal("[GrowthModel] FATAL ERROR: NaN detected in lattice.u at epoch %d, aborting...", self.epoch)
                         break
+
+                if callback is not None and self.epoch % save_freq == 0:
+                    callback(self.lattice, self.epoch, frame_dir, frame_list)
 
                 pbar.update(1)

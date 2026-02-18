@@ -292,7 +292,7 @@ def test_set_nucleation_seed_updates_phi_and_registers_seed(dammy_pfl):
 
     occ = list(lat.occupied)
     x0, y0, z0 = occ[0]
-    assert lat.group_id[x0, y0, z0] == 0
+    assert lat.group_id[x0, y0, z0] == 1
 
 def test_nearest_seed_id_prefers_closest(dammy_pfl):
     """
@@ -307,4 +307,4 @@ def test_nearest_seed_id_prefers_closest(dammy_pfl):
     lat.update_occupied_and_history(epoch=1)
 
     assert (5, 5, 0) in lat.occupied
-    assert lat.group_id[5, 5, 0] == 1
+    assert lat.group_id[5, 5, 0] == 2

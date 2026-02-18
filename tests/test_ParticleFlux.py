@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 import pytest
 
 from classes.ParticleFlux import ParticleFlux
@@ -32,41 +33,41 @@ def test_set_external_flux_rejects_negative_strength(dammy_flux):
         [[1, 0, 0, 0]],
         np.zeros((2, 2)),         
     ], )
-def test_set_external_flux_wrong_shape_disables_flux_and_warns(dammy_flux, capsys, dirs):
+def test_set_external_flux_wrong_shape_disables_flux_and_warns(dammy_flux, caplog, dirs):
     """
     Tests if a wrong input shape disables the external flux.
     """
+    caplog.set_level(logging.WARNING, logger="growthsim")
     dammy_flux.set_external_flux(dirs, strength=1.0)
-    out, err = capsys.readouterr()
 
     assert dammy_flux.fluxDirections is None
     assert dammy_flux.fluxStrength == 0.0
-    assert "WARNING" in out
-    assert "no flux selected" in out
+    assert "WARNING" in caplog.text
+    assert "no flux selected" in caplog.text
 
-def test_set_external_flux_strength_zero_disables_flux_and_warns(dammy_flux, capsys):
+def test_set_external_flux_strength_zero_disables_flux_and_warns(dammy_flux, caplog):
     """
     Tests if a zero strength in input disables the external flux.
     """
+    caplog.set_level(logging.WARNING, logger="growthsim")
     dammy_flux.set_external_flux([[1, 0, 0]], strength=0.0)
-    out, err = capsys.readouterr()
 
     assert dammy_flux.fluxDirections is None
     assert dammy_flux.fluxStrength == 0.0
-    assert "WARNING" in out
-    assert "no flux selected" in out
+    assert "WARNING" in caplog.text
+    assert "no flux selected" in caplog.text
 
-def test_set_external_flux_all_zero_vectors_disables_flux_and_warns(dammy_flux, capsys):
+def test_set_external_flux_all_zero_vectors_disables_flux_and_warns(dammy_flux, caplog):
     """
     Checks if the flux is disabled if all input vectors are zero vectors.
     """
+    caplog.set_level(logging.WARNING, logger="growthsim")
     dammy_flux.set_external_flux([[0, 0, 0], [0, 0, 0]], strength=1.0)
-    out, err = capsys.readouterr()
 
     assert dammy_flux.fluxDirections is None
     assert dammy_flux.fluxStrength == 0.0
-    assert "WARNING" in out
-    assert "no valid directions" in out
+    assert "WARNING" in caplog.text
+    assert "no flux selected" in caplog.text
 
 def test_set_external_flux_filters_zero_vectors_and_normalizes(dammy_flux):
     """

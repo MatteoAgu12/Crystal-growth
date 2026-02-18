@@ -20,9 +20,9 @@ The main physical phenomena in which these objects are involved are:
 * **Defects** - vacancies, dislocations, impurities and grain boundaries break perfect order; they control mechanical strength, plasticity, transport, and often where and how growth proceeds.
 * **Phase transitions** - crystals can melt, transform into other crystalline phases, or undergo order–disorder transitions when temperature, pressure, or composition change.
 
-## KineticLattice implementation
+## Lattice implementation
 ### Base KineticLattice
-### Kinetic KineticLattice
+### KineticLattice
 The system is defined on a discrete cubic lattice
 
 $$\Lambda = \{(x,y,z) | x=0,\dots,N_x-1, y=0,\dots,N_y-1, z=0,\dots,N_z-1\}$$
@@ -36,7 +36,7 @@ where $h(\mathbf{r})=-1$ for empty sites, and $h(\mathbf{r})=t$ if the site was 
 * an optional **crystal seed set** $S_0 \subset  \Lambda$, used to define the initial occupied regions.
 TODO: continue
 
-### Phase field lattice
+### PhaseFieldLattice
 
 ## Growth models
 ### EDEN growth

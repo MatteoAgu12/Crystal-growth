@@ -3,6 +3,7 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import numpy as np
 import pytest
+import logging
 
 import matplotlib.pyplot as plt
 
@@ -86,7 +87,7 @@ def test_get_field_3d_returns_attr_or_raises():
     with pytest.raises(ValueError, match="has no field"):
         get_field_3d(lat, "does_not_exist")
 
-def test_get_data_2d_by_name_known_and_unknown(capsys):
+def test_get_data_2d_by_name_known_and_unknown(caplog):
     phi = np.zeros((4, 4, 3), dtype=np.float64)
     phi[1, 2, 1] = 7.0
     lat = PhaseFieldStub(phi=phi)
@@ -97,9 +98,9 @@ def test_get_data_2d_by_name_known_and_unknown(capsys):
     assert a[1, 2] == 7.0
 
     b = _get_data_2d_by_name(lat, "unknown", mid)
-    out, _ = capsys.readouterr()
+    caplog.set_level(logging.WARNING, logger="growthsim")
+    assert "Unknown field" in caplog.text
     assert b is None
-    assert "Unknown field" in out
 
 def test_cmap_name_for_mode_minimal():
     assert _cmap_name_for_mode(None) == "viridis"
@@ -151,12 +152,12 @@ def test_build_palettes_minimal():
 # -----------------------
 # Smoke test plotting
 # -----------------------
-def test_plot_kinetic_lattice_invalid_color_mode_returns(capsys, monkeypatch):
+def test_plot_kinetic_lattice_invalid_color_mode_returns(caplog, monkeypatch):
     monkeypatch.setattr(plt, "show", lambda *a, **k: None)
 
     grid = np.zeros((3, 3, 1), dtype=np.uint8)
     lat = KineticStub(grid=grid)
 
     plot_kinetic_lattice(lat, N_epochs=10, title="t", out_dir=None, three_dim=False, color_mode="bad")
-    out, _ = capsys.readouterr()
-    assert "only accepted" in out
+    caplog.set_level(logging.WARNING, logger="growthsim")
+    assert "only accepted" in caplog.text

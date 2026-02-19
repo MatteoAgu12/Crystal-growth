@@ -21,22 +21,32 @@ import logging
 logger = logging.getLogger("growthsim")
 
 # TODO: tmp, forse da spostare
-def save_frame_kinetic(lattice: KineticLattice, epoch: int, frame_dir: str, frame_list: list) -> str:
+def save_frame_kinetic_2D(lattice: KineticLattice, epoch: int, frame_dir: str, frame_list: list) -> str:
     z = 0 if lattice.shape[2] == 1 else lattice.shape[2] // 2
 
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 
-    axs[0].imshow(lattice.group_id[:,:,z].T, origin='lower', cmap='gray_r', vmin=0, vmax=1)
-    axs[0].set_title(r"Crystal field ($\phi$)")
+    id_data = lattice.group_id[:, :, z].astype(float)
+    id_masked = np.ma.masked_where(id_data == 0, id_data)
+    axs[0].imshow(id_masked.T, origin='lower', cmap='tab20b', interpolation='nearest')
+    axs[0].set_title(r"Group ID")
 
     hist = lattice.history[:,:,z].astype(float)
     hist_masked = np.ma.masked_where(hist < 0, hist)
-    axs[1].imshow(hist_masked.T, origin='lower', cmap='turbo')
+    axs[1].imshow(hist_masked.T, origin='lower', cmap='turbo', interpolation='nearest')
     axs[1].set_title(r"Occupation history")
 
-    # TODO: plot dei boundatries
-    # axs[2].imshow(lattice.u[:,:,z].T, origin='lower', cmap='inferno', vmin=0, vmax=1)
-    # axs[2].set_title(r"Diffused field ($u$)")
+    boundary_mask_3d = get_grain_boundaries_mask(lattice)
+    boundary_mask_2d = boundary_mask_3d[:, :, z]
+    occ_2d = lattice.grid[:, :, z].astype(bool)
+
+    nx, ny = occ_2d.shape
+    rgba_img = np.ones((ny, nx, 4)) 
+    rgba_img[occ_2d.T] = [0.9, 0.9, 0.9, 1.0]
+    rgba_img[boundary_mask_2d.T] = [0.0, 0.0, 0.0, 1.0]
+
+    axs[2].imshow(rgba_img, origin='lower', interpolation='nearest')
+    axs[2].set_title("Grain boundaries")
 
     filepath = os.path.join(frame_dir, f"frame_{epoch:05d}.png")
     plt.savefig(filepath, bbox_inches='tight')
@@ -247,7 +257,15 @@ def perform_EDEN_simulation(input: custom_input):
                        three_dim=input.THREE_DIM,
                        verbose=input.VERBOSE)
 
-    model.run(input.EPOCHS)
+    if input.THREE_DIM:
+        model.run(input.EPOCHS)
+    else:
+        save_freq = 50 # TODO: input
+        frame_list = []
+        model.run(input.EPOCHS, callback=save_frame_kinetic_2D, 
+                  save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)
+        if frame_list:
+            create_gif(frame_list, input.OUTPUT_DIR, input.TITLE)
     
     GUI.plot_kinetic_lattice(LATTICE, 
                      input.EPOCHS, 
@@ -289,7 +307,15 @@ def perform_DLA_simulation(input: custom_input):
                       three_dim=input.THREE_DIM,
                       verbose=input.VERBOSE)
 
-    model.run(input.EPOCHS)
+    if input.THREE_DIM:
+        model.run(input.EPOCHS)
+    else:
+        save_freq = 50 # TODO: input
+        frame_list = []
+        model.run(input.EPOCHS, callback=save_frame_kinetic_2D, 
+                  save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)
+        if frame_list:
+            create_gif(frame_list, input.OUTPUT_DIR, input.TITLE)
 
     if input.SEEDS == 1:
         ANLS.fractal_dimension_analysis(LATTICE, 

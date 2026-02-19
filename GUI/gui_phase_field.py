@@ -8,7 +8,7 @@ from scipy.ndimage import map_coordinates
 from typing import Union
 
 from classes.PhaseFieldLattice import PhaseFieldLattice
-from GUI.gui_common import _mid_plane_z, set_axes_labels, finalize_plot
+from GUI.gui_routines import _mid_plane_z, set_axes_labels, finalize_plot
 
 import logging
 logger = logging.getLogger("growthsim")
@@ -66,7 +66,7 @@ def _cmap_name_for_mode(color_mode: Union[str, None]) -> str:
         if color_mode == 'phi': return 'gray_r'
         if color_mode == 'u': return 'inferno'
         if color_mode == 'history': return 'turbo'
-    return 'viridis'
+    return 'turbo'
 
 def _norm_for_3d_mode(lattice: PhaseFieldLattice, color_mode: str, cvals: np.ndarray) -> Normalize:
     """

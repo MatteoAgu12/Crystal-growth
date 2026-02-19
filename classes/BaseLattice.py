@@ -1,5 +1,5 @@
 import numpy as np
-from abc import ABC
+from abc import ABC, abstractmethod
 
 class BaseLattice(ABC):
     """
@@ -81,3 +81,19 @@ class BaseLattice(ABC):
                 neighbors.append([int(nx), int(ny), int(nz)])
                 
         return np.array(neighbors)
+
+    @abstractmethod
+    def save_frame(self, epoch: int, three_dim: bool, frame_dir: str, frame_list: list) -> str:
+        """
+        Saves a frame of the current status into a directory.
+
+        Args:
+            epoch (int): epoch number
+            three_dim (bool): if True, the lattice is three dimentional
+            frame_dir (str): directory where to save the frame
+            frame_list (list): list that collects all the frame saved
+
+        Returns:
+            str: the name of tyhe file containing the frame
+        """
+        pass

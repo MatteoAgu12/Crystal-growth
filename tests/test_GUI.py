@@ -103,7 +103,7 @@ def test_get_data_2d_by_name_known_and_unknown(caplog):
     assert b is None
 
 def test_cmap_name_for_mode_minimal():
-    assert _cmap_name_for_mode(None) == "viridis"
+    assert _cmap_name_for_mode(None) == "turbo"
     assert _cmap_name_for_mode("phi") == "gray_r"
     assert _cmap_name_for_mode("history") == "turbo"
 

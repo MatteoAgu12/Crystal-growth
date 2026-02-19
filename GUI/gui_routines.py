@@ -1,6 +1,10 @@
 import os
 import matplotlib.pyplot as plt
+from typing import Union
+import imageio.v2 as imageio
+
 from classes.BaseLattice import BaseLattice
+
 import logging
 
 logger = logging.getLogger("growthsim")
@@ -47,3 +51,24 @@ def finalize_plot(out_dir: Union[str, None], title: str, suffix: str, log_messag
         plt.savefig(filename, bbox_inches='tight')
         logger.info(log_message, filename)
     plt.show()
+
+def create_gif(frame_files: list[str], outdir: str, title: str):
+    logger.info("[GIF generation] generating the GIF...")
+    gif_path = os.path.join(outdir, f"{title}_growth.gif")
+
+    with imageio.get_writer(gif_path, mode='I', duration=0.1) as writer:
+        for filename in frame_files:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+
+    logger.info(f"[GIF generation] GIF successfully saved as {gif_path}")
+
+    logger.info("[GIF generation] Cleaning the temporary frames...")
+    for i, filename in enumerate(frame_files):
+        if i == len(frame_files)-1:
+            pass
+        try:
+            os.remove(filename)
+        except OSError as e:
+            logger.warning(f"[GIF generation] cannot remove file {filename}: {e}")
+    logger.info("[GIF generation] Cache freed!")

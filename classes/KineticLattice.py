@@ -1,7 +1,11 @@
+import os
 import numpy as np
 import itertools
 from typing import Union
+import matplotlib.pyplot as plt
+
 from classes.BaseLattice import BaseLattice
+from GUI.gui_kinetic import get_visible_voxels_binary_mask, get_grain_boundaries_mask
 
 import logging
 logger = logging.getLogger("growthsim")
@@ -164,3 +168,89 @@ class KineticLattice(BaseLattice):
         maxs = np.clip(maxs, 0, np.array(self.shape) - 1)
         
         return list(zip(mins, maxs))
+
+    def _save_frame_kinetic_2D(self, epoch: int, frame_dir: str, frame_list: list) -> str:
+        z = 0 if self.shape[2] == 1 else self.shape[2] // 2
+
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+        id_data = self.group_id[:, :, z].astype(float)
+        id_masked = np.ma.masked_where(id_data == 0, id_data)
+        axs[0].imshow(id_masked.T, origin='lower', cmap='tab20b', interpolation='nearest')
+        axs[0].set_title(r"Group ID")
+
+        hist = self.history[:,:,z].astype(float)
+        hist_masked = np.ma.masked_where(hist < 0, hist)
+        axs[1].imshow(hist_masked.T, origin='lower', cmap='turbo', interpolation='nearest')
+        axs[1].set_title(r"Occupation history")
+
+        boundary_mask_3d = get_grain_boundaries_mask(self)
+        boundary_mask_2d = boundary_mask_3d[:, :, z]
+        occ_2d = self.grid[:, :, z].astype(bool)
+
+        nx, ny = occ_2d.shape
+        rgba_img = np.ones((ny, nx, 4)) 
+        rgba_img[occ_2d.T] = [0.9, 0.9, 0.9, 1.0]
+        rgba_img[boundary_mask_2d.T] = [0.0, 0.0, 0.0, 1.0]
+
+        axs[2].imshow(rgba_img, origin='lower', interpolation='nearest')
+        axs[2].set_title("Grain boundaries")
+
+        filepath = os.path.join(frame_dir, f"frame_{epoch:05d}.png")
+        plt.savefig(filepath, bbox_inches='tight')
+        plt.close(fig)
+
+        frame_list.append(filepath)
+
+    def _save_frame_kinetic_3D(self, epoch: int, frame_dir: str, frame_list: list) -> str:
+        fig = plt.figure(figsize=(18, 6))
+
+        visible_mask = get_visible_voxels_binary_mask(self)
+        x, y, z = np.where(visible_mask)
+        nx, ny, nz = self.shape
+
+        if len(x) > 0:
+            id_vals = self.group_id[x, y, z]
+            hist_vals = self.history[x, y, z]
+            boundaries_mask_global = get_grain_boundaries_mask(self)
+            is_boundary = boundaries_mask_global[x, y, z]
+            boundary_colors = np.where(is_boundary, 'black', 'lightgray')
+
+        markersize = 15
+        ax1 = fig.add_subplot(1, 3, 1, projection='3d')
+        if len(x) > 0:
+            ax1.scatter(x, y, z, c=id_vals, cmap='tab20', marker='s', s=markersize, alpha=1.0, edgecolor='none')
+        ax1.set_title("Group ID")
+
+        ax2 = fig.add_subplot(1, 3, 2, projection='3d')
+        if len(x) > 0:
+            ax2.scatter(x, y, z, c=hist_vals, cmap='turbo', marker='s', s=markersize, alpha=1.0, edgecolors='none')
+        ax2.set_title("Occupation History")
+
+        ax3 = fig.add_subplot(1, 3, 3, projection='3d')
+        if len(x) > 0:
+            ax3.scatter(x, y, z, c=boundary_colors, marker='s', s=markersize, alpha=1.0, edgecolors='none')
+        ax3.set_title("Grain Boundaries")
+
+        for ax in [ax1, ax2, ax3]:
+            ax.set_xlim(0, nx)
+            ax.set_ylim(0, ny)
+            ax.set_zlim(0, nz)
+            ax.view_init(elev=30, azim=45)
+
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_zticks([])
+
+        filepath = os.path.join(frame_dir, f"frame_{epoch:05d}.png")
+        plt.savefig(filepath, bbox_inches='tight', dpi=100) 
+        plt.close(fig)
+
+        frame_list.append(filepath)
+        return filepath
+
+    def save_frame(self, epoch: int, three_dim: bool, frame_dir: str, frame_list: list) -> str:
+        if three_dim:
+            return self._save_frame_kinetic_3D(epoch, frame_dir, frame_list)
+        else:
+            return self._save_frame_kinetic_2D(epoch, frame_dir, frame_list)

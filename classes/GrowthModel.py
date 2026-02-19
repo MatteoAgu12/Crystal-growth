@@ -76,6 +76,6 @@ class GrowthModel(ABC):
                         break
 
                 if callback is not None and self.epoch % save_freq == 0:
-                    callback(self.lattice, self.epoch, frame_dir, frame_list)
+                    callback(self.epoch, self.three_dim, frame_dir, frame_list)
 
                 pbar.update(1)

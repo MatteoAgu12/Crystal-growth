@@ -9,6 +9,7 @@ The accessible functions are:
     - get_grain_boundaries_mask
     - get_visible_voxels_binary_mask
 """
+from GUI.gui_routines import create_gif
 
 from GUI.gui_kinetic import (
     plot_kinetic_lattice, 
@@ -21,6 +22,7 @@ from GUI.gui_phase_field import (
 )
 
 __all__ = [
+    "create_gif"
     "plot_kinetic_lattice",
     "plot_phase_field_simulation",
     "get_grain_boundaries_mask",

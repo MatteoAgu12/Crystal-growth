@@ -6,18 +6,17 @@ from matplotlib.patches import Patch
 from typing import Union, Tuple, Dict
 
 from classes.BaseLattice import BaseLattice
-from classes.KineticLattice import KineticLattice
-from GUI.gui_common import set_axes_labels, finalize_plot
+from GUI.gui_routines import set_axes_labels, finalize_plot
 
 import logging
 logger = logging.getLogger("growthsim")
 
-def get_visible_voxels_binary_mask(lattice: KineticLattice) -> np.ndarray:
+def get_visible_voxels_binary_mask(lattice: BaseLattice) -> np.ndarray:
     """
     Create a binary mask showing only the occupied cells not completely surrounded by other occupied cells.
 
     Args:
-        lattice (KineticLattice): custom lattice object containing occupation data
+        lattice (BaseLattice): custom lattice object containing occupation data
 
     Return:
         (np.ndarray): boolean 3D mask where True indicates a visible voxel
@@ -55,12 +54,12 @@ def get_grain_boundaries_mask(lattice: BaseLattice) -> np.ndarray:
 
     return occupied & is_boundary_neighbor
 
-def _build_id_palette(lattice: KineticLattice) -> Tuple[np.ndarray, Colormap, Dict[int, tuple]]:
+def _build_id_palette(lattice: BaseLattice) -> Tuple[np.ndarray, Colormap, Dict[int, tuple]]:
     """
     Construct the data grid, colormap, and ID-to-color mapping for ID-based voxel coloring.
 
     Args:
-        lattice (KineticLattice): custom lattice object
+        lattice (BaseLattice): custom lattice object
 
     Return:
         (Tuple[np.ndarray, Colormap, dict]): tuple containing the ID grid, colormap object, and dictionary mapping IDs to RGBA colors
@@ -71,29 +70,29 @@ def _build_id_palette(lattice: KineticLattice) -> Tuple[np.ndarray, Colormap, Di
     id_to_color = {uid: cmap(i % cmap.N) for i, uid in enumerate(unique_vals)}
     return data_grid, cmap, id_to_color
 
-def _build_epoch_palette(lattice: KineticLattice, N_epochs: int) -> Tuple[np.ndarray, Colormap, Normalize]:
+def _build_epoch_palette(lattice: BaseLattice, N_epochs: int) -> Tuple[np.ndarray, Colormap, Normalize]:
     """
     Construct the data grid, colormap, and normalization for epoch-based voxel coloring.
 
     Args:
-        lattice (KineticLattice): custom lattice object
+        lattice (BaseLattice): custom lattice object
         N_epochs (int): total number of epochs in the simulation
 
     Return:
         (Tuple[np.ndarray, Colormap, Normalize]): tuple containing history grid, colormap, and normalization bounds
     """
     data_grid = lattice.history
-    cmap = plt.cm.viridis
+    cmap = plt.cm.turbo
     norm = Normalize(vmin=0, vmax=N_epochs)
     return data_grid, cmap, norm
 
-def _render_voxels_boundaries(ax: plt.Axes, lattice: KineticLattice, visible_voxels: np.ndarray) -> np.ndarray:
+def _render_voxels_boundaries(ax: plt.Axes, lattice: BaseLattice, visible_voxels: np.ndarray) -> np.ndarray:
     """
     Render grain boundaries in a 3D lattice visualization.
 
     Args:
         ax (plt.Axes): matplotlib 3D axis object
-        lattice (KineticLattice): custom lattice object
+        lattice (BaseLattice): custom lattice object
         visible_voxels (np.ndarray): binary mask of visible exterior voxels
 
     Return:
@@ -109,14 +108,14 @@ def _render_voxels_boundaries(ax: plt.Axes, lattice: KineticLattice, visible_vox
     ax.voxels(plot_mask, facecolors=colors, edgecolor=None, linewidth=0)
     return colors
 
-def _render_voxels_surface(ax: plt.Axes, lattice: KineticLattice, visible_voxels: np.ndarray, data_grid: np.ndarray, 
+def _render_voxels_surface(ax: plt.Axes, lattice: BaseLattice, visible_voxels: np.ndarray, data_grid: np.ndarray, 
                            color_mode: str, cmap: Colormap, norm_or_id_to_color: Union[Normalize, dict]) -> np.ndarray:
     """
     Render voxel surfaces in a 3D lattice based on a specified continuous or discrete color mapping.
 
     Args:
         ax (plt.Axes): matplotlib 3D axis object
-        lattice (KineticLattice): custom lattice object
+        lattice (BaseLattice): custom lattice object
         visible_voxels (np.ndarray): binary mask of visible voxels
         data_grid (np.ndarray): 3D grid containing data values for coloring
         color_mode (str): coloring strategy ("id" or "epoch")
@@ -141,13 +140,13 @@ def _render_voxels_surface(ax: plt.Axes, lattice: KineticLattice, visible_voxels
 
     return colors
 
-def _plot_2d_epoch(ax: plt.Axes, lattice: KineticLattice, cmap: Colormap, norm: Normalize) -> None:
+def _plot_2d_epoch(ax: plt.Axes, lattice: BaseLattice, cmap: Colormap, norm: Normalize) -> None:
     """
     Plot a 2D projection of the kinetic lattice colored by occupation epoch.
 
     Args:
         ax (plt.Axes): matplotlib axes object
-        lattice (KineticLattice): custom lattice object
+        lattice (BaseLattice): custom lattice object
         cmap (Colormap): colormap for epoch representation
         norm (Normalize): normalization bounds for the epoch range
     """
@@ -156,13 +155,13 @@ def _plot_2d_epoch(ax: plt.Axes, lattice: KineticLattice, cmap: Colormap, norm: 
     im = ax.imshow(masked_data.T, origin='lower', cmap=cmap, norm=norm, interpolation='nearest')
     plt.colorbar(im, ax=ax, shrink=0.8).set_label("Occupation epoch")
 
-def _plot_2d_id(ax: plt.Axes, lattice: KineticLattice, id_to_color: dict) -> None:
+def _plot_2d_id(ax: plt.Axes, lattice: BaseLattice, id_to_color: dict) -> None:
     """
     Plot a 2D projection of the kinetic lattice colored by unique grain IDs.
 
     Args:
         ax (plt.Axes): matplotlib axes object
-        lattice (KineticLattice): custom lattice object
+        lattice (BaseLattice): custom lattice object
         id_to_color (dict): dictionary mapping discrete grain IDs to RGBA tuples
     """
     data_2d = np.max(lattice.group_id, axis=2)
@@ -178,13 +177,13 @@ def _plot_2d_id(ax: plt.Axes, lattice: KineticLattice, id_to_color: dict) -> Non
 
     ax.imshow(rgba_img, origin='lower', interpolation='nearest')
 
-def _plot_2d_boundaries(ax: plt.Axes, lattice: KineticLattice) -> None:
+def _plot_2d_boundaries(ax: plt.Axes, lattice: BaseLattice) -> None:
     """
     Plot a 2D projection emphasizing the physical boundaries between grains.
 
     Args:
         ax (plt.Axes): matplotlib axes object
-        lattice (KineticLattice): custom lattice object
+        lattice (BaseLattice): custom lattice object
     """
     boundary_mask = get_grain_boundaries_mask(lattice)
     mask_2d = np.any(boundary_mask, axis=2)
@@ -198,13 +197,13 @@ def _plot_2d_boundaries(ax: plt.Axes, lattice: KineticLattice) -> None:
 
     ax.imshow(rgba_img, origin='lower', interpolation='nearest')
 
-def plot_kinetic_lattice(lattice: KineticLattice, N_epochs: int, title: str, out_dir: Union[str, None], 
+def plot_kinetic_lattice(lattice: BaseLattice, N_epochs: int, title: str, out_dir: Union[str, None], 
                          three_dim: bool, color_mode: str = "epoch") -> None:
     """
     Create a 2D or 3D visualization of the discrete kinetic lattice simulation.
 
     Args:
-        lattice (KineticLattice): custom lattice object holding simulation data
+        lattice (BaseLattice): custom lattice object holding simulation data
         N_epochs (int): total number of epochs run in the simulation
         title (str): descriptive title for the generated plot
         out_dir (str or None): output directory path for saving the image file

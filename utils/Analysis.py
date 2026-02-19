@@ -81,7 +81,7 @@ def fractal_dimension_analysis(lattice: KineticLattice, output_dir: str, title: 
     plt.ylabel(r"log(N($\epsilon$))")
     plt.legend()
     
-    filename = output_dir + title + "Hausdorff_dimention.png"
+    filename = output_dir + '/' + title + "Hausdorff_dimention.png"
     plt.savefig(filename)
         
     logger.info("Image of Hausdorff estimation analysis saved as %s.", filename)
@@ -119,7 +119,7 @@ def distance_from_active_surface(lattice: KineticLattice, output_dir: str, N_epo
     plt.ylabel("Farest occupied distance")
     plt.legend()
     
-    filename = output_dir + "Active_surface_distance.png"
+    filename = output_dir + '/' + "Active_surface_distance.png"
     plt.savefig(filename)
               
     logger.info("Plot of distance of the farest cell from the active surface as function of time saved as %s.", filename)
@@ -146,7 +146,7 @@ def anisotropy_histogram(lattice: KineticLattice, out_dir: str, epoch: int = -1,
     plt.ylabel("Count")
     plt.title("Anisotropy dignostic histogram")
     
-    filename = out_dir + "Anisotropy_diagnostic_histo.png"
+    filename = out_dir + '/' + "Anisotropy_diagnostic_histo.png"
     plt.savefig(filename)
          
     logger.info("Diagnostic histogram of the anisotropy saved as %s.", filename)

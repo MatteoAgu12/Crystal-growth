@@ -1,4 +1,7 @@
+import os
 import numpy as np 
+import matplotlib.pyplot as plt
+
 from classes.BaseLattice import BaseLattice
 
 import logging
@@ -154,6 +157,26 @@ class PhaseFieldLattice(BaseLattice):
 
         return best_k+1
         
+    def save_frame(self, epoch: int, three_dim: bool, frame_dir: str, frame_list: list) -> str:
+        z = 0 if self.shape[2] == 1 else self.shape[2] // 2
 
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+        axs[0].imshow(self.phi[:,:,z].T, origin='lower', cmap='gray_r', vmin=0, vmax=1)
+        axs[0].set_title(r"Crystal field ($\phi$)")
+
+        axs[1].imshow(self.u[:,:,z].T, origin='lower', cmap='inferno', vmin=0, vmax=1)
+        axs[1].set_title(r"Diffused field ($u$)")
+
+        hist = self.history[:,:,z].astype(float)
+        hist_masked = np.ma.masked_where(hist < 0, hist)
+        axs[2].imshow(hist_masked.T, origin='lower', cmap='turbo')
+        axs[2].set_title(r"Occupation history")
+
+        filepath = os.path.join(frame_dir, f"frame_{epoch:05d}.png")
+        plt.savefig(filepath, bbox_inches='tight')
+        plt.close(fig)
+
+        frame_list.append(filepath)
 
 

@@ -300,18 +300,18 @@ def perform_KOBAYASHI_simulation(input: custom_input):
     if frame_list:
         GUI.create_gif(frame_list, input.OUTPUT_DIR, input.TITLE)
     
-    # GUI.plot_phase_field_simulation(LATTICE,
-    #                                 out_dir=input.OUTPUT_DIR,
-    #                                 field_name="phi",
-    #                                 color_field_name="phi",
-    #                                 title=input.TITLE,
-    #                                 three_dim=False)
-    # GUI.plot_phase_field_simulation(LATTICE,
-    #                                 out_dir=input.OUTPUT_DIR,
-    #                                 field_name="history",
-    #                                 color_field_name="history",
-    #                                 title=input.TITLE,
-    #                                 three_dim=False)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name="phi",
+                                    color_field_name="phi",
+                                    title=input.TITLE,
+                                    three_dim=False)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name="history",
+                                    color_field_name="history",
+                                    title=input.TITLE,
+                                    three_dim=False)
     if input.SEEDS != 1:
         GUI.plot_kinetic_lattice(LATTICE, 
                          input.EPOCHS, 
@@ -373,24 +373,24 @@ def perform_STEFAN_simulation(input: custom_input):
         GUI.create_gif(frame_list, input.OUTPUT_DIR, input.TITLE)
 
     
-    # GUI.plot_phase_field_simulation(LATTICE,
-    #                                 out_dir=input.OUTPUT_DIR,
-    #                                 field_name = "phi",
-    #                                 color_field_name="phi",
-    #                                 title=input.TITLE,
-    #                                 three_dim=False)
-    # GUI.plot_phase_field_simulation(LATTICE,
-    #                                 out_dir=input.OUTPUT_DIR,
-    #                                 field_name="u",
-    #                                 color_field_name="u",
-    #                                 title=input.TITLE,
-    #                                 three_dim=False)
-    # GUI.plot_phase_field_simulation(LATTICE,
-    #                                 out_dir=input.OUTPUT_DIR,
-    #                                 field_name="history",
-    #                                 color_field_name="history",
-    #                                 title=input.TITLE,
-    #                                 three_dim=False)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name = "phi",
+                                    color_field_name="phi",
+                                    title=input.TITLE,
+                                    three_dim=False)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name="u",
+                                    color_field_name="u",
+                                    title=input.TITLE,
+                                    three_dim=False)
+    GUI.plot_phase_field_simulation(LATTICE,
+                                    out_dir=input.OUTPUT_DIR,
+                                    field_name="history",
+                                    color_field_name="history",
+                                    title=input.TITLE,
+                                    three_dim=False)
     if input.SEEDS != 1:
         GUI.plot_kinetic_lattice(LATTICE, 
                          input.EPOCHS, 

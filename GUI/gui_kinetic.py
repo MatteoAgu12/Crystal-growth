@@ -231,8 +231,6 @@ def plot_kinetic_lattice(lattice: BaseLattice, N_epochs: int, title: str, out_di
 
         voxels = lattice.grid.astype(bool)
         if not np.any(voxels):
-            ax.set_title(title)
-            plt.show()
             return
 
         visible_voxels = get_visible_voxels_binary_mask(lattice)

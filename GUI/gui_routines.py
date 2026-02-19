@@ -50,7 +50,6 @@ def finalize_plot(out_dir: Union[str, None], title: str, suffix: str, log_messag
         filename = os.path.join(out_dir, f"{title.replace(' ', '_')}{file_suffix}.png")
         plt.savefig(filename, bbox_inches='tight')
         logger.info(log_message, filename)
-    plt.show()
 
 def create_gif(frame_files: list[str], outdir: str, title: str):
     logger.info("[GIF generation] generating the GIF...")

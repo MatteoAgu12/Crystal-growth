@@ -15,13 +15,36 @@ from classes.KobayashiGrowth import KobayashiGrowth
 from classes.StefanGrowth import StefanGrowth
 
 import utils.Analysis as ANLS
-import utils.GUI as GUI
+import GUI.GUI as GUI
 
 import logging 
 logger = logging.getLogger("growthsim")
 
 # TODO: tmp, forse da spostare
-def save_frame_phase_field(lattice: BaseLattice, epoch: int, frame_dir: str, frame_list: list) -> str:
+def save_frame_kinetic(lattice: KineticLattice, epoch: int, frame_dir: str, frame_list: list) -> str:
+    z = 0 if lattice.shape[2] == 1 else lattice.shape[2] // 2
+
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+    axs[0].imshow(lattice.group_id[:,:,z].T, origin='lower', cmap='gray_r', vmin=0, vmax=1)
+    axs[0].set_title(r"Crystal field ($\phi$)")
+
+    hist = lattice.history[:,:,z].astype(float)
+    hist_masked = np.ma.masked_where(hist < 0, hist)
+    axs[1].imshow(hist_masked.T, origin='lower', cmap='turbo')
+    axs[1].set_title(r"Occupation history")
+
+    # TODO: plot dei boundatries
+    # axs[2].imshow(lattice.u[:,:,z].T, origin='lower', cmap='inferno', vmin=0, vmax=1)
+    # axs[2].set_title(r"Diffused field ($u$)")
+
+    filepath = os.path.join(frame_dir, f"frame_{epoch:05d}.png")
+    plt.savefig(filepath, bbox_inches='tight')
+    plt.close(fig)
+
+    frame_list.append(filepath)
+
+def save_frame_phase_field(lattice: PhaseFieldLattice, epoch: int, frame_dir: str, frame_list: list) -> str:
     z = 0 if lattice.shape[2] == 1 else lattice.shape[2] // 2
 
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))

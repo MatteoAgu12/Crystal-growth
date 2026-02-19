@@ -17,6 +17,7 @@ if __name__ == '__main__':
     title         = parsed_inputs.title
     verbose       = parsed_inputs.verbose
     out_dir       = ensure_output_dir(parsed_inputs.output, SIMULATION)
+    frame_freq    = parsed_inputs.frame_freq
     external_flux = ParticleFlux(parsed_inputs.external_flux,
                                  parsed_inputs.flux_strength,
                                  parsed_inputs.verbose) if parsed_inputs.external_flux is not None else None
@@ -44,6 +45,7 @@ if __name__ == '__main__':
                                         SEEDS=seeds,
                                         EPOCHS=epochs, 
                                         THREE_DIM=is_3D, 
+                                        FRAME_FREQ=frame_freq,
                                         VERBOSE=verbose,
                                         TITLE=title, OUTPUT_DIR=out_dir,
                                         EXTERNAL_FLUX=external_flux,

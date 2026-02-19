@@ -31,6 +31,7 @@ class custom_input:
     VERBOSE:          bool
     TITLE:            str
     OUTPUT_DIR:       str
+    FRAME_FREQ:       int
     EXTERNAL_FLUX:    ParticleFlux
 
     # PhaseFieldLattice only
@@ -55,14 +56,15 @@ class custom_input:
             {self.SIMULATION} Simulation Settings:
             ===============================
             GLOBAL PARAMETERS:
-            Size:             ({self.NX}, {self.NY}, {self.NZ})
-            Seeds:            {self.SEEDS}
-            Epochs:           {self.EPOCHS}
-            Dimensions:       {3 if self.THREE_DIM else 2}
-            Title:            {self.TITLE}
-            Output Dir:       {self.OUTPUT_DIR}
-            Flux Direction:   {self.EXTERNAL_FLUX}
-            Verbose:          {self.VERBOSE}
+            Size:                   ({self.NX}, {self.NY}, {self.NZ})
+            Seeds:                  {self.SEEDS}
+            Epochs:                 {self.EPOCHS}
+            Dimensions:             {3 if self.THREE_DIM else 2}
+            Title:                  {self.TITLE}
+            Output Dir:             {self.OUTPUT_DIR}
+            Frame saving frequency: {self.FRAME_FREQ}
+            Flux Direction:         {self.EXTERNAL_FLUX}
+            Verbose:                {self.VERBOSE}
             --------------------------------
             """
         else:
@@ -71,30 +73,31 @@ class custom_input:
             {self.SIMULATION} Simulation Settings:
             ===============================
             GLOBAL PARAMETERS:
-            Size:             ({self.NX}, {self.NY}, {self.NZ})
-            Seeds:            {self.SEEDS}
-            Epochs:           {self.EPOCHS}
-            Dimensions:       {3 if self.THREE_DIM else 2}
-            Title:            {self.TITLE}
-            Output Dir:       {self.OUTPUT_DIR}
-            Flux Direction:   {self.EXTERNAL_FLUX}
-            Verbose:          {self.VERBOSE}
+            Size:                   ({self.NX}, {self.NY}, {self.NZ})
+            Seeds:                  {self.SEEDS}
+            Epochs:                 {self.EPOCHS}
+            Dimensions:             {3 if self.THREE_DIM else 2}
+            Title:                  {self.TITLE}
+            Output Dir:             {self.OUTPUT_DIR}
+            Frame saving frequency: {self.FRAME_FREQ}
+            Flux Direction:         {self.EXTERNAL_FLUX}
+            Verbose:                {self.VERBOSE}
             --------------------------------
 
             Phase Field Parameters:
-            Interface Thr:    {self.INTERFACE_THR}
-            Epsilon:          {self.EPSILON}
-            Delta:            {self.DELTA}
-            N Folds:          {self.N_FOLDS}
-            Alpha:            {self.ALPHA}
-            U_eq:             {self.U_EQ}
-            U_infty:          {self.U_INFTY}
-            Latent Coef:      {self.LATENT_COEF}
-            Gamma:            {self.GAMMA}
-            Diffusivity:      {self.DIFFUSIVITY}
-            Mobility:         {self.MOBILITY}
-            Supersaturation:  {self.SUPERSATURATION}
-            Time Step:        {self.TIME_STEP}
+            Interface Thr:          {self.INTERFACE_THR}
+            Epsilon:                {self.EPSILON}
+            Delta:                  {self.DELTA}
+            N Folds:                {self.N_FOLDS}
+            Alpha:                  {self.ALPHA}
+            U_eq:                   {self.U_EQ}
+            U_infty:                {self.U_INFTY}
+            Latent Coef:            {self.LATENT_COEF}
+            Gamma:                  {self.GAMMA}
+            Diffusivity:            {self.DIFFUSIVITY}
+            Mobility:               {self.MOBILITY}
+            Supersaturation:        {self.SUPERSATURATION}
+            Time Step:              {self.TIME_STEP}
             --------------------------------
             """
 
@@ -178,7 +181,7 @@ def perform_EDEN_simulation(input: custom_input):
                        three_dim=input.THREE_DIM,
                        verbose=input.VERBOSE)
 
-    save_freq = 50 # TODO: input
+    save_freq = input.FRAME_FREQ
     frame_list = []
     model.run(input.EPOCHS, callback=LATTICE.save_frame, 
               save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)
@@ -225,7 +228,7 @@ def perform_DLA_simulation(input: custom_input):
                       three_dim=input.THREE_DIM,
                       verbose=input.VERBOSE)
 
-    save_freq = 50 # TODO: input
+    save_freq = input.FRAME_FREQ
     frame_list = []
     model.run(input.EPOCHS, callback=LATTICE.save_frame, 
               save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)
@@ -293,7 +296,7 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                             three_dim=False,
                             verbose=input.VERBOSE)
 
-    save_freq = 50 # TODO: input
+    save_freq = input.FRAME_FREQ
     frame_list = []
     model.run(input.EPOCHS, callback=LATTICE.save_frame, 
               save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)
@@ -365,7 +368,7 @@ def perform_STEFAN_simulation(input: custom_input):
                             three_dim=False,
                             verbose=input.VERBOSE)
 
-    save_freq = 50 # TODO: input
+    save_freq = input.FRAME_FREQ
     frame_list = []
     model.run(input.EPOCHS, callback=LATTICE.save_frame, 
               save_freq=save_freq, frame_dir=input.OUTPUT_DIR, frame_list=frame_list)

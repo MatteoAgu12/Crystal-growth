@@ -42,6 +42,8 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     if not hasattr(parsed_input, "seeds"):                parsed_input.seeds = 1
     if not hasattr(parsed_input, 'title'):                parsed_input.title = "Crystal lattice"
     if not hasattr(parsed_input, 'verbose'):              parsed_input.verbose = False
+    if not hasattr(parsed_input, 'frame_freq'):           parsed_input.frame_freq = 50
+
     if not hasattr(parsed_input, 'external_flux'):        parsed_input.external_flux = None
     if not hasattr(parsed_input, 'flux_strength'):        parsed_input.flux_strength = 0.0
 
@@ -76,6 +78,18 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
     # Simulation Type
     if parsed_input.simulation not in ALLOWED_NATIVE_SIMULATION_OPTIONS:
         raise ValueError(f"ERROR: 'simulation' must be one of {ALLOWED_NATIVE_SIMULATION_OPTIONS}. Got: {parsed_input.simulation}")
+
+    # Frequency of saving frames
+    if parsed_input.frame_freq <= 0:
+        raise ValueError(f"ERROR: 'frame_freq' must an integer bigger than 0. Got{parsed_input.frame_freq}")
+    elif parsed_input.frame_freq >= parsed_input.epochs:
+        logger.warning("""
+        ************************************************************************
+        WARNING: 
+        \tyou selected a frame frequency bigger than the number of epochs.
+        \tno frames will be saved, only the final outcome!
+        ************************************************************************
+        """)
 
     # Initial nucleation seeds
     if parsed_input.seeds <= 0:
@@ -260,6 +274,7 @@ def parse_inputs() -> argparse.Namespace:
     *   seeds = 5                                                           *
     *   epochs = 1000                                                       *
     *   output = ./output/                                                  *
+    *   frame_freq = 30                                                     *
     *   verbose = True                                                      *
     *                                                                       *
     *   # Kobayashi model parameters                                        *

@@ -65,11 +65,9 @@ class PhaseFieldLattice(BaseLattice):
 
     def set_nucleation_seed(self, x: int, y: int, z: int,
                             radius: float = 5.0, width: float = 1.5,
-                            phi_in: float = 1.0, phi_out: float = 0.0,
-                            u_inf: float = 0.0, u_eq: float = 1.0):
+                            phi_in: float = 1.0, u_eq: float = 1.0):
         """
         Function to set a nucleation seed at coordinates (x,y,z) by initializing the phase field (phi) in a spherical region around the seed point.
-        The phase field is set to phi_in inside the seed region and transitions to phi_out outside the seed region based on a hyperbolic tangent profile.
 
         Args:
             x (int): x coordinate of the seed point
@@ -78,8 +76,6 @@ class PhaseFieldLattice(BaseLattice):
             radius (float, optional): radius of the seed region. Defaults to 4.
             width (float, optional): width of the transition region between phi_in and phi_out. Defaults to 1.5.
             phi_in (float, optional): phase field value inside the seed region. Defaults to 1.0.
-            phi_out (float, optional): phase field value outside the seed region. Defaults to 0.0.
-            u_inf (float, optional): concentration field value far from the seed. Defaults to 0.0.
             u_eq (float, optional): concentration field value at equilibrium. Defaults to 1.
         """
         r = float(radius)

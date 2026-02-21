@@ -1,7 +1,6 @@
 import numpy as np
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.GrowthModel import GrowthModel
-from classes.ParticleFlux import ParticleFlux
 
 import logging
 logger = logging.getLogger("growthsim")
@@ -26,8 +25,6 @@ class StefanGrowth(GrowthModel):
                  latent_coeff: float = 1.6,
                  gamma: float = 10.0,
                  u_infty: float = 0.0,
-                 enforce_dirichlet_u: bool = True,
-                 external_flux: ParticleFlux = None,
                  three_dim: bool = False,
                  rng_seed: int = 42,
                  verbose: bool = False):
@@ -45,14 +42,11 @@ class StefanGrowth(GrowthModel):
             latent_coeff (float, optional): coefficient for the coupling between the phase field and concentration field that accounts for latent heat effects. Defaults to 1.6.
             gamma (float, optional): parameter for the arctan function in the reaction term of the phase field evolution. Defaults to 10.0.
             u_infty (float, optional): far-field concentration for the concentration field. Defaults to 0.0.
-            enforce_dirichlet_u (bool, optional): if True, enforce Dirichlet boundary conditions for the concentration field (u) at the boundaries of the lattice. Defaults to True.
-            external_flux (ParticleFlux, optional): exernal particle flux to be applied during growth steps. Defaults to None.
             three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to False.
             rng_seed (int, optional): random seed for reproducibility. Defaults to 42. 
             verbose (bool, optional): if True, the growth model will print debug information during growth steps. Defaults to False.
         """
         super().__init__(lattice=lattice,
-                         external_flux=external_flux,
                          rng_seed=rng_seed,
                          three_dim=three_dim,
                          verbose=verbose)

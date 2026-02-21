@@ -1,7 +1,6 @@
 import numpy as np
 from classes.PhaseFieldLattice import PhaseFieldLattice
 from classes.GrowthModel import GrowthModel
-from classes.ParticleFlux import ParticleFlux
 
 import logging
 logger = logging.getLogger("growthsim")
@@ -20,7 +19,6 @@ class KobayashiGrowth(GrowthModel):
                  delta: float = 0.0,
                  n_folds: float = 0.0,
                  supersaturation: float = 0.0,
-                 external_flux: ParticleFlux = None,
                  three_dim: bool = True,
                  verbose: bool = False):
         """
@@ -32,7 +30,6 @@ class KobayashiGrowth(GrowthModel):
             delta (float, optional): strength of the anisotropy. Defaults to 0.0.
             n_folds (float, optional): number of folds for the anisotropy. Defaults to 0.0.
             supersaturation (float, optional): supersaturation parameter for the reaction term in the phase field evolution. Defaults to 0.0.
-            external_flux (ParticleFlux, optional): exernal particle flux to be applied during growth steps. Defaults to None.
             three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to True.
             verbose (bool, optional): if True, the growth model will print debug information during growth steps. Defaults to False.
         """

@@ -244,10 +244,10 @@ def perform_DLA_simulation(input: custom_input):
                                         verbose=input.VERBOSE)
     
     GUI.plot_kinetic_lattice(LATTICE, 
-                     input.EPOCHS, 
-                     title=input.TITLE, 
-                     three_dim=input.THREE_DIM, 
-                     out_dir=input.OUTPUT_DIR)
+                             input.EPOCHS, 
+                             title=input.TITLE, 
+                             three_dim=input.THREE_DIM, 
+                             out_dir=input.OUTPUT_DIR)
 
     if input.SEEDS != 1:
         GUI.plot_kinetic_lattice(LATTICE, 
@@ -292,7 +292,6 @@ def perform_KOBAYASHI_simulation(input: custom_input):
                             mobility=input.MOBILITY,
                             supersaturation=input.SUPERSATURATION,
                             dt=input.TIME_STEP,
-                            external_flux=None,
                             three_dim=False,
                             verbose=input.VERBOSE)
 
@@ -362,9 +361,7 @@ def perform_STEFAN_simulation(input: custom_input):
                             gamma=input.GAMMA,
                             u_eq=input.U_EQ,
                             u_infty=input.U_INFTY,
-                            enforce_dirichlet_u=True,
                             dt=input.TIME_STEP,
-                            external_flux=None,
                             three_dim=False,
                             verbose=input.VERBOSE)
 

@@ -1,6 +1,7 @@
 from utils.ArgParser import parse_inputs
 from utils.logger import setup_logging
 from utils.paths import ensure_output_dir
+from classes.ParticleFlux import ParticleFlux
 import simulations as SIM 
 
 if __name__ == '__main__':

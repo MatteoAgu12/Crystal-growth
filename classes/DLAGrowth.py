@@ -30,7 +30,8 @@ class DLAGrowth(GrowthModel):
             three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to True.
             verbose (bool, optional): if True, the growth model will print debug information during growth steps. Defaults to False.
         """
-        super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
+        super().__init__(lattice, rng_seed, three_dim, verbose)
+        self.external_flux = external_flux
         
         if outer_limit_padding <= generation_padding:
             raise ValueError("[DLAGrowth] ERROR: outer limit padding must be > generation padding. Aborted.")

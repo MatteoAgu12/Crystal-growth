@@ -27,7 +27,8 @@ class EDENGrowth(GrowthModel):
             three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to True.
             verbose (bool, optional): if True, the growth model will print debug information during growth
         """                 
-        super().__init__(lattice, external_flux, rng_seed, three_dim, verbose)
+        super().__init__(lattice, rng_seed, three_dim, verbose)
+        self.external_flux = external_flux
         
     def __str__(self):
         return super().__str__()

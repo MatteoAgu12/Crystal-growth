@@ -3,7 +3,6 @@ import numpy as np
 from tqdm import tqdm
 
 from classes.BaseLattice import BaseLattice
-from classes.ParticleFlux import ParticleFlux
 
 import logging
 logger = logging.getLogger("growthsim")
@@ -16,21 +15,18 @@ class GrowthModel(ABC):
     The growth model is responsible for performing growth steps (epochs) and updating the lattice accordingly.
     """
     def __init__(self, lattice: BaseLattice,
-                 external_flux: ParticleFlux = None,
                  rng_seed: int = 69,
                  three_dim: bool = True,
                  verbose: bool = False):
         """
         Args:
             lattice (BaseLattice): the lattice structure on which the growth model will operate
-            external_flux (ParticleFlux, optional): exernal particle flux to be applied during growth steps. Defaults to None.
             rng_seed (int, optional): random seed for reproducibility. Defaults to 69.
             three_dim (bool, optional): if True, the growth model will consider three-dimensional growth. Defaults to True.
             verbose (bool, optional): if True, the growth model will print debug information during growth steps. Defaults to False.
         """
         self.lattice       = lattice
         self.epoch         = 0
-        self.external_flux = external_flux
         self.rng           = np.random.default_rng(rng_seed)
         self.three_dim     = three_dim
         self.verbose       = verbose
@@ -60,7 +56,11 @@ class GrowthModel(ABC):
 
         Args:
             n_steps (int): Number of growth steps (epochs) to perform.
-            # TODO: aggiorna
+            callback: the input must be the function that defines how to save the current frame of the crystal.
+                      Default to None.
+            save_freq (int): frequency at which the callback function is called.
+            frame_dir (str): directory where to save the frame
+            frame_list (list): list that contains all the paths with the frame saved up to now (to be updated).
         """
         with tqdm(total=n_steps, desc="Running GrowthModel", unit="epoch", disable=self.verbose) as pbar:
             for i in range(n_steps):

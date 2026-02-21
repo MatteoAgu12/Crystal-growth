@@ -282,7 +282,7 @@ def test_set_nucleation_seed_updates_phi_and_registers_seed(dammy_pfl):
     lat = dammy_pfl
     z = 0
 
-    lat.set_nucleation_seed(x=3, y=3, z=z, radius=2.0, width=0.5, phi_in=1.0, phi_out=0.0)
+    lat.set_nucleation_seed(x=3, y=3, z=z, radius=2.0, width=0.5, phi_in=1.0)
 
     assert (3, 3, z) in lat._seeds
     assert lat.phi[:, :, z].max() > 0.0

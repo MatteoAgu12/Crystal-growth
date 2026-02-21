@@ -41,8 +41,8 @@ Each domain has to be tought as a crystaline island with a random local orientat
 The simulation then grows the crystal around these seeds.
 * a **verbose** flag, that prints additional information during the simulation if active.
 
-This base class also implements some general utilities to interact with the lattice, such as $\texttt{is\_point\_inside()}$, that tells you if a point is inside the lattice space, and $\texttt{get\_neighbors()}$, that gives the coordinates of the six neighbors (four in 2D) of a specific cell.\
-It also declares the abstract method $\texttt{save\_frame()}$ that every child class must implement: its function is to save in a directory some characteristic plots of the lattice at that specific time step.
+This base class also implements some general utilities to interact with the lattice, such as $\texttt{is\_ point\_ inside()}$, that tells you if a point is inside the lattice space, and $\texttt{get\_ neighbors()}$, that gives the coordinates of the six neighbors (four in 2D) of a specific cell.\
+It also declares the abstract method $\texttt{save\_ frame()}$ that every child class must implement: its function is to save in a directory some characteristic plots of the lattice at that specific time step.
 
 ### KineticLattice
 This class hinerits everything from $\texttt{BaseLattice}$ without adding any data member.\

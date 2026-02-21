@@ -41,8 +41,8 @@ Each domain has to be tought as a crystaline island with a random local orientat
 The simulation then grows the crystal around these seeds.
 * a **verbose** flag, that prints additional information during the simulation if active.
 
-This base class also implements some general utilities to interact with the lattice, such as $\texttt{is\_ point\_ inside()}$, that tells you if a point is inside the lattice space, and $\texttt{get\_ neighbors()}$, that gives the coordinates of the six neighbors (four in 2D) of a specific cell.\
-It also declares the abstract method $\texttt{save\_ frame()}$ that every child class must implement: its function is to save in a directory some characteristic plots of the lattice at that specific time step.
+This base class also implements some general utilities to interact with the lattice, such as $\texttt{is\\_point\\_inside()}$, that tells you if a point is inside the lattice space, and $\texttt{get\\_neighbors()}$, that gives the coordinates of the six neighbors (four in 2D) of a specific cell.\
+It also declares the abstract method $\texttt{save\\_frame()}$ that every child class must implement: its function is to save in a directory some characteristic plots of the lattice at that specific time step.
 
 ### KineticLattice
 This class hinerits everything from $\texttt{BaseLattice}$ without adding any data member.\
@@ -65,7 +65,7 @@ In this case the nucleation seeds are circular blobs of variable radius that hav
 This class represent an external bias for the growth.\
 It consistes into a set of **preferred directions** along which the crystal is more likely to grow. It is also characterized by an intrinsic strength, that tells how relevant the bias is.
 
-This flux $\underline{\text{only works in kinetic simulations}}$!
+This flux **only works in kinetic simulations**!
 
 
 
@@ -94,11 +94,15 @@ In the isotropic case, all border sites are equivalent, resulting in a radially 
 
 ![alt text](images/EDEN_2D.gif)
 
-With an external flux selected, each cell of the active border has an associated probability $P(\mathbf{r})$, biased using an anisotropy weight 
-$$w(\mathbf{r}) = e^{\widehat{n}\cdot\widehat{\alpha}_i}$$
-where $\widehat{n}$ is the surface normal and $\widehat{\alpha}_i$ is the i-th flux direction.\
+With an external flux selected, each cell of the active border has an associated probability $P(\mathbf{r})$, biased using an anisotropy weight
+
+$$w(\mathbf{r}) = e^{\mathbf{n}\cdot\mathbf{\alpha}_i}$$
+
+where $\mathbf{n}$ is the surface normal and $\mathbf{\alpha_i}$ is the i-th flux direction.\
 This way, the resulting probability is the weight normalized by the weights of the neighbors
+
 $$P(\mathbf{r}) = \frac{w(\mathbf{r})}{\sum_{\mathbf{r'} \in B(t)} w(\mathbf{r'})}$$
+
 This results into a biased isotropic growth, with wide branches along the flux directions.
 For example, if the flux is along the directions $\pm\widehat{x}$ and $\pm\widehat{y}$, the result is a crystal with branches along the axes, as you can see in the following.
 
@@ -113,7 +117,7 @@ At each time step $t$, the simulation:
    A random starting position $mathbf{r}_0$ is selected on the surface of this box.
 2. Defines as **outer bounding box** with larger padding $p_{out} > p_{gen}$.  
    If the particle exits this region or exceeds a maximum number of spacial steps, its walk is restarted from a new random generation point.
-3. From $\mathbf{r}_0$, the new particle performs a random walk: $\mathbf{r}_{t+1} = \mathbf{r}_t + \mathbf{\Delta r}_t$  
+3. From $\mathbf{r_0}$, the new particle performs a random walk: $\mathbf{r}_{t+1} = \mathbf{r}_t + \mathbf{\Delta r}_t$  
    where $\mathbf{\Delta r}_t$ is the nearest-neighbor step, chosen according to a probability distribution that can be isotropic or not.
 4. If at a given step the particle position $\mathbf{r}_t$ has at least one occupied neighbor, the particle irreveribly sticks to the crystal and the step ends, proceding with a new particle.
 
@@ -173,6 +177,7 @@ The diffused field is then evolved according to the following differential equat
 $$
 \frac{\partial u}{\partial t} = D \nabla^2 u + K\frac{\partial\phi}{\partial t}
 $$
+
 where $D$ is the diffusivity of the field and $K$ the latent heat coefficient.
 
 This simulation will produce crystal with dendrites, similar to a snowflake. This is due to the latent heat coefficient being different from zero: sharp and long branches will lose heat faster, resulting in a faster solidification of their surroundings, becoming longer faster and faster.
@@ -188,7 +193,7 @@ For each simulation, the software saves into a directory the $\texttt{.log}$ fil
 1) An animated GIF file that shows the full growth of the crystal. For kinetic simulations the evolution of the occupation history, the crystalline domain and the grain boundatries are produced, for the phase field simulations the $\phi$ and $u$ field are reported, together with the occupation history.
 2) The final result for each type of plot (crystal field, diffused field, occupation history, ...). The plots of the crytalline domain and the grain boundaries are saved only if the number of initial nucleation seeds in the simulation is bigger than one.
 
-If the output direcotry is not specified by the user, the software creates one called $\texttt{\$DATE\_\$HOUR\_\$SIMULATION\_TYPE}$.
+If the output direcotry is not specified by the user, the software creates one called *$DATE_$HOUR_$SIMULATION_TYPE*.
 
 Additionally to that, for the DLA simulation an analysis of the Hausdorff dimention is performed. This quantity is calculated only for this simulation since it produces fractal crystal, and this quantity is the mathematical definition of dimention for such a shape. This is computed via box-counting over multiple length scales: if $N(l)$ is the number of occupied boxes of side $l$, the dimension $D_f$ is estimated from:
 
@@ -309,7 +314,7 @@ If you execute the main file with no path associated, the software warns you and
 Instead of running the simulation implemented in the software, you can also create and modify your own lattice object, both by importing one class defined in the softawre, or by defining a new lattice which is a child of the $\texttt{BaseLattice}$ class.
 
 For example, let's create an object of the class $\texttt{KineticLattice}$.
-```
+```python
 from classes.KineticLattice import KineticLattice
 
 NX, NY, NZ = [100, 100, 1]
@@ -318,7 +323,7 @@ LATTICE = KineticLattice(NX, NY, NZ, VERBOSE)
 ```
 This will create a 3D 100x100x100 lattice, that when used prints additional information thanks to the verbose flag.\
 Let's now define a nucleation seed in a certain point with a safe routine.
-```
+```python
 X, Y, Z = [30, 68, 0]
 if not LATTICE.is_occupied(X, Y, Z):
    LATTICE.set_nucleation_seed(X, Y, Z)
@@ -329,7 +334,7 @@ You can play with the class to discover all the functionalities.
 With the lattice objects and all the models in the $\texttt{class}$ folder, you can build your own simulation.\
 For example, let's create a DLA simulation that defines a growth from an active surface: this simulation mimics what can happen inside a lithium battery, where the lithium monomers are collected on an electrode, forming crystal structures and branches that in the old gen batteries caused dangerous shortcircuit, with the self ignition of the battery itself.
 
-```
+```python
 from classes.KineticLattice import KineticLattice
 from classes.ParticleFlux import ParticleFlux
 from classes.DLAGrowth import DLAGrowth

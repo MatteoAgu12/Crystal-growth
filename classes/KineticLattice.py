@@ -170,6 +170,17 @@ class KineticLattice(BaseLattice):
         return list(zip(mins, maxs))
 
     def _save_frame_kinetic_2D(self, epoch: int, frame_dir: str, frame_list: list) -> str:
+        """
+        Saves a current frame of the 2D simulation.
+
+        Args:
+            epoch (int): current epoch number
+            frame_dir (str): output directory
+            frame_list (list): list of past frame to be updated with the current one
+
+        Returns:
+            str: path of the frame saved
+        """
         z = 0 if self.shape[2] == 1 else self.shape[2] // 2
 
         fig, axs = plt.subplots(1, 3, figsize=(15, 5))
@@ -203,6 +214,17 @@ class KineticLattice(BaseLattice):
         frame_list.append(filepath)
 
     def _save_frame_kinetic_3D(self, epoch: int, frame_dir: str, frame_list: list) -> str:
+        """
+        Saves a current frame of the 3D simulation.
+
+        Args:
+            epoch (int): current epoch number
+            frame_dir (str): output directory
+            frame_list (list): list of past frame to be updated with the current one
+
+        Returns:
+            str: path of the frame saved
+        """
         fig = plt.figure(figsize=(18, 6))
 
         visible_mask = get_visible_voxels_binary_mask(self)
@@ -250,6 +272,18 @@ class KineticLattice(BaseLattice):
         return filepath
 
     def save_frame(self, epoch: int, three_dim: bool, frame_dir: str, frame_list: list) -> str:
+        """
+        Wrapper function that calls the utility to save the current frame, depending on the number of dimentions.
+
+        Args:
+            epoch (int): current epoch number
+            three_dim (bool): if True is 3D, else 2D
+            frame_dir (str): output directory path
+            frame_list (list): list containing the path of all the frames, to be updated
+
+        Returns:
+            str: the path of the produce frame
+        """
         if three_dim:
             return self._save_frame_kinetic_3D(epoch, frame_dir, frame_list)
         else:

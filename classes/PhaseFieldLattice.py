@@ -154,6 +154,18 @@ class PhaseFieldLattice(BaseLattice):
         return best_k+1
         
     def save_frame(self, epoch: int, three_dim: bool, frame_dir: str, frame_list: list) -> str:
+        """
+        Saves a frame of the current status of the simulation.
+
+        Args:
+            epoch (int): current epoch number
+            three_dim (bool): not used, always False in this case
+            frame_dir (str): output directory path
+            frame_list (list): list containing the paths of all previous frames, to be updated
+
+        Returns:
+            str: path of the produced frame
+        """
         z = 0 if self.shape[2] == 1 else self.shape[2] // 2
 
         fig, axs = plt.subplots(1, 3, figsize=(15, 5))

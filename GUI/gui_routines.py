@@ -52,6 +52,14 @@ def finalize_plot(out_dir: Union[str, None], title: str, suffix: str, log_messag
         logger.info(log_message, filename)
 
 def create_gif(frame_files: list[str], outdir: str, title: str):
+    """
+    Generates an animated GIF from a list of frame and saves it into a directory.
+
+    Args:
+        frame_files (list[str]): list containing the paths to all the frames
+        outdir (str): path of the output directory
+        title (str): title of the GIF file
+    """
     logger.info("[GIF generation] generating the GIF...")
     gif_path = os.path.join(outdir, f"{title}_growth.gif")
 

@@ -21,6 +21,11 @@ logger = logging.getLogger("growthsim")
 
 @dataclass
 class custom_input:
+    """
+    Custom class that collects all the input from the user.
+    It is ment as a wrapper to easly add/remove input parameters,
+    without changing all the simulation functions
+    """
     SIMULATION:       str
     NX:               int
     NY:               int

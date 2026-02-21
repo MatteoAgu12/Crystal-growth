@@ -86,9 +86,7 @@ class StefanGrowth(GrowthModel):
         latent_coeff={self.K}
         gamma={self.gamma}
         u_infty={self.u_infty}
-        enforce_dirichlet_u={self.enforce_dirichlet_u}
 
-        external_flux={self.external_flux is not None}
         three_dim={self.three_dim}
         verbose={self.verbose}
         -------------------------------------------------------------
@@ -144,9 +142,6 @@ class StefanGrowth(GrowthModel):
 
         np.clip(phi, 0.0, 1.0, out=phi)
 
-    def _step_3D(self):
-        pass
-
     def step(self):
         """
         Function that performs a single growth step (one epoch) of the Stefan growth model. 
@@ -155,10 +150,7 @@ class StefanGrowth(GrowthModel):
         """
         logger.debug(f"[StefanGrowth] Starting epoch {self.epoch + 1}...")
 
-        if self.three_dim:
-            self._step_3D()
-        else:
-            self._step_2D()
+        self._step_2D()
         
         self.lattice.update_occupied_and_history(epoch=self.epoch)
 

@@ -38,7 +38,7 @@ def check_parsed_inputs(parsed_input: argparse.Namespace):
             raise ValueError(f"{failure_message}")
 
     if not hasattr(parsed_input, 'output'):               parsed_input.output = None
-    if not hasattr(parsed_input, 'two_dim'):              parsed_input.two_dim = False
+    if not hasattr(parsed_input, 'two_dim'):              parsed_input.two_dim = True
     if not hasattr(parsed_input, "seeds"):                parsed_input.seeds = 1
     if not hasattr(parsed_input, 'title'):                parsed_input.title = "Crystal lattice"
     if not hasattr(parsed_input, 'verbose'):              parsed_input.verbose = False

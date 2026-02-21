@@ -56,7 +56,6 @@ class KobayashiGrowth(GrowthModel):
         n_folds={self.n_folds}
         supersaturation={self.supersaturation}
 
-        external_flux={self.external_flux is not None}
         three_dim={self.three_dim}
         verbose={self.verbose}
         -------------------------------------------------------------
@@ -119,9 +118,6 @@ class KobayashiGrowth(GrowthModel):
         lat.phi[:, :, z] = phi_new
         lat.update_occupied_and_history(epoch=self.epoch)
 
-    def _step_3D(self):
-        pass
-
     def step(self):
         """
         Function that performs a single growth step (one epoch) of the Kobayashi growth model. 
@@ -130,10 +126,7 @@ class KobayashiGrowth(GrowthModel):
         """
         logger.debug("[KobayashiGrowth] Starting epoch %d...", self.epoch + 1)
 
-        if self.three_dim:
-            self._step_3D()
-        else:
-            self._step_2D()
+        self._step_2D()
 
         self.lattice.update_occupied_and_history(epoch=self.epoch)
 

@@ -55,7 +55,7 @@ def create_gif(frame_files: list[str], outdir: str, title: str):
     logger.info("[GIF generation] generating the GIF...")
     gif_path = os.path.join(outdir, f"{title}_growth.gif")
 
-    with imageio.get_writer(gif_path, mode='I', duration=0.1) as writer:
+    with imageio.get_writer(gif_path, mode='I', duration=0.1, loop=0) as writer:
         for filename in frame_files:
             image = imageio.imread(filename)
             writer.append_data(image)
